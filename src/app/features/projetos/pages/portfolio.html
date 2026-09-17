@@ -1,0 +1,80 @@
+<div class="page-header">
+    <div class="page-header-top">
+        <div>
+            <h1>Portfólio de Projetos</h1>
+            <p>Visualize e gerencie os projetos de TIC cadastrados</p>
+        </div>
+        <a routerLink="/cadastro" class="btn-novo">
+            <mat-icon class="btn-novo-icon">add</mat-icon>
+            Novo Projeto
+        </a>
+    </div>
+</div>
+
+<div class="toolbar">
+    <div class="search-box">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input type="text"
+               [(ngModel)]="busca"
+               (input)="filtrar()"
+               placeholder="Buscar por nome, sigla ou área...">
+    </div>
+    <span class="total-count">{{ totalElementos }} projeto{{ totalElementos !== 1 ? 's' : '' }}</span>
+</div>
+
+@if (carregando) {
+    <div class="estado-vazio">
+        <p>Carregando projetos...</p>
+    </div>
+} @else if (erro) {
+    <div class="estado-vazio estado-erro">
+        <mat-icon class="estado-icon">error_outline</mat-icon>
+        <p>{{ erro }}</p>
+        <button class="btn-tentar" (click)="carregar()">Tentar novamente</button>
+    </div>
+} @else if (projetosFiltrados.length === 0) {
+    <div class="estado-vazio">
+        <mat-icon class="estado-icon">folder_open</mat-icon>
+        @if (busca.trim()) {
+            <p>Nenhum projeto encontrado para "{{ busca }}"</p>
+        } @else {
+            <p>Nenhum projeto cadastrado ainda</p>
+            <a routerLink="/cadastro" class="btn-novo-inline">Cadastrar primeiro projeto</a>
+        }
+    </div>
+} @else {
+    <div class="tabela-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Sigla</th>
+                    <th>Nome</th>
+                    <th>Área</th>
+                    <th>Status</th>
+                    <th>Responsável</th>
+                    <th>Criado em</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (projeto of projetosFiltrados; track projeto.id) {
+                    <tr>
+                        <td><span class="sigla-badge">{{ projeto.sigla }}</span></td>
+                        <td class="col-nome">{{ projeto.nome }}</td>
+                        <td>{{ projeto.area || '—' }}</td>
+                        <td><span class="status-badge" [class]="statusClasse(projeto.status)">{{ statusLabel(projeto.status) }}</span></td>
+                        <td>{{ projeto.gerenteResponsavel || '—' }}</td>
+                        <td>{{ formatarData(projeto.createdAt) }}</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (totalPaginas > 1) {
+        <div class="paginacao">
+            <button class="btn-pag" [disabled]="paginaAtual === 0" (click)="paginaAnterior()">← Anterior</button>
+            <span class="pag-info">Página {{ paginaAtual + 1 }} de {{ totalPaginas }}</span>
+            <button class="btn-pag" [disabled]="paginaAtual >= totalPaginas - 1" (click)="proximaPagina()">Próxima →</button>
+        </div>
+    }
+}

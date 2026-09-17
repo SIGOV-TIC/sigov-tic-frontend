@@ -1,0 +1,539 @@
+<div class="page-header">
+    <h1>Cadastro de Projeto</h1>
+    <p>Registrar novo projeto no portfólio de TIC</p>
+</div>
+
+<form (ngSubmit)="submeter()" class="form-grid">
+
+    <!-- Coluna esquerda: etapas dentro do card -->
+    <section class="form-section" [class.concluded]="etapasConcluidas">
+
+        <!-- Mini stepper -->
+        <div class="stepper">
+            @for (etapa of etapasEsquerda; track etapa; let i = $index) {
+                <div class="step" [class.active]="i === etapaAtual && !etapasConcluidas" [class.done]="i < etapaAtual || etapasConcluidas" (click)="irParaEtapa(i)">
+                    <div class="step-number">
+                        @if (i < etapaAtual || etapasConcluidas) { ✓ } @else { {{ i + 1 }} }
+                    </div>
+                    <span class="step-label">{{ etapa }}</span>
+                </div>
+                @if (i < etapasEsquerda.length - 1) {
+                    <div class="step-line" [class.done]="i < etapaAtual || etapasConcluidas"></div>
+                }
+            }
+        </div>
+
+        <!-- Etapa 1: Dados Gerais -->
+        @if (etapaAtual === 0) {
+            <div class="section-header">
+                <div class="section-bar"></div>
+                <div>
+                    <h2>Dados Gerais</h2>
+                    <p class="section-subtitle">Informações básicas sobre o projeto</p>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="nome">Nome do Projeto <span class="required">*</span></label>
+                <input id="nome" type="text" [(ngModel)]="projeto.nome" name="nome"
+                       [class.filled]="projeto.nome"
+                       placeholder="Digite ou selecione..."
+                       (input)="filtrarNomes($any($event.target).value)"
+                       (focus)="filtrarNomes($any($event.target).value)"
+                       [matAutocomplete]="autoNome" required>
+                @if (projeto.nome) { <button type="button" class="clear-field" (click)="limparCampo('nome')" aria-label="Limpar nome do projeto" title="Limpar campo">×</button> }
+                <mat-autocomplete #autoNome="matAutocomplete">
+                    @for (n of nomesFiltrados; track n) {
+                        <mat-option [value]="n">{{ n }}</mat-option>
+                    }
+                </mat-autocomplete>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    <label for="sigla">Sigla <span class="required">*</span></label>
+                    <input id="sigla" type="text" [(ngModel)]="projeto.sigla" name="sigla"
+                           [class.filled]="projeto.sigla"
+                           placeholder="Digite ou selecione..."
+                           (input)="filtrarSiglas($any($event.target).value)"
+                           (focus)="filtrarSiglas($any($event.target).value)"
+                           [matAutocomplete]="autoSigla" required>
+                    @if (projeto.sigla) { <button type="button" class="clear-field" (click)="limparCampo('sigla')" aria-label="Limpar sigla" title="Limpar campo">×</button> }
+                    <mat-autocomplete #autoSigla="matAutocomplete">
+                        @for (s of siglasFiltradas; track s) {
+                            <mat-option [value]="s">{{ s }}</mat-option>
+                        }
+                    </mat-autocomplete>
+                </div>
+                <div class="field">
+                    <label for="area">Área Responsável</label>
+                    <input id="area" type="text" [(ngModel)]="projeto.area" name="area"
+                           [class.filled]="projeto.area"
+                           placeholder="Digite ou selecione..."
+                           (input)="filtrarAreas($any($event.target).value)"
+                           (focus)="filtrarAreas($any($event.target).value)"
+                           [matAutocomplete]="autoArea">
+                    @if (projeto.area) { <button type="button" class="clear-field" (click)="limparCampo('area')" aria-label="Limpar área responsável" title="Limpar campo">×</button> }
+                    <mat-autocomplete #autoArea="matAutocomplete">
+                        @for (a of areasFiltradas; track a) {
+                            <mat-option [value]="a">{{ a }}</mat-option>
+                        }
+                    </mat-autocomplete>
+                </div>
+            </div>
+            <div class="field">
+                <label for="unidadeExecutora">Unidade Executora</label>
+                <input id="unidadeExecutora" type="text" [(ngModel)]="projeto.unidadeExecutora" name="unidadeExecutora"
+                       [class.filled]="projeto.unidadeExecutora"
+                       placeholder="Digite ou selecione..."
+                       (input)="filtrarUnidades($any($event.target).value)"
+                       (focus)="filtrarUnidades($any($event.target).value)"
+                       [matAutocomplete]="autoUnidade">
+                @if (projeto.unidadeExecutora) { <button type="button" class="clear-field" (click)="limparCampo('unidadeExecutora')" aria-label="Limpar unidade executora" title="Limpar campo">×</button> }
+                <mat-autocomplete #autoUnidade="matAutocomplete">
+                    @for (u of unidadesFiltradas; track u) {
+                        <mat-option [value]="u">{{ u }}</mat-option>
+                    }
+                </mat-autocomplete>
+            </div>
+        }
+
+        <!-- Etapa 2: Responsáveis -->
+        @if (etapaAtual === 1) {
+            <div class="section-header">
+                <div class="section-bar"></div>
+                <div>
+                    <h2>Responsáveis</h2>
+                    <p class="section-subtitle">Equipe responsável pelo projeto</p>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field">
+                    <label for="po">PO</label>
+                    <input id="po" type="text" [(ngModel)]="projeto.po" name="po"
+                           [class.filled]="projeto.po"
+                           placeholder="Digite ou selecione..."
+                           (input)="filtrarPessoas($any($event.target).value)"
+                           (focus)="filtrarPessoas($any($event.target).value)"
+                           [matAutocomplete]="autoPo">
+                    @if (projeto.po) { <button type="button" class="clear-field" (click)="limparCampo('po')" aria-label="Limpar PO" title="Limpar campo">×</button> }
+                    <mat-autocomplete #autoPo="matAutocomplete">
+                        @for (p of pessoasFiltradas; track p) {
+                            <mat-option [value]="p">{{ p }}</mat-option>
+                        }
+                    </mat-autocomplete>
+                </div>
+                <div class="field">
+                    <label for="scrumMaster">Scrum Master</label>
+                    <input id="scrumMaster" type="text" [(ngModel)]="projeto.scrumMaster" name="scrumMaster"
+                           [class.filled]="projeto.scrumMaster"
+                           placeholder="Digite ou selecione..."
+                           (input)="filtrarPessoas($any($event.target).value)"
+                           (focus)="filtrarPessoas($any($event.target).value)"
+                           [matAutocomplete]="autoSm">
+                    @if (projeto.scrumMaster) { <button type="button" class="clear-field" (click)="limparCampo('scrumMaster')" aria-label="Limpar Scrum Master" title="Limpar campo">×</button> }
+                    <mat-autocomplete #autoSm="matAutocomplete">
+                        @for (p of pessoasFiltradas; track p) {
+                            <mat-option [value]="p">{{ p }}</mat-option>
+                        }
+                    </mat-autocomplete>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    <label for="sponsor">Sponsor</label>
+                    <input id="sponsor" type="text" [(ngModel)]="projeto.sponsor" name="sponsor"
+                           [class.filled]="projeto.sponsor"
+                           placeholder="Digite ou selecione..."
+                           (input)="filtrarPessoas($any($event.target).value)"
+                           (focus)="filtrarPessoas($any($event.target).value)"
+                           [matAutocomplete]="autoSponsor">
+                    @if (projeto.sponsor) { <button type="button" class="clear-field" (click)="limparCampo('sponsor')" aria-label="Limpar sponsor" title="Limpar campo">×</button> }
+                    <mat-autocomplete #autoSponsor="matAutocomplete">
+                        @for (p of pessoasFiltradas; track p) {
+                            <mat-option [value]="p">{{ p }}</mat-option>
+                        }
+                    </mat-autocomplete>
+                </div>
+                <div class="field">
+                    <label for="gerenteResponsavel">Gerente Responsável</label>
+                    <input id="gerenteResponsavel" type="text" [(ngModel)]="projeto.gerenteResponsavel" name="gerenteResponsavel"
+                           [class.filled]="projeto.gerenteResponsavel"
+                           placeholder="Digite ou selecione..."
+                           (input)="filtrarPessoas($any($event.target).value)"
+                           (focus)="filtrarPessoas($any($event.target).value)"
+                           [matAutocomplete]="autoGerente">
+                    @if (projeto.gerenteResponsavel) { <button type="button" class="clear-field" (click)="limparCampo('gerenteResponsavel')" aria-label="Limpar gerente responsável" title="Limpar campo">×</button> }
+                    <mat-autocomplete #autoGerente="matAutocomplete">
+                        @for (p of pessoasFiltradas; track p) {
+                            <mat-option [value]="p">{{ p }}</mat-option>
+                        }
+                    </mat-autocomplete>
+                </div>
+            </div>
+        }
+
+        <!-- Etapa 3: Descrição -->
+        @if (etapaAtual === 2) {
+            <div class="section-header">
+                <div class="section-bar"></div>
+                <div>
+                    <h2>Descrição</h2>
+                    <p class="section-subtitle">Detalhamento do projeto</p>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="descricao">Descrição</label>
+                <textarea id="descricao" [(ngModel)]="projeto.descricao" name="descricao" rows="3"
+                          [class.filled]="projeto.descricao"
+                          placeholder="Descreva o projeto..."></textarea>
+                @if (projeto.descricao) { <button type="button" class="clear-field" (click)="limparCampo('descricao')" aria-label="Limpar descrição" title="Limpar campo">×</button> }
+                <div class="sugestoes">
+                    @for (s of descricoes; track s) {
+                        <button type="button" class="sugestao-chip" (click)="preencherCampo('descricao', s)">{{ s.substring(0, 50) }}...</button>
+                    }
+                </div>
+            </div>
+            <div class="field">
+                <label for="objetivo">Objetivo</label>
+                <textarea id="objetivo" [(ngModel)]="projeto.objetivo" name="objetivo" rows="2"
+                          [class.filled]="projeto.objetivo"
+                          placeholder="Objetivo do projeto..."></textarea>
+                @if (projeto.objetivo) { <button type="button" class="clear-field" (click)="limparCampo('objetivo')" aria-label="Limpar objetivo" title="Limpar campo">×</button> }
+                <div class="sugestoes">
+                    @for (s of objetivos; track s) {
+                        <button type="button" class="sugestao-chip" (click)="preencherCampo('objetivo', s)">{{ s.substring(0, 50) }}...</button>
+                    }
+                </div>
+            </div>
+            <div class="field">
+                <label for="justificativa">Justificativa</label>
+                <textarea id="justificativa" [(ngModel)]="projeto.justificativa" name="justificativa" rows="2"
+                          [class.filled]="projeto.justificativa"
+                          placeholder="Justificativa para o projeto..."></textarea>
+                @if (projeto.justificativa) { <button type="button" class="clear-field" (click)="limparCampo('justificativa')" aria-label="Limpar justificativa" title="Limpar campo">×</button> }
+                <div class="sugestoes">
+                    @for (s of justificativas; track s) {
+                        <button type="button" class="sugestao-chip" (click)="preencherCampo('justificativa', s)">{{ s.substring(0, 50) }}...</button>
+                    }
+                </div>
+            </div>
+            <div class="field">
+                <label for="beneficiosEsperados">Benefícios Esperados</label>
+                <textarea id="beneficiosEsperados" [(ngModel)]="projeto.beneficiosEsperados" name="beneficiosEsperados" rows="2"
+                          [class.filled]="projeto.beneficiosEsperados"
+                          placeholder="Benefícios esperados..."></textarea>
+                @if (projeto.beneficiosEsperados) { <button type="button" class="clear-field" (click)="limparCampo('beneficiosEsperados')" aria-label="Limpar benefícios esperados" title="Limpar campo">×</button> }
+                <div class="sugestoes">
+                    @for (s of beneficios; track s) {
+                        <button type="button" class="sugestao-chip" (click)="preencherCampo('beneficiosEsperados', s)">{{ s.substring(0, 50) }}...</button>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Etapa 4: Planejamento e Recursos -->
+        @if (etapaAtual === 3) {
+            <div class="section-header">
+                <div class="section-bar"></div>
+                <div>
+                    <h2>Planejamento e Recursos</h2>
+                    <p class="section-subtitle">Cronograma e orçamento do projeto</p>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field">
+                    <label for="dataInicio">Data Início Prevista</label>
+                    <input id="dataInicio" type="date" [(ngModel)]="projeto.dataInicioPrevista" name="dataInicioPrevista"
+                           [class.filled]="projeto.dataInicioPrevista">
+                    @if (projeto.dataInicioPrevista) { <button type="button" class="clear-field" (click)="limparCampo('dataInicioPrevista')" aria-label="Limpar data de início" title="Limpar campo">×</button> }
+                </div>
+                <div class="field">
+                    <label for="dataConclusao">Data Conclusão Prevista</label>
+                    <input id="dataConclusao" type="date" [(ngModel)]="projeto.dataConclusaoPrevista" name="dataConclusaoPrevista"
+                           [class.filled]="projeto.dataConclusaoPrevista">
+                    @if (projeto.dataConclusaoPrevista) { <button type="button" class="clear-field" (click)="limparCampo('dataConclusaoPrevista')" aria-label="Limpar data de conclusão" title="Limpar campo">×</button> }
+                </div>
+            </div>
+            <div class="field">
+                <label for="orcamento">Orçamento Estimado (R$)</label>
+                <input id="orcamento" type="number" [(ngModel)]="projeto.orcamentoEstimado" name="orcamentoEstimado"
+                       [class.filled]="projeto.orcamentoEstimado"
+                       placeholder="Digite ou selecione..."
+                       [matAutocomplete]="autoOrcamento">
+                <mat-autocomplete #autoOrcamento="matAutocomplete">
+                    @for (orcamento of orcamentosMock; track orcamento) {
+                        <mat-option [value]="orcamento">R$ {{ orcamento.toLocaleString('pt-BR') }}</mat-option>
+                    }
+                </mat-autocomplete>
+                <div class="budget-stepper" aria-label="Ajustar orçamento">
+                    <button type="button" (click)="ajustarOrcamento(50000)" aria-label="Aumentar orçamento" title="Aumentar orçamento"><mat-icon>keyboard_arrow_up</mat-icon></button>
+                    <button type="button" (click)="ajustarOrcamento(-50000)" aria-label="Diminuir orçamento" title="Diminuir orçamento"><mat-icon>keyboard_arrow_down</mat-icon></button>
+                </div>
+                @if (projeto.orcamentoEstimado) { <button type="button" class="clear-field" (click)="limparCampo('orcamentoEstimado')" aria-label="Limpar orçamento estimado" title="Limpar campo">×</button> }
+            </div>
+        }
+
+        <!-- Erros de validação -->
+        @if (errosValidacao.length > 0) {
+            <div class="validacao-erros">
+                <span class="validacao-titulo">Preencha os campos obrigatórios:</span>
+                <ul>
+                    @for (erro of errosValidacao; track erro) {
+                        <li>{{ erro }}</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        <!-- Navegação dentro do card -->
+        <div class="nav-buttons">
+            @if (etapaAtual > 0) {
+                <button type="button" class="btn-nav-back" (click)="voltar()">← Voltar</button>
+            } @else {
+                <div></div>
+            }
+            @if (etapaAtual < etapasEsquerda.length - 1) {
+                <button type="button" class="btn-nav-next" (click)="avancar()">Avançar →</button>
+            } @else {
+                <button type="button" class="btn-nav-done" (click)="concluirEtapas()">Concluir ✓</button>
+            }
+        </div>
+
+    </section>
+
+    <!-- Coluna direita: Vínculo de TIC (sempre visível) -->
+    <div class="right-column">
+        <section class="form-section">
+            <div class="section-header">
+                <div class="section-bar"></div>
+                <div class="section-header-top">
+                    <div>
+                        <h2>Vínculo de TIC</h2>
+                        <p class="section-subtitle">Vincule o projeto aos instrumentos de planejamento estratégico de TIC</p>
+                    </div>
+                    <div class="progress-badge" [class.complete]="camposAlinhamentoPreenchidos === totalCamposAlinhamento">
+                        {{ camposAlinhamentoPreenchidos }}/{{ totalCamposAlinhamento }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="programa">Programa do PDTIC <span class="required">*</span></label>
+                <input id="programa" type="text" [(ngModel)]="projeto.programa" name="programa"
+                       [class.filled]="projeto.programa"
+                       placeholder="Digite ou selecione..."
+                       (input)="filtrarProgramas($any($event.target).value)"
+                       (focus)="filtrarProgramas($any($event.target).value)"
+                       [matAutocomplete]="autoPrograma">
+                @if (projeto.programa) { <button type="button" class="clear-field" (click)="limparCampo('programa')" aria-label="Limpar programa do PDTIC" title="Limpar campo">×</button> }
+                <mat-autocomplete #autoPrograma="matAutocomplete">
+                    @for (p of programasFiltrados; track p) {
+                        <mat-option [value]="p">{{ p }}</mat-option>
+                    }
+                </mat-autocomplete>
+            </div>
+            <div class="field">
+                <label for="objetivoEstrategico">Objetivo Estratégico <span class="required">*</span></label>
+                <input id="objetivoEstrategico" type="text" [(ngModel)]="projeto.objetivoEstrategico" name="objetivoEstrategico"
+                       [class.filled]="projeto.objetivoEstrategico"
+                       placeholder="Digite ou selecione..."
+                       (input)="filtrarObjetivos($any($event.target).value)"
+                       (focus)="filtrarObjetivos($any($event.target).value)"
+                       [matAutocomplete]="autoObj">
+                @if (projeto.objetivoEstrategico) { <button type="button" class="clear-field" (click)="limparCampo('objetivoEstrategico')" aria-label="Limpar objetivo estratégico" title="Limpar campo">×</button> }
+                <mat-autocomplete #autoObj="matAutocomplete">
+                    @for (o of objetivosFiltrados; track o) {
+                        <mat-option [value]="o">{{ o }}</mat-option>
+                    }
+                </mat-autocomplete>
+            </div>
+            <div class="field">
+                <label for="iniciativaEstrategica">Iniciativa Estratégica</label>
+                <input id="iniciativaEstrategica" type="text" [(ngModel)]="projeto.iniciativaEstrategica" name="iniciativaEstrategica"
+                       [class.filled]="projeto.iniciativaEstrategica"
+                       placeholder="Digite ou selecione..."
+                       (input)="filtrarIniciativas($any($event.target).value)"
+                       (focus)="filtrarIniciativas($any($event.target).value)"
+                       [matAutocomplete]="autoInic">
+                @if (projeto.iniciativaEstrategica) { <button type="button" class="clear-field" (click)="limparCampo('iniciativaEstrategica')" aria-label="Limpar iniciativa estratégica" title="Limpar campo">×</button> }
+                <mat-autocomplete #autoInic="matAutocomplete">
+                    @for (i of iniciativasFiltradas; track i) {
+                        <mat-option [value]="i">{{ i }}</mat-option>
+                    }
+                </mat-autocomplete>
+            </div>
+            <div class="field">
+                <label for="indicadorEstrategico">Indicador Estratégico</label>
+                <input id="indicadorEstrategico" type="text" [(ngModel)]="projeto.indicadorEstrategico" name="indicadorEstrategico"
+                       [class.filled]="projeto.indicadorEstrategico"
+                       placeholder="Digite ou selecione..."
+                       (input)="filtrarIndicadores($any($event.target).value)"
+                       (focus)="filtrarIndicadores($any($event.target).value)"
+                       [matAutocomplete]="autoInd">
+                @if (projeto.indicadorEstrategico) { <button type="button" class="clear-field" (click)="limparCampo('indicadorEstrategico')" aria-label="Limpar indicador estratégico" title="Limpar campo">×</button> }
+                <mat-autocomplete #autoInd="matAutocomplete">
+                    @for (ind of indicadoresFiltrados; track ind) {
+                        <mat-option [value]="ind">{{ ind }}</mat-option>
+                    }
+                </mat-autocomplete>
+            </div>
+
+            <!-- Rodapé do card direito -->
+            <div class="card-footer">
+                <div class="progress-bar-track">
+                    <div class="progress-bar-fill" [style.width.%]="(camposAlinhamentoPreenchidos / totalCamposAlinhamento) * 100"></div>
+                </div>
+                <span class="progress-text">{{ camposAlinhamentoPreenchidos }} de {{ totalCamposAlinhamento }} campos preenchidos</span>
+            </div>
+        </section>
+    </div>
+
+</form>
+
+<!-- Barra de ações inferior -->
+<div class="action-bar">
+    <div class="action-left">
+        @if (!prontoParaSalvar) {
+            <span class="action-hint">Conclua as etapas para submeter</span>
+        }
+    </div>
+    <div class="action-right">
+        <button type="button" class="btn-primary" [class.disabled]="!prontoParaSalvar" [disabled]="!prontoParaSalvar" (click)="submeter()">Submeter para Aprovação</button>
+        <button type="button" class="btn-secondary" (click)="salvarRascunho()">Salvar como Rascunho</button>
+        <button type="button" class="btn-text" (click)="limpar()">Cancelar</button>
+    </div>
+</div>
+
+<!-- Overlay de resumo -->
+@if (mostrarResumo) {
+    <div class="resumo-overlay" (click)="fecharResumo()">
+        <div class="resumo-card" (click)="$event.stopPropagation()">
+            <h2>Resumo do Projeto</h2>
+            <p class="resumo-subtitle">Confira os dados antes de confirmar o salvamento</p>
+
+            <div class="resumo-body">
+
+            <!-- Dados Gerais -->
+            <div class="resumo-secao">
+                <h3>Dados Gerais</h3>
+                <div class="resumo-grid">
+                    <div class="resumo-item">
+                        <span class="resumo-label">Nome</span>
+                        <span class="resumo-valor">{{ projeto.nome || '—' }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Sigla</span>
+                        <span class="resumo-valor">{{ projeto.sigla || '—' }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Área Responsável</span>
+                        <span class="resumo-valor">{{ projeto.area || '—' }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Unidade Executora</span>
+                        <span class="resumo-valor">{{ projeto.unidadeExecutora || '—' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Responsáveis -->
+            <div class="resumo-secao">
+                <h3>Responsáveis</h3>
+                <div class="resumo-grid">
+                    <div class="resumo-item">
+                        <span class="resumo-label">PO</span>
+                        <span class="resumo-valor">{{ projeto.po || '—' }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Scrum Master</span>
+                        <span class="resumo-valor">{{ projeto.scrumMaster || '—' }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Sponsor</span>
+                        <span class="resumo-valor">{{ projeto.sponsor || '—' }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Gerente Responsável</span>
+                        <span class="resumo-valor">{{ projeto.gerenteResponsavel || '—' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Descrição -->
+            <div class="resumo-secao">
+                <h3>Descrição</h3>
+                <div class="resumo-grid">
+                    <div class="resumo-item full">
+                        <span class="resumo-label">Descrição</span>
+                        <span class="resumo-valor">{{ projeto.descricao || '—' }}</span>
+                    </div>
+                    <div class="resumo-item full">
+                        <span class="resumo-label">Objetivo</span>
+                        <span class="resumo-valor">{{ projeto.objetivo || '—' }}</span>
+                    </div>
+                    <div class="resumo-item full">
+                        <span class="resumo-label">Justificativa</span>
+                        <span class="resumo-valor">{{ projeto.justificativa || '—' }}</span>
+                    </div>
+                    <div class="resumo-item full">
+                        <span class="resumo-label">Benefícios Esperados</span>
+                        <span class="resumo-valor">{{ projeto.beneficiosEsperados || '—' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Planejamento e Recursos -->
+            <div class="resumo-secao">
+                <h3>Planejamento e Recursos</h3>
+                <div class="resumo-grid">
+                    <div class="resumo-item">
+                        <span class="resumo-label">Data Início Prevista</span>
+                        <span class="resumo-valor">{{ projeto.dataInicioPrevista || '—' }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Data Conclusão Prevista</span>
+                        <span class="resumo-valor">{{ projeto.dataConclusaoPrevista || '—' }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Orçamento Estimado</span>
+                        <span class="resumo-valor">{{ projeto.orcamentoEstimado ? 'R$ ' + projeto.orcamentoEstimado.toLocaleString('pt-BR') : '—' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vínculo de TIC -->
+            <div class="resumo-secao">
+                <h3>Vínculo de TIC</h3>
+                <div class="resumo-grid">
+                    <div class="resumo-item">
+                        <span class="resumo-label">Programa</span>
+                        <span class="resumo-valor">{{ projeto.programa || '—' }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Objetivo Estratégico</span>
+                        <span class="resumo-valor">{{ projeto.objetivoEstrategico || '—' }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Iniciativa Estratégica</span>
+                        <span class="resumo-valor">{{ projeto.iniciativaEstrategica || '—' }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Indicador Estratégico</span>
+                        <span class="resumo-valor">{{ projeto.indicadorEstrategico || '—' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            </div>
+
+            <!-- Ações do resumo -->
+            <div class="resumo-acoes">
+                <button type="button" class="btn-text" (click)="fecharResumo()">Voltar</button>
+                <button type="button" class="btn-primary" (click)="confirmarSalvar()">Confirmar Submissão</button>
+            </div>
+        </div>
+    </div>
+}

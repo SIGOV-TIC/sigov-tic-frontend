@@ -1,0 +1,92 @@
+<div class="layout">
+
+    <aside class="sidebar">
+
+        <div class="sidebar-header">
+            <span class="sidebar-logo-text">SIGOV-TIC</span>
+        </div>
+
+        <nav class="nav-section">
+            <span class="nav-label">Principal</span>
+            <a class="nav-item" routerLink="/portfolio" routerLinkActive="active">
+                <mat-icon class="nav-icon">dashboard</mat-icon>
+                Portfólio
+            </a>
+            <a class="nav-item" routerLink="/cadastro" routerLinkActive="active">
+                <mat-icon class="nav-icon">add_circle_outline</mat-icon>
+                Novo Projeto
+            </a>
+        </nav>
+
+        <nav class="nav-section">
+            <span class="nav-label">Gestão</span>
+            <a class="nav-item">
+                <mat-icon class="nav-icon">description</mat-icon>
+                Rascunhos
+            </a>
+            <a class="nav-item">
+                <mat-icon class="nav-icon">assessment</mat-icon>
+                Relatórios
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a class="nav-item">
+                <mat-icon class="nav-icon">settings</mat-icon>
+                Configurações
+            </a>
+            <a class="nav-item">
+                <mat-icon class="nav-icon">help_outline</mat-icon>
+                Ajuda
+            </a>
+        </div>
+
+    </aside>
+
+    <div class="main-wrapper">
+
+        <header class="header">
+            <div class="header-bar">
+                <div class="header-left">
+                    <span class="header-brand">Gestão do Portfólio de TIC</span>
+                </div>
+                <div class="header-right">
+                    <div class="header-search">
+                        <mat-icon class="search-icon">search</mat-icon>
+                        <input type="text" placeholder="Buscar no sistema..." readonly>
+                    </div>
+                    <button class="header-notification">
+                        <mat-icon>notifications_none</mat-icon>
+                    </button>
+                    <div class="header-user">
+                        <div class="header-avatar">GT</div>
+                        <span>Gestor TIC</span>
+                        <mat-icon class="header-chevron">expand_more</mat-icon>
+                    </div>
+                </div>
+            </div>
+            <div class="breadcrumb">
+                <mat-icon class="breadcrumb-home" routerLink="/portfolio">home</mat-icon>
+                <span class="breadcrumb-separator">›</span>
+                @if (estaNoCadastro) {
+                    <a class="breadcrumb-link" routerLink="/portfolio">Portfólio</a>
+                    <span class="breadcrumb-separator">›</span>
+                    <span class="breadcrumb-current">Novo Projeto</span>
+                } @else {
+                    <span class="breadcrumb-current">Portfólio</span>
+                }
+            </div>
+        </header>
+
+        <main class="main-content">
+            <ng-content />
+        </main>
+
+        <footer class="footer">
+            SIGOV-TIC | Gestão do Portfólio de TIC
+            <span class="footer-version">Versão 1.0</span>
+        </footer>
+
+    </div>
+
+</div>

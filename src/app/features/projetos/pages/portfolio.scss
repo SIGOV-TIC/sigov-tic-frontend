@@ -1,0 +1,300 @@
+.page-header {
+    margin-bottom: 20px;
+    background-color: #0D1A2D;
+    padding: 20px 24px;
+    border-radius: 6px;
+    border: 1px solid #1A2E4A;
+
+    h1 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #FFFFFF;
+    }
+
+    p {
+        color: #AAB4C0;
+        font-size: 14px;
+        margin-top: 6px;
+    }
+}
+
+.page-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-novo {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    background-color: #FACC15;
+    color: #0A1628;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.2s;
+
+    &:hover {
+        background-color: #EAB308;
+    }
+
+    .btn-novo-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+    }
+}
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #111E33;
+    border: 1px solid #1E3A5F;
+    border-radius: 6px;
+    padding: 8px 14px;
+    width: 340px;
+    transition: border-color 0.2s;
+
+    &:focus-within {
+        border-color: #3B82F6;
+    }
+
+    .search-icon {
+        color: #556677;
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+    }
+
+    input {
+        background: none;
+        border: none;
+        color: #FFFFFF;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        outline: none;
+        flex: 1;
+
+        &::placeholder {
+            color: #6B7A8D;
+        }
+    }
+}
+
+.total-count {
+    font-size: 13px;
+    color: #6B7A8D;
+}
+
+// Tabela
+
+.tabela-container {
+    background-color: #111E33;
+    border: 1px solid #1E3A5F;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background-color: #0D1A2D;
+
+    th {
+        text-align: left;
+        padding: 12px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #8899AA;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid #1E3A5F;
+    }
+}
+
+tbody {
+    tr {
+        border-bottom: 1px solid #1A2E4A;
+        transition: background-color 0.15s;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &:hover {
+            background-color: rgba(30, 58, 95, 0.3);
+            cursor: pointer;
+        }
+    }
+
+    td {
+        padding: 14px 16px;
+        font-size: 14px;
+        color: #CCD3DB;
+    }
+}
+
+.sigla-badge {
+    display: inline-block;
+    background-color: #1E3A5F;
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+}
+
+.col-nome {
+    color: #FFFFFF;
+    font-weight: 500;
+}
+
+.status-badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.status-rascunho {
+    background-color: rgba(107, 122, 141, 0.2);
+    color: #8899AA;
+}
+
+.status-aguardando {
+    background-color: rgba(250, 204, 21, 0.15);
+    color: #FACC15;
+}
+
+.status-aprovado {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #22C55E;
+}
+
+.status-rejeitado {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #EF4444;
+}
+
+// Paginação
+
+.paginacao {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-top: 16px;
+    padding: 12px;
+}
+
+.btn-pag {
+    background: none;
+    border: 1px solid #1E3A5F;
+    color: #AAB4C0;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s, color 0.2s;
+
+    &:hover:not(:disabled) {
+        border-color: #3B82F6;
+        color: #FFFFFF;
+    }
+
+    &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+}
+
+.pag-info {
+    font-size: 13px;
+    color: #6B7A8D;
+}
+
+// Estados vazios
+
+.estado-vazio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+    background-color: #111E33;
+    border: 1px solid #1E3A5F;
+    border-radius: 6px;
+
+    .estado-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: #2A4A6F;
+        margin-bottom: 12px;
+    }
+
+    p {
+        font-size: 15px;
+        color: #6B7A8D;
+    }
+
+    &.estado-erro {
+        .estado-icon {
+            color: #EF4444;
+        }
+
+        p {
+            color: #FCA5A5;
+        }
+    }
+}
+
+.btn-tentar {
+    margin-top: 12px;
+    background: none;
+    border: 1px solid #1E3A5F;
+    color: #AAB4C0;
+    font-size: 13px;
+    padding: 6px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+
+    &:hover {
+        border-color: #3B82F6;
+        color: #FFFFFF;
+    }
+}
+
+.btn-novo-inline {
+    margin-top: 12px;
+    color: #FACC15;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
