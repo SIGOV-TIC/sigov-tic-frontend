@@ -1,25 +1,33 @@
 export type StatusProjeto = 'RASCUNHO' | 'AGUARDANDO_APROVACAO' | 'APROVADO' | 'REJEITADO';
 
+export interface FaseProjeto {
+  nome: string;
+  duracaoMeses: number;
+}
+
 export interface ProjetoRequest {
   nome: string;
   sigla: string;
-  area?: string;
-  unidadeExecutora?: string;
+  areaSolicitante?: string;
+  areaExecutora?: string;
   descricao?: string;
   objetivo?: string;
   justificativa?: string;
   beneficiosEsperados?: string;
-  programa?: string;
+  priorizadoPdtic?: boolean;
   objetivoEstrategico?: string;
   iniciativaEstrategica?: string;
+  inovador?: boolean;
+  justificativaInovador?: string;
   indicadorEstrategico?: string;
   po?: string;
   scrumMaster?: string;
-  sponsor?: string;
+  patrocinador?: string;
   gerenteResponsavel?: string;
   dataInicioPrevista?: string;
   dataConclusaoPrevista?: string;
   orcamentoEstimado?: number;
+  fases?: FaseProjeto[];
   status?: StatusProjeto;
 }
 

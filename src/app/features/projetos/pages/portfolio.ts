@@ -57,7 +57,7 @@ export class Portfolio implements OnInit {
       (p) =>
         p.nome.toLowerCase().includes(termo) ||
         p.sigla.toLowerCase().includes(termo) ||
-        p.area?.toLowerCase().includes(termo)
+        p.areaSolicitante?.toLowerCase().includes(termo)
     );
   }
 

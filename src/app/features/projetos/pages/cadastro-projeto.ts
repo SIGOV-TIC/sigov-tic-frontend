@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { ProjetoRequest } from '../models/projeto';
+import { ProjetoRequest, FaseProjeto } from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
 
 @Component({
@@ -20,7 +20,12 @@ export class CadastroProjeto {
   projeto: ProjetoRequest = {
     nome: '',
     sigla: '',
+    fases: [],
+    priorizadoPdtic: false,
+    inovador: false,
   };
+
+  novaFase: FaseProjeto = { nome: '', duracaoMeses: 1 };
 
   nomes = [
     'Sistema de Governança de TIC',
@@ -73,13 +78,6 @@ export class CadastroProjeto {
     'Roberto Campos', 'Fernanda Lima', 'Lucas Oliveira',
     'Patrícia Mendes', 'Thiago Almeida',
   ];
-  programas = [
-    'Programa de Governança e Gestão de TIC',
-    'Programa de Transformação Digital',
-    'Programa de Segurança da Informação',
-    'Programa de Infraestrutura e Serviços de TIC',
-    'Programa de Sistemas e Soluções de TIC',
-  ];
   objetivosEstrategicos = [
     'Aprimorar a governança e gestão de TIC',
     'Fortalecer a segurança cibernética e proteção de dados',
@@ -106,7 +104,6 @@ export class CadastroProjeto {
   orcamentosMock = [250000, 500000, 1000000, 2500000];
 
   pessoasFiltradas: string[] = [];
-  programasFiltrados: string[] = [];
   objetivosFiltrados: string[] = [];
   iniciativasFiltradas: string[] = [];
   indicadoresFiltrados: string[] = [];
@@ -121,22 +118,21 @@ export class CadastroProjeto {
     this.areasFiltradas = this.areas;
     this.unidadesFiltradas = this.unidades;
     this.pessoasFiltradas = this.pessoas;
-    this.programasFiltrados = this.programas;
     this.objetivosFiltrados = this.objetivosEstrategicos;
     this.iniciativasFiltradas = this.iniciativasEstrategicas;
     this.indicadoresFiltrados = this.indicadoresEstrategicos;
   }
 
-  get camposAlinhamentoPreenchidos(): number {
+  get camposVinculoPreenchidos(): number {
     let count = 0;
-    if (this.projeto.programa) count++;
+    if (this.projeto.priorizadoPdtic !== undefined && this.projeto.priorizadoPdtic !== null) count++;
     if (this.projeto.objetivoEstrategico) count++;
     if (this.projeto.iniciativaEstrategica) count++;
     if (this.projeto.indicadorEstrategico) count++;
     return count;
   }
 
-  get totalCamposAlinhamento(): number {
+  get totalCamposVinculo(): number {
     return 4;
   }
 
@@ -150,41 +146,14 @@ export class CadastroProjeto {
     return lista.filter(item => item.toLowerCase().includes(termo));
   }
 
-  filtrarNomes(valor: string) {
-    this.nomesFiltrados = this.filtrar(valor, this.nomes);
-  }
-
-  filtrarSiglas(valor: string) {
-    this.siglasFiltradas = this.filtrar(valor, this.siglas);
-  }
-
-  filtrarAreas(valor: string) {
-    this.areasFiltradas = this.filtrar(valor, this.areas);
-  }
-
-  filtrarUnidades(valor: string) {
-    this.unidadesFiltradas = this.filtrar(valor, this.unidades);
-  }
-
-  filtrarPessoas(valor: string) {
-    this.pessoasFiltradas = this.filtrar(valor, this.pessoas);
-  }
-
-  filtrarProgramas(valor: string) {
-    this.programasFiltrados = this.filtrar(valor, this.programas);
-  }
-
-  filtrarObjetivos(valor: string) {
-    this.objetivosFiltrados = this.filtrar(valor, this.objetivosEstrategicos);
-  }
-
-  filtrarIniciativas(valor: string) {
-    this.iniciativasFiltradas = this.filtrar(valor, this.iniciativasEstrategicas);
-  }
-
-  filtrarIndicadores(valor: string) {
-    this.indicadoresFiltrados = this.filtrar(valor, this.indicadoresEstrategicos);
-  }
+  filtrarNomes(valor: string) { this.nomesFiltrados = this.filtrar(valor, this.nomes); }
+  filtrarSiglas(valor: string) { this.siglasFiltradas = this.filtrar(valor, this.siglas); }
+  filtrarAreas(valor: string) { this.areasFiltradas = this.filtrar(valor, this.areas); }
+  filtrarUnidades(valor: string) { this.unidadesFiltradas = this.filtrar(valor, this.unidades); }
+  filtrarPessoas(valor: string) { this.pessoasFiltradas = this.filtrar(valor, this.pessoas); }
+  filtrarObjetivos(valor: string) { this.objetivosFiltrados = this.filtrar(valor, this.objetivosEstrategicos); }
+  filtrarIniciativas(valor: string) { this.iniciativasFiltradas = this.filtrar(valor, this.iniciativasEstrategicas); }
+  filtrarIndicadores(valor: string) { this.indicadoresFiltrados = this.filtrar(valor, this.indicadoresEstrategicos); }
 
   preencherCampo(campo: keyof ProjetoRequest, valor: string) {
     (this.projeto as any)[campo] = valor;
@@ -197,6 +166,17 @@ export class CadastroProjeto {
   ajustarOrcamento(variacao: number) {
     const atual = Number(this.projeto.orcamentoEstimado) || 0;
     this.projeto.orcamentoEstimado = Math.max(0, atual + variacao);
+  }
+
+  adicionarFase() {
+    if (!this.novaFase.nome.trim()) return;
+    this.projeto.fases = this.projeto.fases || [];
+    this.projeto.fases.push({ ...this.novaFase });
+    this.novaFase = { nome: '', duracaoMeses: 1 };
+  }
+
+  removerFase(index: number) {
+    this.projeto.fases?.splice(index, 1);
   }
 
   avancar() {
@@ -221,7 +201,7 @@ export class CadastroProjeto {
     const erros: string[] = [];
     if (!this.projeto.nome?.trim()) erros.push('Nome do Projeto');
     if (!this.projeto.sigla?.trim()) erros.push('Sigla');
-    if (!this.projeto.area?.trim()) erros.push('Área Responsável');
+    if (!this.projeto.areaSolicitante?.trim()) erros.push('Área Solicitante');
     if (!this.projeto.descricao?.trim()) erros.push('Descrição');
     return erros;
   }
@@ -271,7 +251,7 @@ export class CadastroProjeto {
   }
 
   limpar() {
-    this.projeto = { nome: '', sigla: '' };
+    this.projeto = { nome: '', sigla: '', fases: [], priorizadoPdtic: false, inovador: false };
     this.etapaAtual = 0;
     this.mostrarResumo = false;
     this.etapasConcluidas = false;

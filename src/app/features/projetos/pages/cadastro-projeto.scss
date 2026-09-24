@@ -246,7 +246,7 @@ input[type="number"] {
 .budget-stepper {
     position: absolute;
     z-index: 2;
-    top: 30px;
+    top: 22px;
     right: 31px;
     display: flex;
     flex-direction: column;
@@ -259,7 +259,7 @@ input[type="number"] {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 19px;
+        width: 17px;
         height: 14px;
         padding: 0;
         border: 0;
@@ -280,6 +280,7 @@ input[type="number"] {
     }
 
     mat-icon {
+        display: block;
         width: 14px;
         height: 14px;
         font-size: 14px;
@@ -672,4 +673,207 @@ input[type="number"] {
     padding: 16px 32px;
     border-top: 1px solid #1E3A5F;
     flex-shrink: 0;
+}
+
+// Toggle switch
+
+.toggle-field {
+    margin-bottom: 16px;
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #CCD3DB;
+    font-weight: 500;
+
+    input[type="checkbox"] {
+        display: none;
+    }
+}
+
+.toggle-switch {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    background-color: #1E3A5F;
+    border-radius: 10px;
+    flex-shrink: 0;
+    transition: background-color 0.2s;
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        background-color: #6B7A8D;
+        border-radius: 50%;
+        transition: transform 0.2s, background-color 0.2s;
+    }
+}
+
+input[type="checkbox"]:checked + .toggle-switch {
+    background-color: #22C55E;
+
+    &::after {
+        transform: translateX(16px);
+        background-color: #FFFFFF;
+    }
+}
+
+// Fases do projeto
+
+.fases-section {
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 1px solid #1E3A5F;
+}
+
+.fases-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #CCD3DB;
+    margin-bottom: 12px;
+}
+
+.fases-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.fase-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #0D1A2D;
+    border: 1px solid #1A2E4A;
+    border-radius: 6px;
+    padding: 8px 12px;
+}
+
+.fase-numero {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: #1E3A5F;
+    color: #AAB4C0;
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.fase-nome {
+    flex: 1;
+    font-size: 14px;
+    color: #FFFFFF;
+}
+
+.fase-duracao {
+    font-size: 12px;
+    color: #AAB4C0;
+    white-space: nowrap;
+}
+
+.fase-remover {
+    background: none;
+    border: none;
+    color: #6B7A8D;
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+
+    mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+    }
+
+    &:hover {
+        color: #EF4444;
+    }
+}
+
+.fase-adicionar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.fase-input-nome {
+    flex: 1;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+}
+
+.fase-input-duracao {
+    width: 60px;
+    padding: 8px 8px !important;
+    font-size: 13px !important;
+    text-align: center;
+    appearance: textfield !important;
+    padding-right: 8px !important;
+}
+
+.fase-duracao-label {
+    font-size: 12px;
+    color: #AAB4C0;
+    white-space: nowrap;
+}
+
+.btn-add-fase {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: 1px solid #22C55E;
+    color: #22C55E;
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+
+    mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+    }
+
+    &:hover:not(:disabled) {
+        background-color: rgba(34, 197, 94, 0.1);
+    }
+
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+}
+
+// Resumo fases
+
+.resumo-fases {
+    margin-top: 12px;
+}
+
+.resumo-fase-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #FFFFFF;
+    padding: 4px 0;
 }

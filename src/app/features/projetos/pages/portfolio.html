@@ -60,7 +60,7 @@
                     <tr>
                         <td><span class="sigla-badge">{{ projeto.sigla }}</span></td>
                         <td class="col-nome">{{ projeto.nome }}</td>
-                        <td>{{ projeto.area || '—' }}</td>
+                        <td>{{ projeto.areaSolicitante || '—' }}</td>
                         <td><span class="status-badge" [class]="statusClasse(projeto.status)">{{ statusLabel(projeto.status) }}</span></td>
                         <td>{{ projeto.gerenteResponsavel || '—' }}</td>
                         <td>{{ formatarData(projeto.createdAt) }}</td>
