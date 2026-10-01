@@ -5,6 +5,11 @@ export interface FaseProjeto {
   duracaoMeses: number;
 }
 
+export type TipoProjeto = 'PRODUTO_TI' | 'SOLUCAO_TECNOLOGICA';
+export type FaseCiclo = 'NAO_CLASSIFICADA' | 'PLANEJAMENTO' | 'EXECUCAO' | 'ENCERRAMENTO';
+export type QuadrantePrazo = 'NO_PRAZO' | 'ATENCAO' | 'ATRASADO' | 'CONCLUIDO';
+export type QuadranteCusto = 'NO_CUSTO' | 'ATENCAO' | 'ESTOURADO' | 'CONCLUIDO';
+
 export interface ProjetoRequest {
   nome: string;
   sigla: string;
@@ -20,14 +25,24 @@ export interface ProjetoRequest {
   inovador?: boolean;
   justificativaInovador?: string;
   indicadorEstrategico?: string;
+  tipo?: TipoProjeto;
+  faseCiclo?: FaseCiclo;
   po?: string;
   scrumMaster?: string;
   patrocinador?: string;
   gerenteResponsavel?: string;
   dataInicioPrevista?: string;
   dataConclusaoPrevista?: string;
+  prazoQuadrante?: QuadrantePrazo;
+  custoQuadrante?: QuadranteCusto;
   orcamentoEstimado?: number;
+  custoRealizado?: number;
+  qtdProprios?: number;
+  qtdTerceiros?: number;
   fases?: FaseProjeto[];
+  atualizacoes?: string;
+  pontoAtencao?: string;
+  recomendacao?: string;
   status?: StatusProjeto;
 }
 
