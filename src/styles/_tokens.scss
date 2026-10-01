@@ -1,0 +1,144 @@
+@use 'sass:list';
+
+// Tokens de layout do BBTS Design System (design.md v0.3.0).
+// Nomes seguem o guia: spacing.*, border-radius.*, border-width.*, grid.*, typescale.*, shadow.*.
+// Cores e fonte NÃO estão aqui: dependem dos JSONs do design system (ver .notes/LACUNAS-DESIGN-SYSTEM.md).
+
+$spacing: (
+  'none': 0,
+  '3xs': 4px,
+  '2xs': 8px,
+  'xs': 12px,
+  'sm': 16px,
+  'md': 24px,
+  'lg': 32px,
+  'xl': 40px,
+  '2xl': 48px,
+  '3xl': 56px,
+  '4xl': 64px,
+  '5xl': 80px,
+  '6xl': 96px,
+  '7xl': 128px,
+  '8xl': 160px,
+  '9xl': 200px,
+  '10xl': 256px,
+);
+
+$border-radius: (
+  'none': 0,
+  'sm': 4px,
+  'md': 8px,
+  'lg': 16px,
+  'xl': 24px,
+  'pill': 999px,
+);
+
+$border-width: (
+  'none': 0,
+  'thin': 0.5px,
+  'medium': 1px,
+  'thick': 2px,
+  'heavy': 4px,
+);
+
+// role -> variante -> (tamanho, altura de linha, espaçamento entre letras)
+// A unidade do espaçamento entre letras não é dita no guia; assumido px.
+$typescale: (
+  'display': (
+    'large': (96px, 120px, 0),
+    'base': (64px, 80px, 0),
+    'small': (44px, 56px, 0),
+  ),
+  'title': (
+    'xx-large': (38px, 48px, 0),
+    'x-large': (34px, 48px, 0),
+    'large': (30px, 40px, 0),
+    'base': (26px, 32px, 0),
+    'small': (22px, 32px, 0),
+    'x-small': (20px, 24px, 0),
+  ),
+  'paragraph': (
+    'x-large': (22px, 32px, 0),
+    'large': (18px, 24px, 0),
+    'base': (16px, 24px, 0),
+    'small': (14px, 20px, 0),
+    'x-small': (12px, 16px, 0),
+  ),
+  'label': (
+    'large': (18px, 24px, 0),
+    'base': (16px, 24px, 0.15px),
+    'small': (14px, 16px, 0.15px),
+    'x-small': (12px, 16px, 0.15px),
+  ),
+  'caption': (
+    'large': (18px, 24px, 0.15px),
+    'base': (16px, 24px, 0.15px),
+    'small': (14px, 16px, 0.23px),
+    'x-small': (12px, 16px, 0.23px),
+  ),
+  'button': (
+    'large': (18px, 24px, 0.15px),
+    'base': (16px, 24px, 0.15px),
+    'small': (14px, 16px, 0.15px),
+  ),
+);
+
+:root {
+  @each $name, $value in $spacing {
+    --spacing-#{$name}: #{$value};
+  }
+
+  @each $name, $value in $border-radius {
+    --border-radius-#{$name}: #{$value};
+  }
+
+  @each $name, $value in $border-width {
+    --border-width-#{$name}: #{$value};
+  }
+
+  @each $role, $variants in $typescale {
+    @each $variant, $m in $variants {
+      --typescale-#{$role}-#{$variant}-size: #{list.nth($m, 1)};
+      --typescale-#{$role}-#{$variant}-line-height: #{list.nth($m, 2)};
+      --typescale-#{$role}-#{$variant}-letter-spacing: #{list.nth($m, 3)};
+    }
+  }
+
+  // Grid
+  --grid-base-unit: 8px;
+
+  --grid-fluid-sm-columns: 4;
+  --grid-fluid-sm-margin: 16px;
+  --grid-fluid-sm-gutter: 16px;
+  --grid-fluid-sm-breakpoint: 0px;
+
+  --grid-fluid-md-columns: 12;
+  --grid-fluid-md-margin: 24px;
+  --grid-fluid-md-gutter: 24px;
+  --grid-fluid-md-breakpoint: 768px;
+
+  --grid-fluid-lg-columns: 12;
+  --grid-fluid-lg-margin: 24px;
+  --grid-fluid-lg-gutter: 24px;
+  --grid-fluid-lg-breakpoint: 1280px;
+
+  --grid-fluid-xl-columns: 12;
+  --grid-fluid-xl-margin: 24px;
+  --grid-fluid-xl-gutter: 24px;
+  --grid-fluid-xl-breakpoint: 1568px;
+
+  // fixed-xl: o guia não define margem; não inventar.
+  --grid-fixed-xl-columns: 12;
+  --grid-fixed-xl-gutter: 24px;
+  --grid-fixed-xl-breakpoint: 1568px;
+  --grid-fixed-xl-container: 1440px;
+
+  // Efeitos: só geometria (offset-x offset-y blur spread). Sem cor no guia.
+  --shadow-hover-geometry: 0 0 8px 0;
+  --shadow-level-1-geometry: 0 4px 4px 0;
+  --shadow-level-2-geometry: 0 8px 24px 0;
+  --shadow-selected-geometry: 0 0 8px 2px;
+  --shadow-focus-inner-spread: 2px;
+  --shadow-focus-outer-spread: 4px;
+  --background-blur: 16px;
+}
