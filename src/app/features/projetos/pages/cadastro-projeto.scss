@@ -1,18 +1,18 @@
 .page-header {
     margin-bottom: 24px;
-    background-color: #0D1A2D;
+    background-color: var(--bg-card-inner);
     padding: 20px 24px;
     border-radius: 6px;
-    border: 1px solid #1A2E4A;
+    border: 1px solid var(--border-subtle);
 
     h1 {
         font-size: 22px;
         font-weight: 700;
-        color: #FFFFFF;
+        color: var(--text-primary);
     }
 
     p {
-        color: #AAB4C0;
+        color: var(--text-muted);
         font-size: 14px;
         margin-top: 6px;
     }
@@ -25,17 +25,15 @@
     align-items: start;
 }
 
-// Card
-
 .form-section {
-    background-color: #111E33;
-    border: 1px solid #1E3A5F;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-main);
     border-radius: 6px;
     padding: 24px;
     transition: border-color 0.3s;
 
     &.concluded {
-        border-color: #22C55E;
+        border-color: var(--accent-green);
     }
 }
 
@@ -43,10 +41,10 @@
     display: flex;
     flex-direction: column;
     margin-bottom: 20px;
-    background-color: #0D1A2D;
+    background-color: var(--bg-card-inner);
     padding: 16px;
     border-radius: 6px;
-    border: 1px solid #1A2E4A;
+    border: 1px solid var(--border-subtle);
 }
 
 .section-header-top {
@@ -67,24 +65,22 @@
 .section-header h2 {
     font-size: 18px;
     font-weight: 600;
-    color: #FFFFFF;
+    color: var(--text-primary);
     width: 100%;
     padding-bottom: 14px;
-    border-bottom: 1px solid #1E3A5F;
+    border-bottom: 1px solid var(--border-main);
     margin-bottom: 12px;
 }
 
 .section-subtitle {
     font-size: 14px;
-    color: #AAB4C0;
+    color: var(--text-muted);
     margin-top: 0;
 }
 
-// Progress badge no header do card direito
-
 .progress-badge {
-    background-color: #1E3A5F;
-    color: #AAB4C0;
+    background-color: var(--border-main);
+    color: var(--text-muted);
     font-size: 12px;
     font-weight: 600;
     padding: 4px 10px;
@@ -94,23 +90,21 @@
     margin-top: 2px;
 
     &.complete {
-        background-color: #22C55E;
+        background-color: var(--accent-green);
         color: #FFFFFF;
     }
 }
-
-// Stepper dentro do card
 
 .stepper {
     display: flex;
     align-items: center;
     margin-bottom: 24px;
     padding-bottom: 20px;
-    border-bottom: 1px solid #1E3A5F;
+    border-bottom: 1px solid var(--border-main);
     position: sticky;
     top: 0;
     z-index: 5;
-    background-color: #111E33;
+    background-color: var(--bg-card);
 }
 
 .step {
@@ -130,49 +124,47 @@
     justify-content: center;
     font-size: 12px;
     font-weight: 600;
-    background-color: #1E3A5F;
-    color: #8899AA;
+    background-color: var(--border-main);
+    color: var(--text-muted);
     flex-shrink: 0;
 }
 
 .step.active .step-number {
-    background-color: #FACC15;
+    background-color: var(--accent-yellow);
     color: #0A1628;
 }
 
 .step.done .step-number {
-    background-color: #22C55E;
+    background-color: var(--accent-green);
     color: #FFFFFF;
 }
 
 .step-label {
     font-size: 12px;
-    color: #6B7A8D;
+    color: var(--text-faint);
 }
 
 .step.active .step-label {
-    color: #FFFFFF;
+    color: var(--text-primary);
     font-weight: 600;
 }
 
 .step.done .step-label {
-    color: #e3e3e3;
+    color: var(--text-secondary);
 }
 
 .step-line {
     flex: 1;
     height: 2px;
-    background-color: #1E3A5F;
+    background-color: var(--border-main);
     margin: 0 8px;
     min-width: 12px;
     border-radius: 1px;
 }
 
 .step-line.done {
-    background-color: #22C55E;
+    background-color: var(--accent-green);
 }
-
-// Campos
 
 .field {
     margin-bottom: 16px;
@@ -191,17 +183,17 @@
 label {
     display: block;
     font-size: 13px;
-    color: #CCD3DB;
+    color: var(--text-secondary);
     margin-bottom: 6px;
     font-weight: 500;
 }
 
 .required {
-    color: #FACC15;
+    color: var(--accent-yellow);
 }
 
 input[type="date"] {
-    color-scheme: dark;
+    color-scheme: inherit;
 }
 
 input,
@@ -209,10 +201,10 @@ textarea {
     width: 100%;
     box-sizing: border-box;
     padding: 10px 34px 10px 12px;
-    background-color: #0A1628;
-    border: 1px solid #1E3A5F;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-main);
     border-radius: 6px;
-    color: #FFFFFF;
+    color: var(--text-primary);
     font-size: 14px;
     font-family: 'Inter', sans-serif;
     outline: none;
@@ -220,15 +212,48 @@ textarea {
     transition: border-color 0.2s;
 
     &::placeholder {
-        color: #6B7A8D;
+        color: var(--text-faint);
     }
 
     &:focus {
-        border-color: #3B82F6;
+        border-color: var(--accent-blue);
     }
 
     &.filled {
-        border-color: #2A4A6F;
+        border-color: var(--border-main);
+    }
+}
+
+select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-main);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236B7A8D' d='M1.41 0L6 4.58 10.59 0 12 1.41l-6 6-6-6z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+
+    &:focus {
+        border-color: var(--accent-blue);
+    }
+
+    &.filled {
+        border-color: var(--border-main);
+    }
+
+    option {
+        background-color: var(--bg-card);
+        color: var(--text-primary);
     }
 }
 
@@ -251,9 +276,9 @@ input[type="number"] {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border: 1px solid #294868;
+    border: 1px solid var(--border-main);
     border-radius: 4px;
-    background-color: #101e32;
+    background-color: var(--bg-card);
 
     button {
         display: flex;
@@ -264,17 +289,17 @@ input[type="number"] {
         padding: 0;
         border: 0;
         background: transparent;
-        color: #9DAEC2;
+        color: var(--text-muted);
         cursor: pointer;
 
         &:first-child {
-            border-bottom: 1px solid #294868;
+            border-bottom: 1px solid var(--border-main);
         }
 
         &:hover,
         &:focus-visible {
-            background-color: #1E3A5F;
-            color: #FFFFFF;
+            background-color: var(--border-main);
+            color: var(--text-primary);
             outline: none;
         }
     }
@@ -299,7 +324,7 @@ input[type="number"] {
     border: 0;
     border-radius: 50%;
     background: transparent;
-    color: rgba(170, 180, 192, 0.5);
+    color: var(--text-faint);
     font-size: 19px;
     line-height: 20px;
     cursor: pointer;
@@ -307,17 +332,15 @@ input[type="number"] {
 
     &:hover,
     &:focus-visible {
-        background-color: rgba(170, 180, 192, 0.12);
-        color: #CCD3DB;
+        background-color: var(--row-hover);
+        color: var(--text-secondary);
         outline: none;
     }
 }
 
-// Erros de validação
-
 .validacao-erros {
     background-color: rgba(239, 68, 68, 0.1);
-    border: 1px solid #EF4444;
+    border: 1px solid var(--accent-red);
     border-radius: 6px;
     padding: 12px 16px;
     margin-top: 8px;
@@ -325,7 +348,7 @@ input[type="number"] {
     .validacao-titulo {
         font-size: 13px;
         font-weight: 600;
-        color: #EF4444;
+        color: var(--accent-red);
     }
 
     ul {
@@ -340,8 +363,6 @@ input[type="number"] {
     }
 }
 
-// Sugestões clicáveis para textareas
-
 .sugestoes {
     display: flex;
     flex-wrap: wrap;
@@ -350,9 +371,9 @@ input[type="number"] {
 }
 
 .sugestao-chip {
-    background-color: #1E3A5F;
+    background-color: var(--border-main);
     border: none;
-    color: #AAB4C0;
+    color: var(--text-muted);
     font-size: 11px;
     font-family: 'Inter', sans-serif;
     padding: 4px 10px;
@@ -361,39 +382,37 @@ input[type="number"] {
     transition: background-color 0.15s, color 0.15s;
 
     &:hover {
-        background-color: #2A4A6F;
-        color: #FFFFFF;
+        background-color: var(--nav-active-bg);
+        color: var(--text-primary);
     }
 }
-
-// Navegação dentro do card
 
 .nav-buttons {
     display: flex;
     justify-content: space-between;
     margin-top: 8px;
     padding-top: 16px;
-    border-top: 1px solid #1E3A5F;
+    border-top: 1px solid var(--border-main);
 }
 
 .btn-nav-back {
     background: none;
     border: none;
-    color: #AAB4C0;
+    color: var(--text-muted);
     font-size: 13px;
     cursor: pointer;
     font-family: 'Inter', sans-serif;
     padding: 6px 0;
 
     &:hover {
-        color: #FFFFFF;
+        color: var(--text-primary);
     }
 }
 
 .btn-nav-next {
     background: none;
-    border: 1px solid #1E3A5F;
-    color: #e3e3e3;
+    border: 1px solid var(--border-main);
+    color: var(--text-secondary);
     font-size: 13px;
     padding: 6px 16px;
     border-radius: 6px;
@@ -401,13 +420,13 @@ input[type="number"] {
     font-family: 'Inter', sans-serif;
 
     &:hover {
-        border-color: #3B82F6;
-        color: #FFFFFF;
+        border-color: var(--accent-blue);
+        color: var(--text-primary);
     }
 }
 
 .btn-nav-done {
-    background-color: #22C55E;
+    background-color: var(--accent-green);
     border: none;
     color: #FFFFFF;
     font-size: 13px;
@@ -418,21 +437,19 @@ input[type="number"] {
     font-weight: 600;
 
     &:hover {
-        background-color: #16A34A;
+        background-color: var(--accent-green-hover);
     }
 }
-
-// Rodapé do card direito
 
 .card-footer {
     margin-top: 8px;
     padding-top: 16px;
-    border-top: 1px solid #1E3A5F;
+    border-top: 1px solid var(--border-main);
 }
 
 .progress-bar-track {
     height: 4px;
-    background-color: #1E3A5F;
+    background-color: var(--border-main);
     border-radius: 2px;
     overflow: hidden;
     margin-bottom: 8px;
@@ -440,17 +457,15 @@ input[type="number"] {
 
 .progress-bar-fill {
     height: 100%;
-    background-color: #22C55E;
+    background-color: var(--accent-green);
     border-radius: 2px;
     transition: width 0.3s ease;
 }
 
 .progress-text {
     font-size: 12px;
-    color: #6B7A8D;
+    color: var(--text-faint);
 }
-
-// Barra de ações inferior
 
 .action-bar {
     display: flex;
@@ -458,8 +473,8 @@ input[type="number"] {
     align-items: center;
     margin-top: 24px;
     padding: 16px 24px;
-    background-color: #111E33;
-    border: 1px solid #1E3A5F;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-main);
     border-radius: 6px;
     position: sticky;
     bottom: 0;
@@ -475,39 +490,23 @@ input[type="number"] {
 
 .action-hint {
     font-size: 13px;
-    color: #6B7A8D;
+    color: var(--text-faint);
     font-style: italic;
-}
-
-.btn-back {
-    background: none;
-    border: none;
-    color: #AAB4C0;
-    font-size: 14px;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    padding: 8px 0;
-
-    &:hover {
-        color: #FFFFFF;
-    }
 }
 
 .btn-text {
     background: none;
     border: none;
-    color: #AAB4C0;
+    color: var(--text-muted);
     font-size: 14px;
     cursor: pointer;
     font-family: 'Inter', sans-serif;
     padding: 8px 16px;
 
     &:hover {
-        color: #FFFFFF;
+        color: var(--text-primary);
     }
 }
-
-// Coluna direita
 
 .right-column {
     display: flex;
@@ -517,7 +516,7 @@ input[type="number"] {
 
 .btn-primary {
     padding: 10px 20px;
-    background-color: #FACC15;
+    background-color: var(--accent-yellow);
     color: #0A1628;
     border: none;
     border-radius: 6px;
@@ -528,7 +527,7 @@ input[type="number"] {
     transition: background-color 0.2s, opacity 0.2s;
 
     &:hover {
-        background-color: #EAB308;
+        background-color: var(--accent-yellow-hover);
     }
 
     &.disabled {
@@ -536,7 +535,7 @@ input[type="number"] {
         cursor: not-allowed;
 
         &:hover {
-            background-color: #FACC15;
+            background-color: var(--accent-yellow);
         }
     }
 }
@@ -544,8 +543,8 @@ input[type="number"] {
 .btn-secondary {
     padding: 10px 20px;
     background-color: transparent;
-    color: #FACC15;
-    border: 1px solid #FACC15;
+    color: var(--accent-yellow);
+    border: 1px solid var(--accent-yellow);
     border-radius: 6px;
     font-size: 14px;
     font-weight: 600;
@@ -565,7 +564,7 @@ input[type="number"] {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: var(--overlay-bg);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -573,8 +572,8 @@ input[type="number"] {
 }
 
 .resumo-card {
-    background-color: #111E33;
-    border: 1px solid #1E3A5F;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-main);
     border-radius: 10px;
     width: 700px;
     max-height: 80vh;
@@ -585,17 +584,17 @@ input[type="number"] {
     > h2 {
         font-size: 20px;
         font-weight: 700;
-        color: #FFFFFF;
+        color: var(--text-primary);
         margin-bottom: 4px;
         padding: 28px 32px 0;
     }
 
     > .resumo-subtitle {
         font-size: 14px;
-        color: #AAB4C0;
+        color: var(--text-muted);
         margin-bottom: 0;
         padding: 0 32px 20px;
-        border-bottom: 1px solid #1E3A5F;
+        border-bottom: 1px solid var(--border-main);
     }
 }
 
@@ -613,29 +612,29 @@ input[type="number"] {
     }
 
     &::-webkit-scrollbar-thumb {
-        background-color: #1E3A5F;
+        background-color: var(--border-main);
         border-radius: 3px;
 
         &:hover {
-            background-color: #2A4A6F;
+            background-color: var(--scrollbar-thumb-hover);
         }
     }
 }
 
 .resumo-secao {
     margin-bottom: 20px;
-    background-color: #0D1A2D;
-    border: 1px solid #1A2E4A;
+    background-color: var(--bg-card-inner);
+    border: 1px solid var(--border-subtle);
     border-radius: 6px;
     padding: 16px;
 
     h3 {
         font-size: 15px;
         font-weight: 600;
-        color: #FACC15;
+        color: var(--accent-yellow);
         margin-bottom: 12px;
         padding-bottom: 8px;
-        border-bottom: 1px solid #1E3A5F;
+        border-bottom: 1px solid var(--border-main);
     }
 }
 
@@ -657,13 +656,13 @@ input[type="number"] {
 
 .resumo-label {
     font-size: 12px;
-    color: #AAB4C0;
+    color: var(--text-muted);
     font-weight: 500;
 }
 
 .resumo-valor {
     font-size: 14px;
-    color: #FFFFFF;
+    color: var(--text-primary);
 }
 
 .resumo-acoes {
@@ -671,7 +670,7 @@ input[type="number"] {
     justify-content: flex-end;
     gap: 12px;
     padding: 16px 32px;
-    border-top: 1px solid #1E3A5F;
+    border-top: 1px solid var(--border-main);
     flex-shrink: 0;
 }
 
@@ -687,7 +686,7 @@ input[type="number"] {
     gap: 10px;
     cursor: pointer;
     font-size: 14px;
-    color: #CCD3DB;
+    color: var(--text-secondary);
     font-weight: 500;
 
     input[type="checkbox"] {
@@ -699,7 +698,7 @@ input[type="number"] {
     position: relative;
     width: 36px;
     height: 20px;
-    background-color: #1E3A5F;
+    background-color: var(--toggle-bg);
     border-radius: 10px;
     flex-shrink: 0;
     transition: background-color 0.2s;
@@ -711,14 +710,14 @@ input[type="number"] {
         left: 2px;
         width: 16px;
         height: 16px;
-        background-color: #6B7A8D;
+        background-color: var(--toggle-knob);
         border-radius: 50%;
         transition: transform 0.2s, background-color 0.2s;
     }
 }
 
 input[type="checkbox"]:checked + .toggle-switch {
-    background-color: #22C55E;
+    background-color: var(--accent-green);
 
     &::after {
         transform: translateX(16px);
@@ -731,14 +730,14 @@ input[type="checkbox"]:checked + .toggle-switch {
 .fases-section {
     margin-top: 8px;
     padding-top: 16px;
-    border-top: 1px solid #1E3A5F;
+    border-top: 1px solid var(--border-main);
 }
 
 .fases-label {
     display: block;
     font-size: 14px;
     font-weight: 600;
-    color: #CCD3DB;
+    color: var(--text-secondary);
     margin-bottom: 12px;
 }
 
@@ -753,8 +752,8 @@ input[type="checkbox"]:checked + .toggle-switch {
     display: flex;
     align-items: center;
     gap: 10px;
-    background-color: #0D1A2D;
-    border: 1px solid #1A2E4A;
+    background-color: var(--bg-card-inner);
+    border: 1px solid var(--border-subtle);
     border-radius: 6px;
     padding: 8px 12px;
 }
@@ -763,8 +762,8 @@ input[type="checkbox"]:checked + .toggle-switch {
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background-color: #1E3A5F;
-    color: #AAB4C0;
+    background-color: var(--border-main);
+    color: var(--text-muted);
     font-size: 11px;
     font-weight: 600;
     display: flex;
@@ -776,19 +775,19 @@ input[type="checkbox"]:checked + .toggle-switch {
 .fase-nome {
     flex: 1;
     font-size: 14px;
-    color: #FFFFFF;
+    color: var(--text-primary);
 }
 
 .fase-duracao {
     font-size: 12px;
-    color: #AAB4C0;
+    color: var(--text-muted);
     white-space: nowrap;
 }
 
 .fase-remover {
     background: none;
     border: none;
-    color: #6B7A8D;
+    color: var(--text-faint);
     cursor: pointer;
     padding: 2px;
     display: flex;
@@ -801,7 +800,7 @@ input[type="checkbox"]:checked + .toggle-switch {
     }
 
     &:hover {
-        color: #EF4444;
+        color: var(--accent-red);
     }
 }
 
@@ -828,7 +827,7 @@ input[type="checkbox"]:checked + .toggle-switch {
 
 .fase-duracao-label {
     font-size: 12px;
-    color: #AAB4C0;
+    color: var(--text-muted);
     white-space: nowrap;
 }
 
@@ -837,8 +836,8 @@ input[type="checkbox"]:checked + .toggle-switch {
     align-items: center;
     gap: 4px;
     background: none;
-    border: 1px solid #22C55E;
-    color: #22C55E;
+    border: 1px solid var(--accent-green);
+    color: var(--accent-green);
     font-size: 12px;
     font-family: 'Inter', sans-serif;
     font-weight: 600;
@@ -863,8 +862,6 @@ input[type="checkbox"]:checked + .toggle-switch {
     }
 }
 
-// Resumo fases
-
 .resumo-fases {
     margin-top: 12px;
 }
@@ -874,6 +871,6 @@ input[type="checkbox"]:checked + .toggle-switch {
     align-items: center;
     gap: 8px;
     font-size: 14px;
-    color: #FFFFFF;
+    color: var(--text-primary);
     padding: 4px 0;
 }

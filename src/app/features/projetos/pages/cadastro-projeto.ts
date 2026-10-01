@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { ProjetoRequest, FaseProjeto } from '../models/projeto';
+import { ProjetoRequest, FaseProjeto, TipoProjeto, FaseCiclo, QuadrantePrazo, QuadranteCusto } from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
 
 @Component({
@@ -102,6 +102,32 @@ export class CadastroProjeto {
     'Índice de satisfação dos usuários de TIC',
   ];
   orcamentosMock = [250000, 500000, 1000000, 2500000];
+
+  tiposProjeto: { valor: TipoProjeto; label: string }[] = [
+    { valor: 'PRODUTO_TI', label: 'Produto TI' },
+    { valor: 'SOLUCAO_TECNOLOGICA', label: 'Solução Tecnológica' },
+  ];
+
+  fasesCiclo: { valor: FaseCiclo; label: string }[] = [
+    { valor: 'NAO_CLASSIFICADA', label: 'Não classificada' },
+    { valor: 'PLANEJAMENTO', label: 'Planejamento' },
+    { valor: 'EXECUCAO', label: 'Execução' },
+    { valor: 'ENCERRAMENTO', label: 'Encerramento' },
+  ];
+
+  quadrantesPrazo: { valor: QuadrantePrazo; label: string }[] = [
+    { valor: 'NO_PRAZO', label: 'No prazo' },
+    { valor: 'ATENCAO', label: 'Atenção' },
+    { valor: 'ATRASADO', label: 'Atrasado' },
+    { valor: 'CONCLUIDO', label: 'Concluído' },
+  ];
+
+  quadrantesCusto: { valor: QuadranteCusto; label: string }[] = [
+    { valor: 'NO_CUSTO', label: 'No custo' },
+    { valor: 'ATENCAO', label: 'Atenção' },
+    { valor: 'ESTOURADO', label: 'Estourado' },
+    { valor: 'CONCLUIDO', label: 'Concluído' },
+  ];
 
   pessoasFiltradas: string[] = [];
   objetivosFiltrados: string[] = [];
@@ -248,6 +274,22 @@ export class CadastroProjeto {
 
   submeter() {
     this.abrirResumo();
+  }
+
+  tipoLabel(tipo?: TipoProjeto): string {
+    return this.tiposProjeto.find(t => t.valor === tipo)?.label || '—';
+  }
+
+  faseCicloLabel(fase?: FaseCiclo): string {
+    return this.fasesCiclo.find(f => f.valor === fase)?.label || '—';
+  }
+
+  prazoQuadranteLabel(q?: QuadrantePrazo): string {
+    return this.quadrantesPrazo.find(p => p.valor === q)?.label || '—';
+  }
+
+  custoQuadranteLabel(q?: QuadranteCusto): string {
+    return this.quadrantesCusto.find(c => c.valor === q)?.label || '—';
   }
 
   limpar() {

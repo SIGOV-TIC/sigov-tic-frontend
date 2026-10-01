@@ -1,18 +1,18 @@
 .page-header {
     margin-bottom: 20px;
-    background-color: #0D1A2D;
+    background-color: var(--bg-card-inner);
     padding: 20px 24px;
     border-radius: 6px;
-    border: 1px solid #1A2E4A;
+    border: 1px solid var(--border-subtle);
 
     h1 {
         font-size: 22px;
         font-weight: 700;
-        color: #FFFFFF;
+        color: var(--text-primary);
     }
 
     p {
-        color: #AAB4C0;
+        color: var(--text-muted);
         font-size: 14px;
         margin-top: 6px;
     }
@@ -29,7 +29,7 @@
     align-items: center;
     gap: 6px;
     padding: 9px 18px;
-    background-color: #FACC15;
+    background-color: var(--accent-yellow);
     color: #0A1628;
     border: none;
     border-radius: 6px;
@@ -41,7 +41,7 @@
     transition: background-color 0.2s;
 
     &:hover {
-        background-color: #EAB308;
+        background-color: var(--accent-yellow-hover);
     }
 
     .btn-novo-icon {
@@ -62,19 +62,19 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    background-color: #111E33;
-    border: 1px solid #1E3A5F;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-main);
     border-radius: 6px;
     padding: 8px 14px;
     width: 340px;
     transition: border-color 0.2s;
 
     &:focus-within {
-        border-color: #3B82F6;
+        border-color: var(--accent-blue);
     }
 
     .search-icon {
-        color: #556677;
+        color: var(--text-dim);
         font-size: 20px;
         width: 20px;
         height: 20px;
@@ -83,55 +83,86 @@
     input {
         background: none;
         border: none;
-        color: #FFFFFF;
+        color: var(--text-primary);
         font-size: 14px;
         font-family: 'Inter', sans-serif;
         outline: none;
         flex: 1;
 
         &::placeholder {
-            color: #6B7A8D;
+            color: var(--text-faint);
         }
     }
 }
 
 .total-count {
     font-size: 13px;
-    color: #6B7A8D;
+    color: var(--text-faint);
 }
 
-// Tabela
-
 .tabela-container {
-    background-color: #111E33;
-    border: 1px solid #1E3A5F;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-main);
     border-radius: 6px;
-    overflow: hidden;
+    overflow-x: auto;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 900px;
 }
 
 thead {
-    background-color: #0D1A2D;
+    .header-group {
+        th {
+            text-align: center;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            border-bottom: 2px solid var(--border-main);
+        }
 
-    th {
-        text-align: left;
-        padding: 12px 16px;
-        font-size: 12px;
-        font-weight: 600;
-        color: #8899AA;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        border-bottom: 1px solid #1E3A5F;
+        .group-descricao {
+            background-color: var(--accent-blue);
+            color: #FFFFFF;
+            border-right: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .group-prazo {
+            background-color: var(--accent-blue);
+            color: #FFFFFF;
+            border-right: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .group-custo {
+            background-color: var(--accent-blue);
+            color: #FFFFFF;
+        }
+    }
+
+    .header-columns {
+        background-color: var(--bg-card-inner);
+
+        th {
+            text-align: left;
+            padding: 10px 14px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            border-bottom: 1px solid var(--border-main);
+            white-space: nowrap;
+        }
     }
 }
 
 tbody {
     tr {
-        border-bottom: 1px solid #1A2E4A;
+        border-bottom: 1px solid var(--border-subtle);
         transition: background-color 0.15s;
 
         &:last-child {
@@ -139,32 +170,71 @@ tbody {
         }
 
         &:hover {
-            background-color: rgba(30, 58, 95, 0.3);
+            background-color: var(--row-hover);
             cursor: pointer;
         }
     }
 
     td {
-        padding: 14px 16px;
-        font-size: 14px;
-        color: #CCD3DB;
+        padding: 12px 14px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        white-space: nowrap;
     }
 }
 
-.sigla-badge {
-    display: inline-block;
-    background-color: #1E3A5F;
-    color: #FFFFFF;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 4px;
-    letter-spacing: 0.3px;
+.col-nome {
+    color: var(--text-primary);
+    font-weight: 500;
 }
 
-.col-nome {
-    color: #FFFFFF;
-    font-weight: 500;
+.col-center {
+    text-align: center;
+}
+
+.valor-vazio {
+    color: var(--text-faint);
+}
+
+.progress-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.progress-mini-track {
+    width: 50px;
+    height: 6px;
+    background-color: var(--border-main);
+    border-radius: 3px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.progress-mini-fill {
+    height: 100%;
+    background-color: var(--accent-blue);
+    border-radius: 3px;
+    transition: width 0.3s;
+}
+
+.progress-mini-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+tfoot {
+    .row-total {
+        background-color: var(--accent-blue);
+        border-top: 2px solid var(--border-main);
+
+        td {
+            padding: 12px 14px;
+            font-size: 13px;
+            color: #FFFFFF;
+        }
+    }
 }
 
 .status-badge {
@@ -177,26 +247,24 @@ tbody {
 }
 
 .status-rascunho {
-    background-color: rgba(107, 122, 141, 0.2);
-    color: #8899AA;
+    background-color: var(--badge-rascunho-bg);
+    color: var(--badge-rascunho-text);
 }
 
 .status-aguardando {
-    background-color: rgba(250, 204, 21, 0.15);
-    color: #FACC15;
+    background-color: var(--badge-aguardando-bg);
+    color: var(--badge-aguardando-text);
 }
 
 .status-aprovado {
-    background-color: rgba(34, 197, 94, 0.15);
-    color: #22C55E;
+    background-color: var(--badge-aprovado-bg);
+    color: var(--badge-aprovado-text);
 }
 
 .status-rejeitado {
-    background-color: rgba(239, 68, 68, 0.15);
-    color: #EF4444;
+    background-color: var(--badge-rejeitado-bg);
+    color: var(--badge-rejeitado-text);
 }
-
-// Paginação
 
 .paginacao {
     display: flex;
@@ -209,8 +277,8 @@ tbody {
 
 .btn-pag {
     background: none;
-    border: 1px solid #1E3A5F;
-    color: #AAB4C0;
+    border: 1px solid var(--border-main);
+    color: var(--text-muted);
     font-size: 13px;
     padding: 6px 14px;
     border-radius: 6px;
@@ -219,8 +287,8 @@ tbody {
     transition: border-color 0.2s, color 0.2s;
 
     &:hover:not(:disabled) {
-        border-color: #3B82F6;
-        color: #FFFFFF;
+        border-color: var(--accent-blue);
+        color: var(--text-primary);
     }
 
     &:disabled {
@@ -231,10 +299,8 @@ tbody {
 
 .pag-info {
     font-size: 13px;
-    color: #6B7A8D;
+    color: var(--text-faint);
 }
-
-// Estados vazios
 
 .estado-vazio {
     display: flex;
@@ -242,26 +308,26 @@ tbody {
     align-items: center;
     justify-content: center;
     padding: 60px 24px;
-    background-color: #111E33;
-    border: 1px solid #1E3A5F;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-main);
     border-radius: 6px;
 
     .estado-icon {
         font-size: 48px;
         width: 48px;
         height: 48px;
-        color: #2A4A6F;
+        color: var(--border-main);
         margin-bottom: 12px;
     }
 
     p {
         font-size: 15px;
-        color: #6B7A8D;
+        color: var(--text-faint);
     }
 
     &.estado-erro {
         .estado-icon {
-            color: #EF4444;
+            color: var(--accent-red);
         }
 
         p {
@@ -273,8 +339,8 @@ tbody {
 .btn-tentar {
     margin-top: 12px;
     background: none;
-    border: 1px solid #1E3A5F;
-    color: #AAB4C0;
+    border: 1px solid var(--border-main);
+    color: var(--text-muted);
     font-size: 13px;
     padding: 6px 16px;
     border-radius: 6px;
@@ -282,14 +348,14 @@ tbody {
     font-family: 'Inter', sans-serif;
 
     &:hover {
-        border-color: #3B82F6;
-        color: #FFFFFF;
+        border-color: var(--accent-blue);
+        color: var(--text-primary);
     }
 }
 
 .btn-novo-inline {
     margin-top: 12px;
-    color: #FACC15;
+    color: var(--accent-yellow);
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;

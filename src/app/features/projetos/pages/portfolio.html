@@ -46,27 +46,61 @@
     <div class="tabela-container">
         <table>
             <thead>
-                <tr>
-                    <th>Sigla</th>
-                    <th>Nome</th>
+                <tr class="header-group">
+                    <th colspan="3" class="group-descricao">Descrição</th>
+                    <th colspan="3" class="group-prazo">Prazo</th>
+                    <th colspan="4" class="group-custo">Custo</th>
+                </tr>
+                <tr class="header-columns">
+                    <th>Projeto</th>
                     <th>Área</th>
-                    <th>Status</th>
-                    <th>Responsável</th>
-                    <th>Criado em</th>
+                    <th>PO</th>
+                    <th>Início</th>
+                    <th>Término</th>
+                    <th>% Decorrido</th>
+                    <th>Planejado (R$) mil</th>
+                    <th>Realizado (R$) mil</th>
+                    <th>Alocação Próprios</th>
+                    <th>Alocação Terceirizados</th>
                 </tr>
             </thead>
             <tbody>
                 @for (projeto of projetosFiltrados; track projeto.id) {
-                    <tr>
-                        <td><span class="sigla-badge">{{ projeto.sigla }}</span></td>
+                    <tr class="row-link" [routerLink]="['/projeto', projeto.id]">
                         <td class="col-nome">{{ projeto.nome }}</td>
                         <td>{{ projeto.areaSolicitante || '—' }}</td>
-                        <td><span class="status-badge" [class]="statusClasse(projeto.status)">{{ statusLabel(projeto.status) }}</span></td>
-                        <td>{{ projeto.gerenteResponsavel || '—' }}</td>
-                        <td>{{ formatarData(projeto.createdAt) }}</td>
+                        <td>{{ projeto.po || '—' }}</td>
+                        <td>{{ formatarData(projeto.dataInicioPrevista) }}</td>
+                        <td>{{ formatarData(projeto.dataConclusaoPrevista) }}</td>
+                        <td>
+                            @if (percentualDecorrido(projeto) !== null) {
+                                <div class="progress-cell">
+                                    <div class="progress-mini-track">
+                                        <div class="progress-mini-fill" [style.width.%]="percentualDecorrido(projeto)"></div>
+                                    </div>
+                                    <span class="progress-mini-label">{{ percentualDecorrido(projeto) }}%</span>
+                                </div>
+                            } @else {
+                                <span class="valor-vazio">—</span>
+                            }
+                        </td>
+                        <td>{{ formatarMoeda(projeto.orcamentoEstimado) }}</td>
+                        <td>{{ formatarMoeda(projeto.custoRealizado) }}</td>
+                        <td class="col-center">{{ projeto.qtdProprios || '—' }}</td>
+                        <td class="col-center">{{ projeto.qtdTerceiros || '—' }}</td>
                     </tr>
                 }
             </tbody>
+            <tfoot>
+                <tr class="row-total">
+                    <td colspan="3"><strong>TOTAL</strong></td>
+                    <td colspan="3" class="col-center"><strong>—</strong></td>
+                    <td><strong>{{ formatarMoeda(totalOrcamento) }}</strong></td>
+                    <td><strong>{{ formatarMoeda(totalRealizado) }}</strong></td>
+                    <td class="col-center"><strong>{{ totalProprios || '—' }}</strong></td>
+                    <td class="col-center"><strong>{{ totalTerceiros || '—' }}</strong></td>
+                </tr>
+            </tfoot>
         </table>
     </div>
 

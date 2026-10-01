@@ -8,8 +8,12 @@
 
         <nav class="nav-section">
             <span class="nav-label">Principal</span>
+            <a class="nav-item" routerLink="/dashboard" routerLinkActive="active">
+                <mat-icon class="nav-icon">space_dashboard</mat-icon>
+                Dashboard
+            </a>
             <a class="nav-item" routerLink="/portfolio" routerLinkActive="active">
-                <mat-icon class="nav-icon">dashboard</mat-icon>
+                <mat-icon class="nav-icon">folder_open</mat-icon>
                 Portfólio
             </a>
             <a class="nav-item" routerLink="/cadastro" routerLinkActive="active">
@@ -55,6 +59,9 @@
                         <mat-icon class="search-icon">search</mat-icon>
                         <input type="text" placeholder="Buscar no sistema..." readonly>
                     </div>
+                    <button class="theme-toggle" (click)="alternarTema()" [title]="temaClaro ? 'Modo escuro' : 'Modo claro'">
+                        <mat-icon>{{ temaClaro ? 'dark_mode' : 'light_mode' }}</mat-icon>
+                    </button>
                     <button class="header-notification">
                         <mat-icon>notifications_none</mat-icon>
                     </button>
@@ -72,6 +79,14 @@
                     <a class="breadcrumb-link" routerLink="/portfolio">Portfólio</a>
                     <span class="breadcrumb-separator">›</span>
                     <span class="breadcrumb-current">Novo Projeto</span>
+                } @else if (estaNoProjeto) {
+                    <a class="breadcrumb-link" routerLink="/portfolio">Portfólio</a>
+                    <span class="breadcrumb-separator">›</span>
+                    <span class="breadcrumb-current">Projeto</span>
+                } @else if (estaNoDashboard) {
+                    <span class="breadcrumb-current">Dashboard</span>
+                } @else if (estaNoPortfolio) {
+                    <span class="breadcrumb-current">Portfólio</span>
                 } @else {
                     <span class="breadcrumb-current">Portfólio</span>
                 }

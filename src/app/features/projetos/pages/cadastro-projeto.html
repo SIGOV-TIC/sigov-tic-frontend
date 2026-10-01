@@ -91,6 +91,26 @@
                     }
                 </mat-autocomplete>
             </div>
+            <div class="field-row">
+                <div class="field">
+                    <label for="tipo">Tipo</label>
+                    <select id="tipo" [(ngModel)]="projeto.tipo" name="tipo" [class.filled]="projeto.tipo">
+                        <option value="" disabled selected>Selecione...</option>
+                        @for (t of tiposProjeto; track t.valor) {
+                            <option [value]="t.valor">{{ t.label }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="faseCiclo">Fase do Ciclo</label>
+                    <select id="faseCiclo" [(ngModel)]="projeto.faseCiclo" name="faseCiclo" [class.filled]="projeto.faseCiclo">
+                        <option value="" disabled selected>Selecione...</option>
+                        @for (f of fasesCiclo; track f.valor) {
+                            <option [value]="f.valor">{{ f.label }}</option>
+                        }
+                    </select>
+                </div>
+            </div>
         }
 
         <!-- Etapa 2: Responsáveis -->
@@ -243,11 +263,53 @@
                            [class.filled]="projeto.dataConclusaoPrevista">
                 </div>
             </div>
-            <div class="field">
-                <label for="orcamento">Orçamento Estimado (R$)</label>
-                <input id="orcamento" type="number" [(ngModel)]="projeto.orcamentoEstimado" name="orcamentoEstimado"
-                       [class.filled]="projeto.orcamentoEstimado"
-                       placeholder="Ex.: 2500000">
+            <div class="field-row">
+                <div class="field">
+                    <label for="prazoQuadrante">Prazo (Quadrante)</label>
+                    <select id="prazoQuadrante" [(ngModel)]="projeto.prazoQuadrante" name="prazoQuadrante" [class.filled]="projeto.prazoQuadrante">
+                        <option value="" disabled selected>Selecione...</option>
+                        @for (q of quadrantesPrazo; track q.valor) {
+                            <option [value]="q.valor">{{ q.label }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="custoQuadrante">Custo (Quadrante)</label>
+                    <select id="custoQuadrante" [(ngModel)]="projeto.custoQuadrante" name="custoQuadrante" [class.filled]="projeto.custoQuadrante">
+                        <option value="" disabled selected>Selecione...</option>
+                        @for (q of quadrantesCusto; track q.valor) {
+                            <option [value]="q.valor">{{ q.label }}</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    <label for="orcamento">Planejado (R$ M)</label>
+                    <input id="orcamento" type="number" [(ngModel)]="projeto.orcamentoEstimado" name="orcamentoEstimado"
+                           [class.filled]="projeto.orcamentoEstimado"
+                           placeholder="ex: 14.600">
+                </div>
+                <div class="field">
+                    <label for="custoRealizado">Realizado (R$ M)</label>
+                    <input id="custoRealizado" type="number" [(ngModel)]="projeto.custoRealizado" name="custoRealizado"
+                           [class.filled]="projeto.custoRealizado"
+                           placeholder="ex: 0.710">
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    <label for="qtdProprios">Alocação Próprios</label>
+                    <input id="qtdProprios" type="number" [(ngModel)]="projeto.qtdProprios" name="qtdProprios"
+                           [class.filled]="projeto.qtdProprios"
+                           min="0" placeholder="ex: 3">
+                </div>
+                <div class="field">
+                    <label for="qtdTerceiros">Alocação Terceirizados</label>
+                    <input id="qtdTerceiros" type="number" [(ngModel)]="projeto.qtdTerceiros" name="qtdTerceiros"
+                           [class.filled]="projeto.qtdTerceiros"
+                           min="0" placeholder="ex: 1">
+                </div>
             </div>
 
             <!-- Fases do Projeto -->
@@ -453,6 +515,14 @@
                         <span class="resumo-label">Área Executora</span>
                         <span class="resumo-valor">{{ projeto.areaExecutora || '—' }}</span>
                     </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Tipo</span>
+                        <span class="resumo-valor">{{ tipoLabel(projeto.tipo) }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Fase do Ciclo</span>
+                        <span class="resumo-valor">{{ faseCicloLabel(projeto.faseCiclo) }}</span>
+                    </div>
                 </div>
             </div>
 
@@ -515,8 +585,28 @@
                         <span class="resumo-valor">{{ projeto.dataConclusaoPrevista || '—' }}</span>
                     </div>
                     <div class="resumo-item">
-                        <span class="resumo-label">Orçamento Estimado</span>
+                        <span class="resumo-label">Prazo (Quadrante)</span>
+                        <span class="resumo-valor">{{ prazoQuadranteLabel(projeto.prazoQuadrante) }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Custo (Quadrante)</span>
+                        <span class="resumo-valor">{{ custoQuadranteLabel(projeto.custoQuadrante) }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Planejado (R$ M)</span>
                         <span class="resumo-valor">{{ projeto.orcamentoEstimado ? 'R$ ' + projeto.orcamentoEstimado.toLocaleString('pt-BR') : '—' }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Realizado (R$ M)</span>
+                        <span class="resumo-valor">{{ projeto.custoRealizado ? 'R$ ' + projeto.custoRealizado.toLocaleString('pt-BR') : '—' }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Alocação Próprios</span>
+                        <span class="resumo-valor">{{ projeto.qtdProprios || '—' }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Alocação Terceirizados</span>
+                        <span class="resumo-valor">{{ projeto.qtdTerceiros || '—' }}</span>
                     </div>
                 </div>
                 @if (projeto.fases && projeto.fases.length > 0) {
