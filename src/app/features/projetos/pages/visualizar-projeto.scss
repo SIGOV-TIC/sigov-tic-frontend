@@ -1,0 +1,342 @@
+.projeto-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    background-color: var(--bg-card-inner);
+    padding: 20px 24px;
+    border-radius: 6px;
+    border: 1px solid var(--border-subtle);
+}
+
+.projeto-header-left {
+    flex: 1;
+    min-width: 0;
+}
+
+.projeto-titulo-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+
+    h1 {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+}
+
+.sigla-badge {
+    background-color: var(--border-main);
+    color: var(--accent-yellow);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
+
+.status-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+}
+
+.status-rascunho {
+    background-color: var(--badge-rascunho-bg);
+    color: var(--badge-rascunho-text);
+}
+
+.status-aguardando {
+    background-color: var(--badge-aguardando-bg);
+    color: var(--badge-aguardando-text);
+}
+
+.status-aprovado {
+    background-color: var(--badge-aprovado-bg);
+    color: var(--badge-aprovado-text);
+}
+
+.status-rejeitado {
+    background-color: var(--badge-rejeitado-bg);
+    color: var(--badge-rejeitado-text);
+}
+
+.projeto-area {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-top: 6px;
+}
+
+.btn-voltar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-main);
+    transition: border-color 0.2s, color 0.2s;
+    white-space: nowrap;
+
+    mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+    }
+
+    &:hover {
+        border-color: var(--accent-blue);
+        color: var(--text-primary);
+    }
+}
+
+.projeto-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+.col-esquerda,
+.col-direita {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-main);
+    border-radius: 6px;
+    padding: 20px;
+
+    h3 {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--accent-yellow);
+        margin: 0 0 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border-main);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    p {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .vazio {
+        color: var(--text-faint);
+        font-style: italic;
+    }
+}
+
+.responsaveis-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.responsavel-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background-color: var(--bg-card-inner);
+    padding: 10px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border-subtle);
+}
+
+.responsavel-label {
+    font-size: 11px;
+    color: var(--text-faint);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.responsavel-valor {
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.fases-timeline {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 16px 0 8px;
+}
+
+.fase-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 80px;
+}
+
+.fase-duracao-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.fase-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--border-main);
+    border: 2px solid var(--accent-blue);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fase-nome-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: center;
+    max-width: 100px;
+    line-height: 1.3;
+}
+
+.fase-line {
+    flex: 1;
+    height: 2px;
+    background-color: var(--accent-blue);
+    margin-top: 38px;
+    min-width: 24px;
+}
+
+.card-decorrido {
+    text-align: center;
+    padding: 24px 20px;
+}
+
+.decorrido-header {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent-yellow);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.decorrido-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+}
+
+.donut-container {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    margin: 0 auto;
+}
+
+.donut-chart {
+    width: 100%;
+    height: 100%;
+}
+
+.donut-track {
+    fill: none;
+    stroke: var(--donut-track);
+    stroke-width: 10;
+}
+
+.donut-fill {
+    fill: none;
+    stroke: var(--donut-fill);
+    stroke-width: 10;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.6s ease;
+}
+
+.donut-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.orcamento-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.orcamento-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background-color: var(--bg-card-inner);
+    padding: 12px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border-subtle);
+}
+
+.orcamento-icon {
+    color: var(--accent-blue);
+    font-size: 20px;
+    margin-top: 2px;
+}
+
+.orcamento-label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-faint);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.orcamento-valor {
+    display: block;
+    font-size: 15px;
+    color: var(--text-primary);
+    font-weight: 600;
+
+    &.destaque {
+        color: var(--accent-yellow);
+    }
+
+    &.vazio {
+        color: var(--text-faint);
+        font-style: italic;
+        font-weight: 400;
+    }
+}
+
+.orcamento-detalhe {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.estado-vazio {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-faint);
+    font-size: 14px;
+}

@@ -1,0 +1,183 @@
+@if (carregando) {
+    <div class="estado-vazio">
+        <p>Carregando projeto...</p>
+    </div>
+} @else {
+
+<div class="projeto-header">
+    <div class="projeto-header-left">
+        <div class="projeto-titulo-row">
+            <h1>{{ projeto.nome }}</h1>
+            <span class="sigla-badge">{{ projeto.sigla }}</span>
+            <span class="status-badge" [class]="statusClasse(projeto.status)">{{ statusLabel(projeto.status) }}</span>
+        </div>
+        <p class="projeto-area">{{ projeto.areaSolicitante || '—' }} · {{ projeto.areaExecutora || '—' }}</p>
+    </div>
+    <a routerLink="/portfolio" class="btn-voltar">
+        <mat-icon>arrow_back</mat-icon> Portfólio
+    </a>
+</div>
+
+<div class="projeto-grid">
+
+    <!-- Coluna esquerda -->
+    <div class="col-esquerda">
+
+        <!-- Responsáveis -->
+        <div class="card">
+            <div class="responsaveis-grid">
+                <div class="responsavel-item">
+                    <span class="responsavel-label">PO</span>
+                    <span class="responsavel-valor">{{ projeto.po || '—' }}</span>
+                </div>
+                <div class="responsavel-item">
+                    <span class="responsavel-label">Scrum Master</span>
+                    <span class="responsavel-valor">{{ projeto.scrumMaster || '—' }}</span>
+                </div>
+                <div class="responsavel-item">
+                    <span class="responsavel-label">Patrocinador</span>
+                    <span class="responsavel-valor">{{ projeto.patrocinador || '—' }}</span>
+                </div>
+                <div class="responsavel-item">
+                    <span class="responsavel-label">Gerente</span>
+                    <span class="responsavel-valor">{{ projeto.gerenteResponsavel || '—' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Objetivo -->
+        <div class="card">
+            <h3>Objetivo</h3>
+            <p>{{ projeto.objetivo || 'Nenhum objetivo registrado.' }}</p>
+        </div>
+
+        <!-- Descrição -->
+        @if (projeto.descricao) {
+            <div class="card">
+                <h3>Descrição</h3>
+                <p>{{ projeto.descricao }}</p>
+            </div>
+        }
+
+        <!-- Atualizações -->
+        <div class="card">
+            <h3>Atualizações</h3>
+            @if (projeto.atualizacoes) {
+                <p>{{ projeto.atualizacoes }}</p>
+            } @else {
+                <p class="vazio">Nenhuma atualização registrada.</p>
+            }
+        </div>
+
+        <!-- Fases -->
+        @if (projeto.fases && projeto.fases.length > 0) {
+            <div class="card">
+                <h3>Fases</h3>
+                <div class="fases-timeline">
+                    @for (fase of projeto.fases; track fase.nome; let i = $index) {
+                        <div class="fase-node">
+                            <div class="fase-duracao-label">{{ fase.duracaoMeses }} {{ fase.duracaoMeses === 1 ? 'Mês' : 'Meses' }}</div>
+                            <div class="fase-circle">{{ i + 1 }}</div>
+                            <div class="fase-nome-label">{{ fase.nome }}</div>
+                        </div>
+                        @if (i < projeto.fases!.length - 1) {
+                            <div class="fase-line"></div>
+                        }
+                    }
+                </div>
+            </div>
+        }
+
+    </div>
+
+    <!-- Coluna direita -->
+    <div class="col-direita">
+
+        <!-- % Decorrido -->
+        <div class="card card-decorrido">
+            <div class="decorrido-header">% Decorrido</div>
+            @if (projeto.dataInicioPrevista && projeto.dataConclusaoPrevista) {
+                <div class="decorrido-subtitle">{{ mesesDecorridos }}/{{ mesesTotais }} meses</div>
+                <div class="donut-container">
+                    <svg viewBox="0 0 120 120" class="donut-chart">
+                        <circle cx="60" cy="60" r="50" class="donut-track"/>
+                        <circle cx="60" cy="60" r="50" class="donut-fill"
+                                [attr.stroke-dasharray]="(percentualDecorrido * 3.14) + ' ' + (314 - percentualDecorrido * 3.14)"
+                                stroke-dashoffset="0"
+                                transform="rotate(-90 60 60)"/>
+                    </svg>
+                    <div class="donut-label">{{ percentualDecorrido }}%</div>
+                </div>
+            } @else {
+                <div class="decorrido-subtitle">Datas não informadas</div>
+                <div class="donut-container">
+                    <svg viewBox="0 0 120 120" class="donut-chart">
+                        <circle cx="60" cy="60" r="50" class="donut-track"/>
+                    </svg>
+                    <div class="donut-label">—</div>
+                </div>
+            }
+        </div>
+
+        <!-- Orçamento e Squad -->
+        <div class="card">
+            <h3>Orçamento</h3>
+            <div class="orcamento-grid">
+                <div class="orcamento-item">
+                    <mat-icon class="orcamento-icon">groups</mat-icon>
+                    <div>
+                        <span class="orcamento-label">Squad</span>
+                        @if (totalSquad > 0) {
+                            <span class="orcamento-valor destaque">{{ totalSquad }} pessoas</span>
+                            <span class="orcamento-detalhe">{{ projeto.qtdProprios || 0 }} próprios · {{ projeto.qtdTerceiros || 0 }} terceiros</span>
+                        } @else {
+                            <span class="orcamento-valor">—</span>
+                        }
+                    </div>
+                </div>
+                <div class="orcamento-item">
+                    <mat-icon class="orcamento-icon">payments</mat-icon>
+                    <div>
+                        <span class="orcamento-label">Custo Previsto</span>
+                        <span class="orcamento-valor">{{ formatarMoeda(projeto.orcamentoEstimado) }}</span>
+                    </div>
+                </div>
+                <div class="orcamento-item">
+                    <mat-icon class="orcamento-icon">account_balance</mat-icon>
+                    <div>
+                        <span class="orcamento-label">Realizado</span>
+                        @if (projeto.custoRealizado) {
+                            <span class="orcamento-valor">{{ formatarMoeda(projeto.custoRealizado) }}</span>
+                        } @else {
+                            <span class="orcamento-valor vazio">—</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ponto de Atenção -->
+        <div class="card">
+            <h3>Ponto de Atenção</h3>
+            @if (projeto.pontoAtencao) {
+                <p>{{ projeto.pontoAtencao }}</p>
+            } @else {
+                <p class="vazio">Nenhum ponto de atenção registrado.</p>
+            }
+        </div>
+
+        <!-- Recomendação -->
+        <div class="card">
+            <h3>Recomendação</h3>
+            @if (projeto.recomendacao) {
+                <p>{{ projeto.recomendacao }}</p>
+            } @else {
+                <p class="vazio">Nenhuma recomendação registrada.</p>
+            }
+        </div>
+
+    </div>
+
+</div>
+
+}

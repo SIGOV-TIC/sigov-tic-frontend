@@ -1,0 +1,195 @@
+<div class="page-header">
+    <div class="page-header-top">
+        <div>
+            <h1>Dashboard Executivo</h1>
+            <p>Visão geral do portfólio de projetos de TIC</p>
+        </div>
+        <div class="page-header-actions">
+            <a routerLink="/portfolio" class="btn-outline">
+                <mat-icon>visibility</mat-icon>
+                Ver Portfólio
+            </a>
+        </div>
+    </div>
+</div>
+
+@if (carregando) {
+    <div class="estado-vazio">
+        <p>Carregando dados...</p>
+    </div>
+} @else {
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <span class="kpi-label">Projetos Ativos</span>
+            <span class="kpi-valor">{{ projetosAtivos }}</span>
+            <span class="kpi-detalhe">+{{ projetosNovos }} em planejamento</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Orçamento Executado</span>
+            <span class="kpi-valor">{{ formatarMoeda(orcamentoExecutado) }}</span>
+            <span class="kpi-detalhe">De {{ formatarMoeda(orcamentoTotal) }} autorizados</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Projetos em Atraso</span>
+            <span class="kpi-valor" [class.kpi-alerta]="projetosEmAtraso > 0">{{ projetosEmAtraso }}</span>
+            <span class="kpi-detalhe">Atenção necessária</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Benefícios Planejados</span>
+            <span class="kpi-valor">{{ formatarMoeda(beneficiosPlanejados) }}</span>
+            <span class="kpi-detalhe">Economia estimada anual</span>
+        </div>
+    </div>
+
+    <!-- Grid principal: Cronograma + Distribuição -->
+    <div class="dash-grid">
+
+        <!-- Cronograma Consolidado -->
+        <div class="card card-cronograma">
+            <h3>Cronograma Consolidado</h3>
+            <div class="cronograma-table">
+                <div class="cronograma-header">
+                    <span class="cronograma-col-projeto">Projeto</span>
+                    <span class="cronograma-col-q">Q1</span>
+                    <span class="cronograma-col-q">Q2</span>
+                    <span class="cronograma-col-q">Q3</span>
+                    <span class="cronograma-col-q">Q4</span>
+                </div>
+                @for (item of cronogramaConsolidado; track item.sigla) {
+                    <div class="cronograma-row">
+                        <span class="cronograma-col-projeto">{{ item.nome }}</span>
+                        @for (ativo of item.trimestres; track $index) {
+                            <span class="cronograma-col-q">
+                                @if (ativo) {
+                                    <span class="cronograma-bar"></span>
+                                }
+                            </span>
+                        }
+                    </div>
+                }
+                @if (cronogramaConsolidado.length === 0) {
+                    <div class="cronograma-vazio">Nenhum projeto com datas definidas</div>
+                }
+            </div>
+        </div>
+
+        <!-- Distribuição por Área -->
+        <div class="card card-distribuicao">
+            <h3>Distribuição por Área</h3>
+
+            <div class="donut-hero">
+                <div class="donut-container">
+                    <svg class="donut-chart" viewBox="0 0 42 42">
+                        <circle class="donut-track" cx="21" cy="21" r="15.915"></circle>
+                        @for (item of distribuicaoPorArea; track item.area; let i = $index) {
+                            <circle class="donut-segment donut-seg-{{ i }}"
+                                    cx="21" cy="21" r="15.915"
+                                    [attr.stroke-dasharray]="item.percentual + ' ' + (100 - item.percentual)"
+                                    [attr.stroke-dashoffset]="donutDashOffset(i)">
+                            </circle>
+                        }
+                    </svg>
+                    <div class="donut-center">
+                        <span class="donut-center-valor">{{ totalDistribuicao }}</span>
+                        <span class="donut-center-label">projetos</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="distribuicao-lista">
+                @for (item of distribuicaoPorArea; track item.area; let i = $index; let last = $last) {
+                    <div class="dist-row" [class.dist-row-outras]="last && temOutrasAreas" (click)="last && temOutrasAreas ? mostrarTodasAreas = true : null">
+                        <div class="dist-row-bg">
+                            <div class="dist-row-fill dist-fill-{{ i }}" [style.width.%]="item.percentual"></div>
+                        </div>
+                        <div class="dist-row-content">
+                            <span class="dist-cor dist-cor-{{ i }}"></span>
+                            <span class="dist-area">{{ item.area }}</span>
+                            <span class="dist-qtd">{{ item.quantidade }}</span>
+                            <span class="dist-pct">{{ item.percentual }}%</span>
+                            @if (last && temOutrasAreas) {
+                                <mat-icon class="dist-expand">expand_more</mat-icon>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Top 5 Projetos por Investimento -->
+    <div class="card card-ranking">
+        <div class="card-header-row">
+            <h3>Top 5 Projetos por Investimento</h3>
+        </div>
+        <div class="ranking-table-container">
+            <table class="ranking-table">
+                <thead>
+                    <tr>
+                        <th>Ranking</th>
+                        <th>Projeto</th>
+                        <th>Área</th>
+                        <th>Orçamento</th>
+                        <th>% Executado</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (projeto of top5PorInvestimento; track projeto.id; let i = $index) {
+                        <tr class="row-link" [routerLink]="['/projeto', projeto.id]">
+                            <td class="col-ranking">#{{ i + 1 }}</td>
+                            <td class="col-nome">{{ projeto.nome }}</td>
+                            <td>{{ projeto.areaSolicitante || '—' }}</td>
+                            <td class="col-orcamento">{{ formatarMoeda(projeto.orcamentoEstimado || 0) }}</td>
+                            <td>
+                                <div class="exec-cell">
+                                    <div class="exec-track">
+                                        <div class="exec-fill" [style.width.%]="percentualExecutado(projeto)"></div>
+                                    </div>
+                                    <span class="exec-label">{{ percentualExecutado(projeto) }}%</span>
+                                </div>
+                            </td>
+                            <td><span class="status-badge" [class]="statusClasse(projeto.status)">{{ statusLabel(projeto.status) }}</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            @if (top5PorInvestimento.length === 0) {
+                <div class="ranking-vazio">Nenhum projeto cadastrado</div>
+            }
+        </div>
+    </div>
+
+}
+
+@if (mostrarTodasAreas) {
+    <div class="areas-overlay" (click)="mostrarTodasAreas = false">
+        <div class="areas-card" (click)="$event.stopPropagation()">
+            <div class="areas-card-header">
+                <h2>Distribuição por Área</h2>
+                <button class="areas-close" (click)="mostrarTodasAreas = false">
+                    <mat-icon>close</mat-icon>
+                </button>
+            </div>
+            <p class="areas-subtitle">{{ totalDistribuicao }} projetos em {{ todasAreas.length }} áreas</p>
+            <div class="areas-lista">
+                @for (item of todasAreas; track item.area; let i = $index) {
+                    <div class="dist-row">
+                        <div class="dist-row-bg">
+                            <div class="dist-row-fill dist-fill-{{ i < 4 ? i : 4 }}" [style.width.%]="item.percentual"></div>
+                        </div>
+                        <div class="dist-row-content">
+                            <span class="dist-cor dist-cor-{{ i < 4 ? i : 4 }}"></span>
+                            <span class="dist-area">{{ item.area }}</span>
+                            <span class="dist-qtd">{{ item.quantidade }}</span>
+                            <span class="dist-pct">{{ item.percentual }}%</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
