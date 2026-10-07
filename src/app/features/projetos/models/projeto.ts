@@ -1,8 +1,14 @@
 export type StatusProjeto = 'RASCUNHO' | 'AGUARDANDO_APROVACAO' | 'APROVADO' | 'REJEITADO';
 
+export type SituacaoFase = 'PENDENTE' | 'EM_ANDAMENTO' | 'CONCLUIDA';
+
 export interface FaseProjeto {
   nome: string;
   duracaoMeses: number;
+  situacao?: SituacaoFase;
+  percentual?: number;
+  dataInicio?: string;
+  dataFim?: string;
 }
 
 export type TipoProjeto = 'PRODUTO_TI' | 'SOLUCAO_TECNOLOGICA';

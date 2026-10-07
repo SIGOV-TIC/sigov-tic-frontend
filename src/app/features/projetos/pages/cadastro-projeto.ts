@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ProjetoRequest, FaseProjeto, TipoProjeto, FaseCiclo, QuadrantePrazo, QuadranteCusto } from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
 
@@ -13,9 +14,11 @@ import { ProjetoService } from '../services/projeto.service';
   templateUrl: './cadastro-projeto.html',
   styleUrl: './cadastro-projeto.scss',
 })
-export class CadastroProjeto {
+export class CadastroProjeto implements OnInit {
+  projetoId: string | null = null;
+  etapasDescricao = ['Informações básicas', 'Equipe do projeto', 'Escopo e justificativa', 'Instrumentos estratégicos', 'Prazo, orçamento e fases'];
   etapaAtual = 0;
-  etapasEsquerda = ['Dados Gerais', 'Responsáveis', 'Descrição', 'Planejamento'];
+  etapasEsquerda = ['Dados Gerais', 'Responsáveis', 'Descrição', 'Vínculo de TIC', 'Planejamento'];
 
   projeto: ProjetoRequest = {
     nome: '',
@@ -138,7 +141,12 @@ export class CadastroProjeto {
   etapasConcluidas = false;
   errosValidacao: string[] = [];
 
-  constructor(private projetoService: ProjetoService, private router: Router) {
+  constructor(
+    private projetoService: ProjetoService,
+    private router: Router,
+    private route: ActivatedRoute,
+    private snackBar: MatSnackBar,
+  ) {
     this.nomesFiltrados = this.nomes;
     this.siglasFiltradas = this.siglas;
     this.areasFiltradas = this.areas;
@@ -149,17 +157,34 @@ export class CadastroProjeto {
     this.indicadoresFiltrados = this.indicadoresEstrategicos;
   }
 
+  ngOnInit() {
+    this.projetoId = this.route.snapshot.paramMap.get('id');
+    if (!this.projetoId) return;
+    this.projetoService.obter(this.projetoId).subscribe((p) => {
+      if (!p) {
+        this.router.navigate(['/portfolio']);
+        return;
+      }
+      const { id, createdAt, updatedAt, ...dados } = p;
+      this.projeto = { ...dados, fases: (dados.fases ?? []).map((f) => ({ ...f })) };
+    });
+  }
+
+  get modoEdicao(): boolean {
+    return !!this.projetoId;
+  }
+
   get camposVinculoPreenchidos(): number {
     let count = 0;
-    if (this.projeto.priorizadoPdtic !== undefined && this.projeto.priorizadoPdtic !== null) count++;
     if (this.projeto.objetivoEstrategico) count++;
     if (this.projeto.iniciativaEstrategica) count++;
     if (this.projeto.indicadorEstrategico) count++;
     return count;
   }
 
+  // Os toggles (PDTIC e Inovador) são marcações, não campos a preencher.
   get totalCamposVinculo(): number {
-    return 4;
+    return 3;
   }
 
   get prontoParaSalvar(): boolean {
@@ -252,11 +277,10 @@ export class CadastroProjeto {
     this.projetoService.criar(this.projeto).subscribe({
       next: () => {
         this.mostrarResumo = false;
+        this.avisar('Projeto submetido para aprovação');
         this.router.navigate(['/portfolio']);
       },
-      error: (err) => {
-        alert('Erro ao criar projeto: ' + (err.error?.message || err.message));
-      },
+      error: (err) => this.avisar('Não foi possível criar o projeto: ' + (err.error?.message || err.message)),
     });
   }
 
@@ -264,16 +288,64 @@ export class CadastroProjeto {
     this.projeto.status = 'RASCUNHO';
     this.projetoService.criar(this.projeto).subscribe({
       next: () => {
+        this.avisar('Rascunho salvo');
         this.router.navigate(['/portfolio']);
       },
-      error: (err) => {
-        alert('Erro ao salvar rascunho: ' + (err.error?.message || err.message));
-      },
+      error: (err) => this.avisar('Não foi possível salvar o rascunho: ' + (err.error?.message || err.message)),
     });
+  }
+
+  salvarEdicao() {
+    this.errosValidacao = this.validarEtapas();
+    if (this.errosValidacao.length > 0) {
+      this.irParaPrimeiraPendencia();
+      return;
+    }
+    this.projetoService.atualizar(this.projetoId!, this.projeto).subscribe({
+      next: () => {
+        this.avisar('Alterações salvas');
+        this.router.navigate(['/projeto', this.projetoId]);
+      },
+      error: (err) => this.avisar('Não foi possível salvar: ' + (err.error?.message || err.message)),
+    });
+  }
+
+  // Leva o usuário à primeira etapa que tem campo obrigatório vazio.
+  private irParaPrimeiraPendencia() {
+    const etapaDe: Record<string, number> = { 'Nome do Projeto': 0, 'Sigla': 0, 'Área Solicitante': 0, 'Descrição': 2 };
+    const etapa = Math.min(...this.errosValidacao.map((e) => etapaDe[e] ?? this.etapaAtual));
+    this.etapaAtual = etapa;
+    this.etapasConcluidas = false;
+  }
+
+  invalido(rotulo: string, valor?: string): boolean {
+    return this.errosValidacao.includes(rotulo) && !valor?.trim();
+  }
+
+  private avisar(mensagem: string) {
+    this.snackBar.open(mensagem, 'Fechar', { duration: 4000 });
+  }
+
+  cancelarEdicao() {
+    this.router.navigate(['/projeto', this.projetoId]);
   }
 
   submeter() {
     this.abrirResumo();
+  }
+
+  get pendentes(): string[] {
+    return this.validarEtapas();
+  }
+
+  formatarData(valor?: string): string {
+    if (!valor) return '—';
+    const [a, m, d] = valor.split('-');
+    return d && m && a ? `${d}/${m}/${a}` : '—';
+  }
+
+  formatarMoeda(valor?: number): string {
+    return valor ? 'R$ ' + Number(valor).toLocaleString('pt-BR') : '—';
   }
 
   tipoLabel(tipo?: TipoProjeto): string {

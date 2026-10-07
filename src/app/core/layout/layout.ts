@@ -41,6 +41,10 @@ export class Layout implements OnInit {
     return this.router.url.startsWith('/projeto/');
   }
 
+  get estaNoCronograma(): boolean {
+    return this.router.url.startsWith('/cronograma');
+  }
+
   get estaNoDashboard(): boolean {
     return this.router.url.startsWith('/dashboard');
   }

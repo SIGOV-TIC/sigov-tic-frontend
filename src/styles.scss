@@ -61,6 +61,14 @@
   --toggle-bg: #1E3A5F;
   --toggle-knob: #6B7A8D;
 
+  // Estados de andamento (cronograma)
+  --estado-concluido: #22C55E;
+  --estado-andamento: #3B82F6;
+  --estado-risco: #F59E0B;
+  --estado-atrasado: #EF4444;
+  --estado-previsto: #6B7A8D;
+  --estado-texto: #0A1628;
+
   color-scheme: dark;
 }
 
@@ -121,6 +129,13 @@
 
   --toggle-bg: #B0B9C8;
   --toggle-knob: #8E99AB;
+
+  --estado-concluido: #16A34A;
+  --estado-andamento: #2563EB;
+  --estado-risco: #D97706;
+  --estado-atrasado: #DC2626;
+  --estado-previsto: #6B7F96;
+  --estado-texto: #FFFFFF;
 
   color-scheme: light;
 }
@@ -190,5 +205,54 @@ html, body {
 
   &.mdc-list-item--selected {
     background-color: var(--autocomplete-selected) !important;
+  }
+}
+
+// Impressão: só o conteúdo da página, em paisagem.
+@page {
+  size: landscape;
+  margin: 12mm;
+}
+
+@media print {
+  .sidebar,
+  .header,
+  .footer,
+  .no-print {
+    display: none !important;
+  }
+
+  .layout,
+  .main-wrapper,
+  .main-content {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  html, body {
+    height: auto;
+    background: #fff;
+  }
+}
+
+// Aviso de confirmação (snackbar) no padrão visual do sistema.
+.mat-mdc-snack-bar-container {
+  --mdc-snackbar-container-color: var(--bg-card-inner);
+  --mdc-snackbar-supporting-text-color: var(--text-primary);
+  --mat-snack-bar-button-color: var(--accent-yellow);
+  --mdc-snackbar-supporting-text-font: 'Inter', sans-serif;
+  --mdc-snackbar-supporting-text-size: 14px;
+
+  .mdc-snackbar__surface {
+    border: 1px solid var(--border-main);
+    border-radius: 6px;
+  }
+
+  .mdc-button__label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
   }
 }

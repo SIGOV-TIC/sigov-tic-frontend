@@ -1,27 +1,38 @@
 <div class="page-header">
-    <h1>Cadastro de Projeto</h1>
-    <p>Registrar novo projeto no portfólio de TIC</p>
+    @if (modoEdicao) {
+        <h1>Edição de Projeto</h1>
+        <p>Atualizar os dados do projeto no portfólio de TIC</p>
+    } @else {
+        <h1>Cadastro de Projeto</h1>
+        <p>Registrar novo projeto no portfólio de TIC</p>
+    }
 </div>
 
 <form (ngSubmit)="submeter()" class="form-grid">
 
-    <!-- Coluna esquerda: etapas dentro do card -->
-    <section class="form-section" [class.concluded]="etapasConcluidas">
 
-        <!-- Mini stepper -->
-        <div class="stepper">
-            @for (etapa of etapasEsquerda; track etapa; let i = $index) {
-                <div class="step" [class.active]="i === etapaAtual && !etapasConcluidas" [class.done]="i < etapaAtual || etapasConcluidas" (click)="irParaEtapa(i)">
-                    <div class="step-number">
+    <!-- Etapas (trilho lateral) -->
+    <nav class="stepper" aria-label="Etapas do cadastro">
+        @for (etapa of etapasEsquerda; track etapa; let i = $index) {
+            <div class="step-item" [class.done]="i < etapaAtual || etapasConcluidas">
+                <button type="button" class="step" [class.active]="i === etapaAtual && !etapasConcluidas"
+                        [class.done]="i < etapaAtual || etapasConcluidas"
+                        (click)="irParaEtapa(i)" [attr.aria-current]="i === etapaAtual ? 'step' : null">
+                    <span class="step-number">
                         @if (i < etapaAtual || etapasConcluidas) { ✓ } @else { {{ i + 1 }} }
-                    </div>
-                    <span class="step-label">{{ etapa }}</span>
-                </div>
-                @if (i < etapasEsquerda.length - 1) {
-                    <div class="step-line" [class.done]="i < etapaAtual || etapasConcluidas"></div>
-                }
-            }
-        </div>
+                    </span>
+                    <span class="step-texto">
+                        <span class="step-label">{{ etapa }}</span>
+                        <span class="step-desc">{{ etapasDescricao[i] }}</span>
+                    </span>
+                </button>
+            </div>
+        }
+    </nav>
+
+    <div class="coluna-form">
+    <!-- Card único com a etapa atual -->
+    <section class="form-section" [class.concluded]="etapasConcluidas">
 
         <!-- Etapa 1: Dados Gerais -->
         @if (etapaAtual === 0) {
@@ -33,24 +44,24 @@
                 </div>
             </div>
 
-            <div class="field">
-                <label for="nome">Nome do Projeto <span class="required">*</span></label>
-                <input id="nome" type="text" [(ngModel)]="projeto.nome" name="nome"
-                       [class.filled]="projeto.nome"
-                       placeholder="Digite ou selecione..."
-                       (input)="filtrarNomes($any($event.target).value)"
-                       (focus)="filtrarNomes($any($event.target).value)"
-                       [matAutocomplete]="autoNome" required>
-                <mat-autocomplete #autoNome="matAutocomplete">
-                    @for (n of nomesFiltrados; track n) {
-                        <mat-option [value]="n">{{ n }}</mat-option>
-                    }
-                </mat-autocomplete>
-            </div>
             <div class="field-row">
-                <div class="field">
+                <div class="field col-8">
+                    <label for="nome">Nome do Projeto <span class="required">*</span></label>
+                    <input id="nome" type="text" [class.invalid]="invalido('Nome do Projeto', projeto.nome)" [(ngModel)]="projeto.nome" name="nome"
+                           [class.filled]="projeto.nome"
+                           placeholder="Digite ou selecione..."
+                           (input)="filtrarNomes($any($event.target).value)"
+                           (focus)="filtrarNomes($any($event.target).value)"
+                           [matAutocomplete]="autoNome" required>
+                    <mat-autocomplete #autoNome="matAutocomplete">
+                        @for (n of nomesFiltrados; track n) {
+                            <mat-option [value]="n">{{ n }}</mat-option>
+                        }
+                    </mat-autocomplete>
+                </div>
+                <div class="field col-4">
                     <label for="sigla">Sigla <span class="required">*</span></label>
-                    <input id="sigla" type="text" [(ngModel)]="projeto.sigla" name="sigla"
+                    <input id="sigla" type="text" [class.invalid]="invalido('Sigla', projeto.sigla)" [(ngModel)]="projeto.sigla" name="sigla"
                            [class.filled]="projeto.sigla"
                            placeholder="Digite ou selecione..."
                            (input)="filtrarSiglas($any($event.target).value)"
@@ -62,9 +73,11 @@
                         }
                     </mat-autocomplete>
                 </div>
+            </div>
+            <div class="field-row">
                 <div class="field">
                     <label for="areaSolicitante">Área Solicitante <span class="required">*</span></label>
-                    <input id="areaSolicitante" type="text" [(ngModel)]="projeto.areaSolicitante" name="areaSolicitante"
+                    <input id="areaSolicitante" type="text" [class.invalid]="invalido('Área Solicitante', projeto.areaSolicitante)" [(ngModel)]="projeto.areaSolicitante" name="areaSolicitante"
                            [class.filled]="projeto.areaSolicitante"
                            placeholder="Digite ou selecione..."
                            (input)="filtrarAreas($any($event.target).value)"
@@ -76,8 +89,7 @@
                         }
                     </mat-autocomplete>
                 </div>
-            </div>
-            <div class="field">
+                <div class="field">
                 <label for="areaExecutora">Área Executora</label>
                 <input id="areaExecutora" type="text" [(ngModel)]="projeto.areaExecutora" name="areaExecutora"
                        [class.filled]="projeto.areaExecutora"
@@ -91,11 +103,12 @@
                     }
                 </mat-autocomplete>
             </div>
+            </div>
             <div class="field-row">
                 <div class="field">
                     <label for="tipo">Tipo</label>
                     <select id="tipo" [(ngModel)]="projeto.tipo" name="tipo" [class.filled]="projeto.tipo">
-                        <option value="" disabled selected>Selecione...</option>
+                        <option [ngValue]="undefined" disabled>Selecione...</option>
                         @for (t of tiposProjeto; track t.valor) {
                             <option [value]="t.valor">{{ t.label }}</option>
                         }
@@ -104,7 +117,7 @@
                 <div class="field">
                     <label for="faseCiclo">Fase do Ciclo</label>
                     <select id="faseCiclo" [(ngModel)]="projeto.faseCiclo" name="faseCiclo" [class.filled]="projeto.faseCiclo">
-                        <option value="" disabled selected>Selecione...</option>
+                        <option [ngValue]="undefined" disabled>Selecione...</option>
                         @for (f of fasesCiclo; track f.valor) {
                             <option [value]="f.valor">{{ f.label }}</option>
                         }
@@ -197,7 +210,7 @@
 
             <div class="field">
                 <label for="descricao">Descrição <span class="required">*</span></label>
-                <textarea id="descricao" [(ngModel)]="projeto.descricao" name="descricao" rows="3"
+                <textarea id="descricao" [class.invalid]="invalido('Descrição', projeto.descricao)" [(ngModel)]="projeto.descricao" name="descricao" rows="3"
                           [class.filled]="projeto.descricao"
                           placeholder="Descreva o projeto..."></textarea>
                 <div class="sugestoes">
@@ -242,7 +255,7 @@
         }
 
         <!-- Etapa 4: Planejamento e Recursos -->
-        @if (etapaAtual === 3) {
+        @if (etapaAtual === 4) {
             <div class="section-header">
                 <div class="section-bar"></div>
                 <div>
@@ -267,7 +280,7 @@
                 <div class="field">
                     <label for="prazoQuadrante">Prazo (Quadrante)</label>
                     <select id="prazoQuadrante" [(ngModel)]="projeto.prazoQuadrante" name="prazoQuadrante" [class.filled]="projeto.prazoQuadrante">
-                        <option value="" disabled selected>Selecione...</option>
+                        <option [ngValue]="undefined" disabled>Selecione...</option>
                         @for (q of quadrantesPrazo; track q.valor) {
                             <option [value]="q.valor">{{ q.label }}</option>
                         }
@@ -276,7 +289,7 @@
                 <div class="field">
                     <label for="custoQuadrante">Custo (Quadrante)</label>
                     <select id="custoQuadrante" [(ngModel)]="projeto.custoQuadrante" name="custoQuadrante" [class.filled]="projeto.custoQuadrante">
-                        <option value="" disabled selected>Selecione...</option>
+                        <option [ngValue]="undefined" disabled>Selecione...</option>
                         @for (q of quadrantesCusto; track q.valor) {
                             <option [value]="q.valor">{{ q.label }}</option>
                         }
@@ -346,37 +359,7 @@
             </div>
         }
 
-        <!-- Erros de validação -->
-        @if (errosValidacao.length > 0) {
-            <div class="validacao-erros">
-                <span class="validacao-titulo">Preencha os campos obrigatórios:</span>
-                <ul>
-                    @for (erro of errosValidacao; track erro) {
-                        <li>{{ erro }}</li>
-                    }
-                </ul>
-            </div>
-        }
-
-        <!-- Navegação dentro do card -->
-        <div class="nav-buttons">
-            @if (etapaAtual > 0) {
-                <button type="button" class="btn-nav-back" (click)="voltar()">← Voltar</button>
-            } @else {
-                <div></div>
-            }
-            @if (etapaAtual < etapasEsquerda.length - 1) {
-                <button type="button" class="btn-nav-next" (click)="avancar()">Avançar →</button>
-            } @else {
-                <button type="button" class="btn-nav-done" (click)="concluirEtapas()">Concluir ✓</button>
-            }
-        </div>
-
-    </section>
-
-    <!-- Coluna direita: Vínculo de TIC (sempre visível) -->
-    <div class="right-column">
-        <section class="form-section">
+        @if (etapaAtual === 3) {
             <div class="section-header">
                 <div class="section-bar"></div>
                 <div class="section-header-top">
@@ -384,22 +367,36 @@
                         <h2>Vínculo de TIC</h2>
                         <p class="section-subtitle">Vincule o projeto aos instrumentos de planejamento estratégico de TIC</p>
                     </div>
-                    <div class="progress-badge" [class.complete]="camposVinculoPreenchidos === totalCamposVinculo">
-                        {{ camposVinculoPreenchidos }}/{{ totalCamposVinculo }}
-                    </div>
                 </div>
             </div>
 
-            <!-- Toggle Priorizado pelo PDTIC -->
-            <div class="field toggle-field">
+            <div class="field-row field-row-toggles">
+                <div class="field toggle-field">
                 <label class="toggle-label">
                     <input type="checkbox" [(ngModel)]="projeto.priorizadoPdtic" name="priorizadoPdtic">
                     <span class="toggle-switch"></span>
                     <span>Priorizado pelo PDTIC</span>
                 </label>
             </div>
+                <div class="field toggle-field">
+                <label class="toggle-label">
+                    <input type="checkbox" [(ngModel)]="projeto.inovador" name="inovador">
+                    <span class="toggle-switch"></span>
+                    <span>Projeto Inovador</span>
+                </label>
+            </div>
+            </div>
+            @if (projeto.inovador) {
+                <div class="field">
+                    <label for="justificativaInovador">Justificativa da Inovação</label>
+                    <textarea id="justificativaInovador" [(ngModel)]="projeto.justificativaInovador" name="justificativaInovador" rows="2"
+                              [class.filled]="projeto.justificativaInovador"
+                              placeholder="Justifique por que este projeto é inovador..."></textarea>
+                </div>
+            }
 
-            <div class="field">
+            <div class="field-row">
+                <div class="field">
                 <label for="objetivoEstrategico">Objetivo Estratégico</label>
                 <input id="objetivoEstrategico" type="text" [(ngModel)]="projeto.objetivoEstrategico" name="objetivoEstrategico"
                        [class.filled]="projeto.objetivoEstrategico"
@@ -413,7 +410,7 @@
                     }
                 </mat-autocomplete>
             </div>
-            <div class="field">
+                <div class="field">
                 <label for="iniciativaEstrategica">Iniciativa Estratégica</label>
                 <input id="iniciativaEstrategica" type="text" [(ngModel)]="projeto.iniciativaEstrategica" name="iniciativaEstrategica"
                        [class.filled]="projeto.iniciativaEstrategica"
@@ -427,24 +424,7 @@
                     }
                 </mat-autocomplete>
             </div>
-
-            <!-- Toggle Inovador -->
-            <div class="field toggle-field">
-                <label class="toggle-label">
-                    <input type="checkbox" [(ngModel)]="projeto.inovador" name="inovador">
-                    <span class="toggle-switch"></span>
-                    <span>Projeto Inovador</span>
-                </label>
             </div>
-            @if (projeto.inovador) {
-                <div class="field">
-                    <label for="justificativaInovador">Justificativa da Inovação</label>
-                    <textarea id="justificativaInovador" [(ngModel)]="projeto.justificativaInovador" name="justificativaInovador" rows="2"
-                              [class.filled]="projeto.justificativaInovador"
-                              placeholder="Justifique por que este projeto é inovador..."></textarea>
-                </div>
-            }
-
             <div class="field">
                 <label for="indicadorEstrategico">Indicador Estratégico</label>
                 <input id="indicadorEstrategico" type="text" [(ngModel)]="projeto.indicadorEstrategico" name="indicadorEstrategico"
@@ -459,32 +439,94 @@
                     }
                 </mat-autocomplete>
             </div>
+        }
 
-            <!-- Rodapé do card direito -->
-            <div class="card-footer">
-                <div class="progress-bar-track">
-                    <div class="progress-bar-fill" [style.width.%]="(camposVinculoPreenchidos / totalCamposVinculo) * 100"></div>
-                </div>
-                <span class="progress-text">{{ camposVinculoPreenchidos }} de {{ totalCamposVinculo }} campos preenchidos</span>
+        <!-- Erros de validação -->
+        @if (errosValidacao.length > 0) {
+            <p class="validacao-erros" role="alert">
+                <mat-icon>error_outline</mat-icon>
+                Falta preencher: {{ errosValidacao.join(', ') }}
+            </p>
+        }
+
+        <!-- Ações dentro do card -->
+        <div class="nav-buttons">
+            @if (modoEdicao) {
+                <button type="button" class="btn-text" (click)="cancelarEdicao()">Cancelar</button>
+            } @else {
+                <button type="button" class="btn-text" (click)="limpar()">Cancelar</button>
+            }
+            <div class="nav-grupo">
+                @if (etapaAtual > 0) {
+                    <button type="button" class="btn-nav-back" (click)="voltar()"><mat-icon>arrow_back</mat-icon> Voltar</button>
+                }
+                @if (modoEdicao) {
+                    @if (etapaAtual < etapasEsquerda.length - 1) {
+                        <button type="button" class="btn-nav-next" (click)="avancar()">Avançar <mat-icon>arrow_forward</mat-icon></button>
+                    }
+                    <button type="button" class="btn-primary" (click)="salvarEdicao()">Salvar alterações</button>
+                } @else {
+                    <button type="button" class="btn-secondary" (click)="salvarRascunho()">Salvar como Rascunho</button>
+                    @if (etapaAtual < etapasEsquerda.length - 1) {
+                        <button type="button" class="btn-primary" (click)="avancar()">Avançar <mat-icon>arrow_forward</mat-icon></button>
+                    } @else if (!etapasConcluidas) {
+                        <button type="button" class="btn-primary" (click)="concluirEtapas()">Concluir ✓</button>
+                    } @else {
+                        <button type="button" class="btn-primary" [disabled]="!prontoParaSalvar" (click)="submeter()">Submeter para Aprovação</button>
+                    }
+                }
             </div>
-        </section>
+        </div>
+
+    </section>
     </div>
+
+    <!-- Painel de resumo (acompanha a rolagem) -->
+    <aside class="painel" aria-label="Resumo do projeto">
+        <h3 class="painel-titulo">Resumo</h3>
+
+        <div class="painel-projeto">
+            <span class="painel-nome">{{ projeto.nome || 'Projeto sem nome' }}</span>
+            @if (projeto.sigla) {
+                <span class="painel-sigla">{{ projeto.sigla }}</span>
+            }
+        </div>
+
+        <dl class="painel-lista">
+            <div><dt>Área solicitante</dt><dd>{{ projeto.areaSolicitante || '—' }}</dd></div>
+            <div><dt>Área executora</dt><dd>{{ projeto.areaExecutora || '—' }}</dd></div>
+            <div><dt>Tipo</dt><dd>{{ tipoLabel(projeto.tipo) }}</dd></div>
+            <div><dt>Fase do ciclo</dt><dd>{{ faseCicloLabel(projeto.faseCiclo) }}</dd></div>
+            <div><dt>Período</dt><dd>{{ formatarData(projeto.dataInicioPrevista) }} → {{ formatarData(projeto.dataConclusaoPrevista) }}</dd></div>
+            <div><dt>Orçamento planejado</dt><dd>{{ formatarMoeda(projeto.orcamentoEstimado) }}</dd></div>
+            <div><dt>Fases</dt><dd>{{ projeto.fases?.length || 0 }}</dd></div>
+        </dl>
+
+        <div class="painel-progresso">
+            <div class="painel-progresso-topo">
+                <span>Vínculo de TIC</span>
+                <span [class.completo]="camposVinculoPreenchidos === totalCamposVinculo">{{ camposVinculoPreenchidos }}/{{ totalCamposVinculo }}</span>
+            </div>
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill" [style.width.%]="(camposVinculoPreenchidos / totalCamposVinculo) * 100"></div>
+            </div>
+        </div>
+
+        @if (pendentes.length > 0) {
+            <div class="painel-pendentes">
+                <span class="painel-pendentes-titulo">Obrigatórios pendentes</span>
+                <ul>
+                    @for (item of pendentes; track item) {
+                        <li>{{ item }}</li>
+                    }
+                </ul>
+            </div>
+        } @else {
+            <p class="painel-ok"><mat-icon>check_circle</mat-icon> Campos obrigatórios preenchidos</p>
+        }
+    </aside>
 
 </form>
-
-<!-- Barra de ações inferior -->
-<div class="action-bar">
-    <div class="action-left">
-        @if (!prontoParaSalvar) {
-            <span class="action-hint">Conclua as etapas para submeter</span>
-        }
-    </div>
-    <div class="action-right">
-        <button type="button" class="btn-primary" [class.disabled]="!prontoParaSalvar" [disabled]="!prontoParaSalvar" (click)="submeter()">Submeter para Aprovação</button>
-        <button type="button" class="btn-secondary" (click)="salvarRascunho()">Salvar como Rascunho</button>
-        <button type="button" class="btn-text" (click)="limpar()">Cancelar</button>
-    </div>
-</div>
 
 <!-- Overlay de resumo -->
 @if (mostrarResumo) {

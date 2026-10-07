@@ -79,42 +79,51 @@
         <div class="card card-distribuicao">
             <h3>Distribuição por Área</h3>
 
-            <div class="donut-hero">
-                <div class="donut-container">
-                    <svg class="donut-chart" viewBox="0 0 42 42">
-                        <circle class="donut-track" cx="21" cy="21" r="15.915"></circle>
-                        @for (item of distribuicaoPorArea; track item.area; let i = $index) {
-                            <circle class="donut-segment donut-seg-{{ i }}"
-                                    cx="21" cy="21" r="15.915"
-                                    [attr.stroke-dasharray]="item.percentual + ' ' + (100 - item.percentual)"
-                                    [attr.stroke-dashoffset]="donutDashOffset(i)">
-                            </circle>
-                        }
-                    </svg>
-                    <div class="donut-center">
-                        <span class="donut-center-valor">{{ totalDistribuicao }}</span>
-                        <span class="donut-center-label">projetos</span>
+            <div class="distribuicao-corpo">
+                <div class="donut-hero">
+                    <div class="donut-container">
+                        <svg class="donut-chart" viewBox="0 0 42 42" role="img" [attr.aria-label]="'Distribuição de ' + totalDistribuicao + ' projetos por área'">
+                            <circle class="donut-track" cx="21" cy="21" r="15.915"></circle>
+                            @for (item of distribuicaoPorArea; track item.area; let i = $index) {
+                                <circle class="donut-segment donut-seg-{{ i }}"
+                                        [class.donut-ativo]="areaDestacada === i"
+                                        [class.donut-esmaecido]="areaDestacada !== null && areaDestacada !== i"
+                                        cx="21" cy="21" r="15.915"
+                                        [attr.stroke-dasharray]="arcosDonut[i].comprimento + ' ' + (100 - arcosDonut[i].comprimento)"
+                                        [attr.stroke-dashoffset]="arcosDonut[i].inicio"
+                                        (mouseenter)="areaDestacada = i"
+                                        (mouseleave)="areaDestacada = null">
+                                </circle>
+                            }
+                        </svg>
+                        <div class="donut-center">
+                            <span class="donut-center-valor">{{ valorCentro }}</span>
+                            <span class="donut-center-label">{{ rotuloCentro }}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="distribuicao-lista">
-                @for (item of distribuicaoPorArea; track item.area; let i = $index; let last = $last) {
-                    <div class="dist-row" [class.dist-row-outras]="last && temOutrasAreas" (click)="last && temOutrasAreas ? mostrarTodasAreas = true : null">
-                        <div class="dist-row-bg">
-                            <div class="dist-row-fill dist-fill-{{ i }}" [style.width.%]="item.percentual"></div>
+                <div class="distribuicao-lista">
+                    @for (item of distribuicaoPorArea; track item.area; let i = $index; let last = $last) {
+                        <div class="dist-row" [class.dist-row-outras]="last && temOutrasAreas"
+                             [class.dist-row-ativa]="areaDestacada === i"
+                             (mouseenter)="areaDestacada = i" (mouseleave)="areaDestacada = null"
+                             (click)="last && temOutrasAreas ? mostrarTodasAreas = true : null">
+                            <div class="dist-row-bg">
+                                <div class="dist-row-fill dist-fill-{{ i }}" [style.width.%]="item.percentual"></div>
+                            </div>
+                            <div class="dist-row-content">
+                                <span class="dist-cor dist-cor-{{ i }}"></span>
+                                <span class="dist-area">{{ item.area }}</span>
+                                <span class="dist-qtd">{{ item.quantidade }}</span>
+                                <span class="dist-pct">{{ item.percentual }}%</span>
+                                @if (last && temOutrasAreas) {
+                                    <mat-icon class="dist-expand">expand_more</mat-icon>
+                                }
+                            </div>
                         </div>
-                        <div class="dist-row-content">
-                            <span class="dist-cor dist-cor-{{ i }}"></span>
-                            <span class="dist-area">{{ item.area }}</span>
-                            <span class="dist-qtd">{{ item.quantidade }}</span>
-                            <span class="dist-pct">{{ item.percentual }}%</span>
-                            @if (last && temOutrasAreas) {
-                                <mat-icon class="dist-expand">expand_more</mat-icon>
-                            }
-                        </div>
-                    </div>
-                }
+                    }
+                </div>
             </div>
         </div>
 

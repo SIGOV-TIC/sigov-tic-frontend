@@ -211,41 +211,63 @@
 
 // Distribuição por Área
 
+.card-distribuicao {
+    container-type: inline-size;
+}
+
+.distribuicao-corpo {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+
+    @container (max-width: 480px) {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
 .donut-hero {
     display: flex;
     justify-content: center;
-    margin-bottom: 20px;
+    flex-shrink: 0;
 }
 
 .donut-container {
     position: relative;
-    width: 160px;
-    height: 160px;
+    width: 168px;
+    height: 168px;
 }
 
 .donut-chart {
     width: 100%;
     height: 100%;
     transform: rotate(-90deg);
+    overflow: visible;
 }
 
 .donut-track {
     fill: none;
     stroke: var(--donut-track);
-    stroke-width: 4;
+    stroke-width: 3;
+    opacity: 0.5;
 }
 
 .donut-segment {
     fill: none;
-    stroke-width: 4;
-    stroke-linecap: round;
+    stroke-width: 3;
+    stroke-linecap: butt;
     stroke: var(--border-main);
+    cursor: pointer;
+    transition: stroke-width 0.2s ease, opacity 0.2s ease;
 
     &.donut-seg-0 { stroke: var(--accent-blue); }
     &.donut-seg-1 { stroke: var(--accent-green); }
     &.donut-seg-2 { stroke: var(--accent-yellow); }
     &.donut-seg-3 { stroke: var(--accent-red); }
     &.donut-seg-4 { stroke: var(--text-muted); }
+
+    &.donut-ativo { stroke-width: 4.2; }
+    &.donut-esmaecido { opacity: 0.35; }
 }
 
 .donut-center {
@@ -253,36 +275,47 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    width: 96px;
     text-align: center;
     display: flex;
     flex-direction: column;
-    gap: 0;
+    gap: 2px;
+    pointer-events: none;
 }
 
 .donut-center-valor {
-    font-size: 30px;
+    font-size: 32px;
     font-weight: 700;
     color: var(--text-primary);
-    line-height: 1.1;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
 }
 
 .donut-center-label {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--text-faint);
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.6px;
+    line-height: 1.2;
 }
 
 .distribuicao-lista {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    flex: 1;
+    min-width: 0;
 }
 
 .dist-row {
     position: relative;
     border-radius: 6px;
     overflow: hidden;
+    transition: box-shadow 0.15s ease;
+
+    &.dist-row-ativa {
+        box-shadow: inset 0 0 0 1px var(--border-main);
+    }
 }
 
 .dist-row-bg {

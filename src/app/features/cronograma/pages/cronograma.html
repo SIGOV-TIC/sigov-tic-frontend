@@ -1,0 +1,212 @@
+<div class="page-header no-print-borda">
+    <div class="page-header-top">
+        <div>
+            <h1>Cronograma Geral</h1>
+            <p>Matriz consolidada da linha do tempo física dos projetos de TIC</p>
+        </div>
+        <div class="page-header-actions no-print">
+            <button type="button" class="btn-outline" (click)="imprimir()">
+                <mat-icon>print</mat-icon>
+                Imprimir
+            </button>
+            <button type="button" class="btn-acao" (click)="exportar()">
+                <mat-icon>download</mat-icon>
+                Exportar Relatório
+            </button>
+        </div>
+    </div>
+</div>
+
+<form class="filtros no-print" (ngSubmit)="filtrar()">
+    <label class="filtro">
+        <span>Área</span>
+        <select name="area" [(ngModel)]="rascunho.area">
+            <option value="">Todas</option>
+            @for (a of areasDisponiveis; track a) {
+                <option [value]="a">{{ a }}</option>
+            }
+        </select>
+    </label>
+    <label class="filtro">
+        <span>Status</span>
+        <select name="status" [(ngModel)]="rascunho.status">
+            <option value="">Todos</option>
+            @for (s of statusOpcoes; track s.valor) {
+                <option [value]="s.valor">{{ s.label }}</option>
+            }
+        </select>
+    </label>
+    <div class="filtro">
+        <span>Período</span>
+        <div class="filtro-periodo">
+            <select name="anoInicio" [(ngModel)]="rascunho.anoInicio" aria-label="Ano inicial">
+                @for (ano of anosDisponiveis; track ano) {
+                    <option [ngValue]="ano">{{ ano }}</option>
+                }
+            </select>
+            <span class="filtro-ate">a</span>
+            <select name="anoFim" [(ngModel)]="rascunho.anoFim" aria-label="Ano final">
+                @for (ano of anosDisponiveis; track ano) {
+                    <option [ngValue]="ano">{{ ano }}</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="filtro">
+        <span>Escala</span>
+        <div class="escala" role="group" aria-label="Escala da matriz">
+            <button type="button" [class.ativa]="filtros.escala === 'MES'" (click)="alternarEscala('MES')">Mês</button>
+            <button type="button" [class.ativa]="filtros.escala === 'TRIMESTRE'" (click)="alternarEscala('TRIMESTRE')">Trimestre</button>
+        </div>
+    </div>
+    <div class="filtros-acoes">
+        <button type="button" class="btn-texto" (click)="limpar()">Limpar</button>
+        <button type="submit" class="btn-acao">Filtrar</button>
+    </div>
+</form>
+
+@if (carregando) {
+    <div class="estado-vazio">
+        <p>Carregando cronograma...</p>
+    </div>
+} @else {
+    <div class="resumo-estados" role="list">
+        @for (r of resumoEstados; track r.estado) {
+            <div class="resumo-estado estado-{{ r.estado }}" role="listitem" [class.zerado]="r.qtd === 0">
+                <span class="resumo-qtd">{{ r.qtd }}</span>
+                <span class="resumo-rotulo">{{ r.rotulo }}</span>
+            </div>
+        }
+        <div class="legenda">
+            <span class="legenda-item"><span class="legenda-marco"></span> Entrega</span>
+            <span class="legenda-item"><span class="legenda-hoje"></span> Hoje</span>
+        </div>
+    </div>
+    <div class="card cronograma-card">
+        <div class="gantt-rolagem">
+            <div class="gantt" [style.--colunas]="colunas.length" [style.--largura-min.px]="larguraMinima">
+
+                <!-- Cabeçalho -->
+                <div class="gantt-linha gantt-cabecalho">
+                    <div class="gantt-nome gantt-nome-cab">Projeto</div>
+                    <div class="gantt-trilha-cab">
+                        @if (posicaoHoje !== null) {
+                            <span class="gantt-hoje-etiqueta" [style.left.%]="posicaoHoje">Hoje</span>
+                        }
+                        <div class="gantt-anos">
+                            @for (a of anosColuna; track a.ano) {
+                                <span [style.flex]="a.colunas">{{ a.ano }}</span>
+                            }
+                        </div>
+                        <div class="gantt-colunas">
+                            @for (c of colunas; track $index) {
+                                <span>{{ c.rotulo }}</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                @for (g of grupos; track g.area) {
+                    <div class="gantt-grupo">
+                        <div class="gantt-grupo-titulo">{{ g.area }} <span class="gantt-grupo-qtd">{{ g.linhas.length }}</span></div>
+                    </div>
+                    @for (l of g.linhas; track l.projeto.id) {
+                        <div class="gantt-linha">
+                            <a class="gantt-nome" [routerLink]="['/projeto', l.projeto.id]" [title]="l.projeto.nome">
+                                <span class="gantt-sigla">{{ l.projeto.sigla }}</span>
+                                <span class="gantt-nome-texto">{{ l.projeto.nome }}</span>
+                            </a>
+                            <div class="gantt-trilha">
+                                @if (posicaoHoje !== null) {
+                                    <span class="gantt-hoje" [style.left.%]="posicaoHoje"></span>
+                                }
+                                @if (foraDoPeriodo(l)) {
+                                    <span class="gantt-fora">Fora do período exibido</span>
+                                } @else {
+                                    @for (c of l.celulas; track $index) {
+                                        @if (c.estado) {
+                                            <button type="button" class="bloco estado-{{ c.estado }}"
+                                               [class.bloco-atual]="c.atual"
+                                               [class.bloco-aberto]="selecionado?.celula === c"
+                                               (click)="abrir(l, c)"
+                                               [title]="l.projeto.nome + ' · ' + c.titulo" [attr.aria-label]="l.projeto.nome + ' · ' + c.titulo">
+                                                @if (c.marco) { <span class="marco marco-{{ c.marco }}"></span> }
+                                            </button>
+                                        } @else {
+                                            <span class="bloco-vazio">
+                                                @if (c.marco) { <span class="marco marco-{{ c.marco }}"></span> }
+                                            </span>
+                                        }
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
+                @if (grupos.length === 0) {
+                    <div class="gantt-vazio">Nenhum projeto com cronograma para os filtros selecionados.</div>
+                }
+
+                <!-- Projetos sem datas, na mesma matriz -->
+                @if (semCronograma.length > 0) {
+                    <div class="gantt-grupo gantt-grupo-pendente">
+                        <div class="gantt-grupo-titulo">
+                            Sem cronograma definido <span class="gantt-grupo-qtd">{{ semCronograma.length }}</span>
+                        </div>
+                    </div>
+                    @for (p of semCronograma; track p.id) {
+                        <div class="gantt-linha gantt-linha-sem">
+                            <a class="gantt-nome" [routerLink]="['/projeto', p.id]" [title]="p.nome">
+                                <span class="gantt-sigla">{{ p.sigla }}</span>
+                                <span class="gantt-nome-texto">{{ p.nome }}</span>
+                            </a>
+                            <div class="gantt-trilha gantt-trilha-sem">
+                                <span class="status-badge {{ statusClasse(p.status) }}">{{ statusLabel(p.status) }}</span>
+                                <span class="sem-texto">Datas de início e conclusão não informadas</span>
+                                <a class="sem-link no-print" [routerLink]="['/projeto', p.id, 'editar']">
+                                    <mat-icon>edit_calendar</mat-icon> Definir datas
+                                </a>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <p class="cronograma-rodape">
+            {{ totalNaMatriz }} {{ totalNaMatriz === 1 ? 'projeto' : 'projetos' }} na matriz
+            @if (semCronograma.length > 0) { · {{ semCronograma.length }} sem cronograma }
+        </p>
+    </div>
+}
+
+@if (selecionado; as sel) {
+    <div class="painel-fundo no-print" (click)="fechar()"></div>
+    <aside class="painel no-print estado-{{ sel.celula.detalhe!.estado }}" role="dialog" aria-label="Detalhe do período">
+        <button type="button" class="painel-fechar" (click)="fechar()" aria-label="Fechar"><mat-icon>close</mat-icon></button>
+        <span class="painel-sigla">{{ sel.linha.projeto.sigla }}</span>
+        <h3>{{ sel.linha.projeto.nome }}</h3>
+        <p class="painel-area">{{ sel.linha.projeto.areaSolicitante || 'Sem área' }}</p>
+
+        <div class="painel-estado">
+            <span class="painel-ponto"></span>
+            {{ rotuloEstado(sel.celula.detalhe!.estado) }}
+        </div>
+        <p class="painel-motivo">{{ sel.celula.detalhe!.motivo }}</p>
+
+        <dl class="painel-dados">
+            <dt>Fase</dt><dd>{{ sel.celula.detalhe!.fase }}</dd>
+            <dt>Período</dt><dd>{{ sel.celula.detalhe!.periodo }}</dd>
+            @if (sel.celula.detalhe!.percentual !== null) {
+                <dt>Andamento</dt>
+                <dd>
+                    {{ sel.celula.detalhe!.percentual }}%
+                    <span class="painel-barra"><span [style.width.%]="sel.celula.detalhe!.percentual"></span></span>
+                </dd>
+            }
+        </dl>
+
+        <a class="btn-acao painel-abrir" [routerLink]="['/projeto', sel.linha.projeto.id]">Abrir projeto</a>
+    </aside>
+}

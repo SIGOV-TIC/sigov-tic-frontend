@@ -89,13 +89,28 @@ export class Dashboard implements OnInit {
     return this.projetos.length;
   }
 
-  donutDashOffset(index: number): number {
+  areaDestacada: number | null = null;
+
+  // Comprimento do círculo = 100 (r = 15.915), então cada unidade equivale a 1% do anel.
+  get arcosDonut(): { comprimento: number; inicio: number }[] {
     const dist = this.distribuicaoPorArea;
-    let offset = 25;
-    for (let i = 0; i < index; i++) {
-      offset -= dist[i].percentual;
-    }
-    return offset;
+    const total = this.totalDistribuicao || 1;
+    const folga = dist.length > 1 ? 1.2 : 0;
+    let acumulado = 0;
+    return dist.map(item => {
+      const fatia = (item.quantidade / total) * 100;
+      const arco = { comprimento: Math.max(fatia - folga, 0.1), inicio: -(acumulado + folga / 2) };
+      acumulado += fatia;
+      return arco;
+    });
+  }
+
+  get valorCentro(): number {
+    return this.areaDestacada === null ? this.totalDistribuicao : this.distribuicaoPorArea[this.areaDestacada].quantidade;
+  }
+
+  get rotuloCentro(): string {
+    return this.areaDestacada === null ? 'projetos' : this.distribuicaoPorArea[this.areaDestacada].percentual + '% do portfólio';
   }
 
   get top5PorInvestimento(): ProjetoResponse[] {
