@@ -1,0 +1,304 @@
+@if (carregando) {
+    <div class="estado-vazio">
+        <p>Carregando projeto...</p>
+    </div>
+} @else {
+
+<div class="projeto-header">
+    <div class="projeto-header-left">
+        <div class="projeto-titulo-row">
+            <h1>{{ projeto.nome }}</h1>
+            <span class="sigla-badge">{{ projeto.sigla }}</span>
+            <span class="status-badge" [class]="statusClasse(projeto.status)">{{ statusLabel(projeto.status) }}</span>
+        </div>
+        <p class="projeto-area">{{ projeto.areaSolicitante || '—' }} · {{ projeto.areaExecutora || '—' }}</p>
+    </div>
+    <div class="projeto-header-acoes">
+        <a [routerLink]="['/projeto', projeto.id, 'editar']" class="btn-voltar">
+            <mat-icon>edit</mat-icon> Editar
+        </a>
+        <a routerLink="/portfolio" class="btn-voltar">
+            <mat-icon>arrow_back</mat-icon> Portfólio
+        </a>
+    </div>
+</div>
+
+<div class="projeto-grid">
+
+    <!-- Coluna esquerda -->
+    <div class="col-esquerda">
+
+        <!-- Responsáveis -->
+        <div class="card">
+            <div class="responsaveis-grid">
+                <div class="responsavel-item">
+                    <span class="responsavel-label">PO</span>
+                    <span class="responsavel-valor">{{ projeto.po || '—' }}</span>
+                </div>
+                <div class="responsavel-item">
+                    <span class="responsavel-label">Scrum Master</span>
+                    <span class="responsavel-valor">{{ projeto.scrumMaster || '—' }}</span>
+                </div>
+                <div class="responsavel-item">
+                    <span class="responsavel-label">Patrocinador</span>
+                    <span class="responsavel-valor">{{ projeto.patrocinador || '—' }}</span>
+                </div>
+                <div class="responsavel-item">
+                    <span class="responsavel-label">Gerente</span>
+                    <span class="responsavel-valor">{{ projeto.gerenteResponsavel || '—' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Objetivo -->
+        <div class="card">
+            <h3>Objetivo</h3>
+            <p>{{ projeto.objetivo || 'Nenhum objetivo registrado.' }}</p>
+        </div>
+
+        <!-- Descrição -->
+        @if (projeto.descricao) {
+            <div class="card">
+                <h3>Descrição</h3>
+                <p>{{ projeto.descricao }}</p>
+            </div>
+        }
+
+        <!-- Atualizações -->
+        <div class="card">
+            <ng-container *ngTemplateOutlet="campoEditavel; context: { chave: 'atualizacoes', titulo: 'Atualizações', vazio: 'Nenhuma atualização registrada.' }"></ng-container>
+        </div>
+
+        <!-- Fases -->
+        @if (projeto.fases && projeto.fases.length > 0) {
+            <div class="card">
+                <h3>Fases</h3>
+                <div class="fases-timeline">
+                    @for (fase of projeto.fases; track $index; let i = $index) {
+                        <button type="button" class="fase-node"
+                                [class.fase-atual]="i === indiceFaseAtual"
+                                [class.fase-concluida]="situacaoDe(i) === 'CONCLUIDA'"
+                                [class.fase-pendente]="situacaoDe(i) === 'PENDENTE' && i !== indiceFaseAtual"
+                                [class.fase-selecionada]="faseSelecionada === i"
+                                [style.--cor-fase]="corFase(i)"
+                                (click)="selecionarFase(i)"
+                                [attr.aria-pressed]="faseSelecionada === i"
+                                [attr.aria-label]="'Fase ' + (i + 1) + ': ' + fase.nome + ', ' + situacaoLabel(situacaoDe(i))">
+                            <span class="fase-duracao-label">{{ fase.duracaoMeses }} {{ fase.duracaoMeses === 1 ? 'Mês' : 'Meses' }}</span>
+                            <span class="fase-circle">
+                                @if (situacaoDe(i) === 'CONCLUIDA') {
+                                    <mat-icon>check</mat-icon>
+                                } @else {
+                                    {{ i + 1 }}
+                                }
+                            </span>
+                            <span class="fase-nome-label">{{ fase.nome }}</span>
+                            <span class="fase-situacao-label">{{ i === indiceFaseAtual ? 'Fase atual' : situacaoLabel(situacaoDe(i)) }}</span>
+                        </button>
+                        @if (i < projeto.fases!.length - 1) {
+                            <div class="fase-line" [class.fase-line-feita]="situacaoDe(i) === 'CONCLUIDA'"></div>
+                        }
+                    }
+                </div>
+
+                @if (faseAberta; as fase) {
+                    <div class="fase-painel" [style.--cor-fase]="corFase(faseSelecionada!)">
+                        <div class="fase-painel-header">
+                            <div>
+                                <span class="fase-painel-titulo">Fase {{ faseSelecionada! + 1 }} · {{ fase.nome }}</span>
+                                <span class="fase-painel-situacao">{{ situacaoLabel(situacaoDe(faseSelecionada!)) }}</span>
+                            </div>
+                            <button type="button" class="fase-lapis" (click)="alternarEdicaoFase()"
+                                    [class.ativo]="editandoFase" aria-label="Editar tudo desta fase" title="Editar tudo">
+                                <mat-icon>edit</mat-icon>
+                            </button>
+                        </div>
+
+                        <div class="fase-campos">
+                            @if (editandoFase) {
+                                <label class="fase-campo fase-campo-largo">
+                                    <span>Nome da fase</span>
+                                    <input type="text" [(ngModel)]="fase.nome">
+                                </label>
+                                <label class="fase-campo">
+                                    <span>Duração (meses)</span>
+                                    <input type="number" min="1" [(ngModel)]="fase.duracaoMeses">
+                                </label>
+                                <label class="fase-campo">
+                                    <span>Situação</span>
+                                    <select [(ngModel)]="fase.situacao">
+                                        <option value="PENDENTE">Pendente</option>
+                                        <option value="EM_ANDAMENTO">Em andamento</option>
+                                        <option value="CONCLUIDA">Concluída</option>
+                                    </select>
+                                </label>
+                            }
+                            <label class="fase-campo">
+                                <span>Data de início</span>
+                                <input type="date" [(ngModel)]="fase.dataInicio">
+                            </label>
+                            <label class="fase-campo">
+                                <span>Data de fim</span>
+                                <input type="date" [(ngModel)]="fase.dataFim">
+                            </label>
+                            <label class="fase-campo">
+                                <span>Percentual concluído (%)</span>
+                                <input type="number" min="0" max="100" [(ngModel)]="fase.percentual" (blur)="ajustarPercentual(fase)">
+                            </label>
+                        </div>
+
+                        <div class="fase-acoes">
+                            @if (situacaoDe(faseSelecionada!) !== 'CONCLUIDA') {
+                                <button type="button" class="btn-concluir-fase" (click)="concluirFase(faseSelecionada!)">
+                                    <mat-icon>check_circle</mat-icon> Concluir fase
+                                </button>
+                            }
+                            <button type="button" class="btn-salvar-fase" (click)="salvarFase()">Salvar</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+    </div>
+
+    <!-- Coluna direita -->
+    <div class="col-direita">
+
+        <!-- Prazo e custo, lado a lado -->
+        <div class="card">
+            <h3>Prazo e Custo</h3>
+            <div class="medidores">
+
+                <div class="medidor">
+                    <div class="anel">
+                        <svg viewBox="0 0 42 42" role="img" [attr.aria-label]="'Prazo decorrido: ' + percentualDecorrido + '%'">
+                            <circle class="anel-trilha" cx="21" cy="21" r="15.915" />
+                            @if (temPrazo) {
+                                <circle class="anel-arco anel-prazo" cx="21" cy="21" r="15.915" transform="rotate(-90 21 21)"
+                                        [attr.stroke-dasharray]="percentualDecorrido + ' ' + (100 - percentualDecorrido)" />
+                            }
+                        </svg>
+                        <span class="anel-valor">{{ temPrazo ? percentualDecorrido + '%' : '—' }}</span>
+                    </div>
+                    <div class="medidor-texto">
+                        <span class="medidor-rotulo">Prazo decorrido</span>
+                        @if (temPrazo) {
+                            <span class="medidor-principal">{{ mesesDecorridos }} de {{ mesesTotais }} meses</span>
+                            <span class="medidor-detalhe">Término previsto em {{ formatarData(projeto.dataConclusaoPrevista) }}</span>
+                        } @else {
+                            <span class="medidor-principal">Datas não informadas</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="medidor">
+                    <div class="anel">
+                        <svg viewBox="0 0 42 42" role="img" [attr.aria-label]="'Custo executado: ' + percentualCusto + '%'">
+                            <circle class="anel-trilha" cx="21" cy="21" r="15.915" />
+                            @if (temCusto) {
+                                <circle class="anel-arco" [class]="'anel-arco anel-' + ritmoCusto.classe" cx="21" cy="21" r="15.915" transform="rotate(-90 21 21)"
+                                        [attr.stroke-dasharray]="percentualCustoAnel + ' ' + (100 - percentualCustoAnel)" />
+                                @if (temPrazo) {
+                                    <line class="anel-marca" x1="21" y1="1.6" x2="21" y2="6.6" [attr.transform]="'rotate(' + (percentualDecorrido * 3.6) + ' 21 21)'" />
+                                }
+                            }
+                        </svg>
+                        <span class="anel-valor">{{ temCusto ? percentualCusto + '%' : '—' }}</span>
+                    </div>
+                    <div class="medidor-texto">
+                        <span class="medidor-rotulo">Custo executado</span>
+                        @if (temCusto) {
+                            <span class="medidor-principal">{{ formatarCompacto(projeto.custoRealizado) }} de {{ formatarCompacto(projeto.orcamentoEstimado) }}</span>
+                            <span class="medidor-detalhe">Esperado pelo prazo: {{ percentualDecorrido }}%</span>
+                        } @else {
+                            <span class="medidor-principal">Orçamento não informado</span>
+                        }
+                    </div>
+                </div>
+
+            </div>
+
+            @if (temCusto && temPrazo) {
+                <p class="ritmo ritmo-{{ ritmoCusto.classe }}">
+                    <mat-icon>{{ ritmoCusto.icone }}</mat-icon>
+                    {{ ritmoCusto.texto }}
+                </p>
+            }
+        </div>
+
+        <!-- Orçamento e Squad -->
+        <div class="card">
+            <h3>Orçamento</h3>
+            <div class="orcamento-grid">
+                <div class="orcamento-item">
+                    <mat-icon class="orcamento-icon">groups</mat-icon>
+                    <div>
+                        <span class="orcamento-label">Squad</span>
+                        @if (totalSquad > 0) {
+                            <span class="orcamento-valor destaque">{{ totalSquad }} pessoas</span>
+                            <span class="orcamento-detalhe">{{ projeto.qtdProprios || 0 }} próprios · {{ projeto.qtdTerceiros || 0 }} terceiros</span>
+                        } @else {
+                            <span class="orcamento-valor">—</span>
+                        }
+                    </div>
+                </div>
+                <div class="orcamento-item">
+                    <mat-icon class="orcamento-icon">payments</mat-icon>
+                    <div>
+                        <span class="orcamento-label">Custo Previsto</span>
+                        <span class="orcamento-valor">{{ formatarMoeda(projeto.orcamentoEstimado) }}</span>
+                    </div>
+                </div>
+                <div class="orcamento-item">
+                    <mat-icon class="orcamento-icon">account_balance</mat-icon>
+                    <div>
+                        <span class="orcamento-label">Realizado</span>
+                        @if (projeto.custoRealizado) {
+                            <span class="orcamento-valor">{{ formatarMoeda(projeto.custoRealizado) }}</span>
+                        } @else {
+                            <span class="orcamento-valor vazio">—</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ponto de Atenção -->
+        <div class="card">
+            <ng-container *ngTemplateOutlet="campoEditavel; context: { chave: 'pontoAtencao', titulo: 'Ponto de Atenção', vazio: 'Nenhum ponto de atenção registrado.' }"></ng-container>
+        </div>
+
+        <!-- Recomendação -->
+        <div class="card">
+            <ng-container *ngTemplateOutlet="campoEditavel; context: { chave: 'recomendacao', titulo: 'Recomendação', vazio: 'Nenhuma recomendação registrada.' }"></ng-container>
+        </div>
+
+    </div>
+
+</div>
+
+}
+
+<!-- Campo de texto do projeto, editável no próprio card -->
+<ng-template #campoEditavel let-chave="chave" let-titulo="titulo" let-vazio="vazio">
+    <div class="card-titulo">
+        <h3>{{ titulo }}</h3>
+        @if (campoEmEdicao !== chave) {
+            <button type="button" class="btn-icone" (click)="editarCampo(chave)" [attr.aria-label]="'Editar ' + titulo" title="Editar">
+                <mat-icon>edit</mat-icon>
+            </button>
+        }
+    </div>
+    @if (campoEmEdicao === chave) {
+        <textarea class="campo-edicao" rows="4" [(ngModel)]="textoEdicao" [attr.aria-label]="titulo"></textarea>
+        <div class="campo-acoes">
+            <button type="button" class="btn-texto" (click)="cancelarCampo()">Cancelar</button>
+            <button type="button" class="btn-salvar-fase" (click)="salvarCampo()">Salvar</button>
+        </div>
+    } @else if (textoDe(chave)) {
+        <p>{{ textoDe(chave) }}</p>
+    } @else {
+        <p class="vazio">{{ vazio }}</p>
+    }
+</ng-template>

@@ -1,27 +1,38 @@
 <div class="page-header">
-    <h1>Cadastro de Projeto</h1>
-    <p>Registrar novo projeto no portfólio de TIC</p>
+    @if (modoEdicao) {
+        <h1>Edição de Projeto</h1>
+        <p>Atualizar os dados do projeto no portfólio de TIC</p>
+    } @else {
+        <h1>Cadastro de Projeto</h1>
+        <p>Registrar novo projeto no portfólio de TIC</p>
+    }
 </div>
 
 <form (ngSubmit)="submeter()" class="form-grid">
 
-    <!-- Coluna esquerda: etapas dentro do card -->
-    <section class="form-section" [class.concluded]="etapasConcluidas">
 
-        <!-- Mini stepper -->
-        <div class="stepper">
-            @for (etapa of etapasEsquerda; track etapa; let i = $index) {
-                <div class="step" [class.active]="i === etapaAtual && !etapasConcluidas" [class.done]="i < etapaAtual || etapasConcluidas" (click)="irParaEtapa(i)">
-                    <div class="step-number">
+    <!-- Etapas (trilho lateral) -->
+    <nav class="stepper" aria-label="Etapas do cadastro">
+        @for (etapa of etapasEsquerda; track etapa; let i = $index) {
+            <div class="step-item" [class.done]="i < etapaAtual || etapasConcluidas">
+                <button type="button" class="step" [class.active]="i === etapaAtual && !etapasConcluidas"
+                        [class.done]="i < etapaAtual || etapasConcluidas"
+                        (click)="irParaEtapa(i)" [attr.aria-current]="i === etapaAtual ? 'step' : null">
+                    <span class="step-number">
                         @if (i < etapaAtual || etapasConcluidas) { ✓ } @else { {{ i + 1 }} }
-                    </div>
-                    <span class="step-label">{{ etapa }}</span>
-                </div>
-                @if (i < etapasEsquerda.length - 1) {
-                    <div class="step-line" [class.done]="i < etapaAtual || etapasConcluidas"></div>
-                }
-            }
-        </div>
+                    </span>
+                    <span class="step-texto">
+                        <span class="step-label">{{ etapa }}</span>
+                        <span class="step-desc">{{ etapasDescricao[i] }}</span>
+                    </span>
+                </button>
+            </div>
+        }
+    </nav>
+
+    <div class="coluna-form">
+    <!-- Card único com a etapa atual -->
+    <section class="form-section" [class.concluded]="etapasConcluidas">
 
         <!-- Etapa 1: Dados Gerais -->
         @if (etapaAtual === 0) {
@@ -33,67 +44,85 @@
                 </div>
             </div>
 
-            <div class="field">
-                <label for="nome">Nome do Projeto <span class="required">*</span></label>
-                <input id="nome" type="text" [(ngModel)]="projeto.nome" name="nome"
-                       [class.filled]="projeto.nome"
-                       placeholder="Digite ou selecione..."
-                       (input)="filtrarNomes($any($event.target).value)"
-                       (focus)="filtrarNomes($any($event.target).value)"
-                       [matAutocomplete]="autoNome" required>
-                @if (projeto.nome) { <button type="button" class="clear-field" (click)="limparCampo('nome')" aria-label="Limpar nome do projeto" title="Limpar campo">×</button> }
-                <mat-autocomplete #autoNome="matAutocomplete">
-                    @for (n of nomesFiltrados; track n) {
-                        <mat-option [value]="n">{{ n }}</mat-option>
-                    }
-                </mat-autocomplete>
-            </div>
             <div class="field-row">
-                <div class="field">
+                <div class="field col-8">
+                    <label for="nome">Nome do Projeto <span class="required">*</span></label>
+                    <input id="nome" type="text" [class.invalid]="invalido('Nome do Projeto', projeto.nome)" [(ngModel)]="projeto.nome" name="nome"
+                           [class.filled]="projeto.nome"
+                           placeholder="Digite ou selecione..."
+                           (input)="filtrarNomes($any($event.target).value)"
+                           (focus)="filtrarNomes($any($event.target).value)"
+                           [matAutocomplete]="autoNome" required>
+                    <mat-autocomplete #autoNome="matAutocomplete">
+                        @for (n of nomesFiltrados; track n) {
+                            <mat-option [value]="n">{{ n }}</mat-option>
+                        }
+                    </mat-autocomplete>
+                </div>
+                <div class="field col-4">
                     <label for="sigla">Sigla <span class="required">*</span></label>
-                    <input id="sigla" type="text" [(ngModel)]="projeto.sigla" name="sigla"
+                    <input id="sigla" type="text" [class.invalid]="invalido('Sigla', projeto.sigla)" [(ngModel)]="projeto.sigla" name="sigla"
                            [class.filled]="projeto.sigla"
                            placeholder="Digite ou selecione..."
                            (input)="filtrarSiglas($any($event.target).value)"
                            (focus)="filtrarSiglas($any($event.target).value)"
                            [matAutocomplete]="autoSigla" required>
-                    @if (projeto.sigla) { <button type="button" class="clear-field" (click)="limparCampo('sigla')" aria-label="Limpar sigla" title="Limpar campo">×</button> }
                     <mat-autocomplete #autoSigla="matAutocomplete">
                         @for (s of siglasFiltradas; track s) {
                             <mat-option [value]="s">{{ s }}</mat-option>
                         }
                     </mat-autocomplete>
                 </div>
+            </div>
+            <div class="field-row">
                 <div class="field">
-                    <label for="area">Área Responsável</label>
-                    <input id="area" type="text" [(ngModel)]="projeto.area" name="area"
-                           [class.filled]="projeto.area"
+                    <label for="areaSolicitante">Área Solicitante <span class="required">*</span></label>
+                    <input id="areaSolicitante" type="text" [class.invalid]="invalido('Área Solicitante', projeto.areaSolicitante)" [(ngModel)]="projeto.areaSolicitante" name="areaSolicitante"
+                           [class.filled]="projeto.areaSolicitante"
                            placeholder="Digite ou selecione..."
                            (input)="filtrarAreas($any($event.target).value)"
                            (focus)="filtrarAreas($any($event.target).value)"
                            [matAutocomplete]="autoArea">
-                    @if (projeto.area) { <button type="button" class="clear-field" (click)="limparCampo('area')" aria-label="Limpar área responsável" title="Limpar campo">×</button> }
                     <mat-autocomplete #autoArea="matAutocomplete">
                         @for (a of areasFiltradas; track a) {
                             <mat-option [value]="a">{{ a }}</mat-option>
                         }
                     </mat-autocomplete>
                 </div>
-            </div>
-            <div class="field">
-                <label for="unidadeExecutora">Unidade Executora</label>
-                <input id="unidadeExecutora" type="text" [(ngModel)]="projeto.unidadeExecutora" name="unidadeExecutora"
-                       [class.filled]="projeto.unidadeExecutora"
+                <div class="field">
+                <label for="areaExecutora">Área Executora</label>
+                <input id="areaExecutora" type="text" [(ngModel)]="projeto.areaExecutora" name="areaExecutora"
+                       [class.filled]="projeto.areaExecutora"
                        placeholder="Digite ou selecione..."
                        (input)="filtrarUnidades($any($event.target).value)"
                        (focus)="filtrarUnidades($any($event.target).value)"
                        [matAutocomplete]="autoUnidade">
-                @if (projeto.unidadeExecutora) { <button type="button" class="clear-field" (click)="limparCampo('unidadeExecutora')" aria-label="Limpar unidade executora" title="Limpar campo">×</button> }
                 <mat-autocomplete #autoUnidade="matAutocomplete">
                     @for (u of unidadesFiltradas; track u) {
                         <mat-option [value]="u">{{ u }}</mat-option>
                     }
                 </mat-autocomplete>
+            </div>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    <label for="tipo">Tipo</label>
+                    <select id="tipo" [(ngModel)]="projeto.tipo" name="tipo" [class.filled]="projeto.tipo">
+                        <option [ngValue]="undefined" disabled>Selecione...</option>
+                        @for (t of tiposProjeto; track t.valor) {
+                            <option [value]="t.valor">{{ t.label }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="faseCiclo">Fase do Ciclo</label>
+                    <select id="faseCiclo" [(ngModel)]="projeto.faseCiclo" name="faseCiclo" [class.filled]="projeto.faseCiclo">
+                        <option [ngValue]="undefined" disabled>Selecione...</option>
+                        @for (f of fasesCiclo; track f.valor) {
+                            <option [value]="f.valor">{{ f.label }}</option>
+                        }
+                    </select>
+                </div>
             </div>
         }
 
@@ -116,7 +145,6 @@
                            (input)="filtrarPessoas($any($event.target).value)"
                            (focus)="filtrarPessoas($any($event.target).value)"
                            [matAutocomplete]="autoPo">
-                    @if (projeto.po) { <button type="button" class="clear-field" (click)="limparCampo('po')" aria-label="Limpar PO" title="Limpar campo">×</button> }
                     <mat-autocomplete #autoPo="matAutocomplete">
                         @for (p of pessoasFiltradas; track p) {
                             <mat-option [value]="p">{{ p }}</mat-option>
@@ -131,7 +159,6 @@
                            (input)="filtrarPessoas($any($event.target).value)"
                            (focus)="filtrarPessoas($any($event.target).value)"
                            [matAutocomplete]="autoSm">
-                    @if (projeto.scrumMaster) { <button type="button" class="clear-field" (click)="limparCampo('scrumMaster')" aria-label="Limpar Scrum Master" title="Limpar campo">×</button> }
                     <mat-autocomplete #autoSm="matAutocomplete">
                         @for (p of pessoasFiltradas; track p) {
                             <mat-option [value]="p">{{ p }}</mat-option>
@@ -141,15 +168,14 @@
             </div>
             <div class="field-row">
                 <div class="field">
-                    <label for="sponsor">Sponsor</label>
-                    <input id="sponsor" type="text" [(ngModel)]="projeto.sponsor" name="sponsor"
-                           [class.filled]="projeto.sponsor"
+                    <label for="patrocinador">Patrocinador</label>
+                    <input id="patrocinador" type="text" [(ngModel)]="projeto.patrocinador" name="patrocinador"
+                           [class.filled]="projeto.patrocinador"
                            placeholder="Digite ou selecione..."
                            (input)="filtrarPessoas($any($event.target).value)"
                            (focus)="filtrarPessoas($any($event.target).value)"
-                           [matAutocomplete]="autoSponsor">
-                    @if (projeto.sponsor) { <button type="button" class="clear-field" (click)="limparCampo('sponsor')" aria-label="Limpar sponsor" title="Limpar campo">×</button> }
-                    <mat-autocomplete #autoSponsor="matAutocomplete">
+                           [matAutocomplete]="autoPatrocinador">
+                    <mat-autocomplete #autoPatrocinador="matAutocomplete">
                         @for (p of pessoasFiltradas; track p) {
                             <mat-option [value]="p">{{ p }}</mat-option>
                         }
@@ -163,7 +189,6 @@
                            (input)="filtrarPessoas($any($event.target).value)"
                            (focus)="filtrarPessoas($any($event.target).value)"
                            [matAutocomplete]="autoGerente">
-                    @if (projeto.gerenteResponsavel) { <button type="button" class="clear-field" (click)="limparCampo('gerenteResponsavel')" aria-label="Limpar gerente responsável" title="Limpar campo">×</button> }
                     <mat-autocomplete #autoGerente="matAutocomplete">
                         @for (p of pessoasFiltradas; track p) {
                             <mat-option [value]="p">{{ p }}</mat-option>
@@ -184,11 +209,10 @@
             </div>
 
             <div class="field">
-                <label for="descricao">Descrição</label>
-                <textarea id="descricao" [(ngModel)]="projeto.descricao" name="descricao" rows="3"
+                <label for="descricao">Descrição <span class="required">*</span></label>
+                <textarea id="descricao" [class.invalid]="invalido('Descrição', projeto.descricao)" [(ngModel)]="projeto.descricao" name="descricao" rows="3"
                           [class.filled]="projeto.descricao"
                           placeholder="Descreva o projeto..."></textarea>
-                @if (projeto.descricao) { <button type="button" class="clear-field" (click)="limparCampo('descricao')" aria-label="Limpar descrição" title="Limpar campo">×</button> }
                 <div class="sugestoes">
                     @for (s of descricoes; track s) {
                         <button type="button" class="sugestao-chip" (click)="preencherCampo('descricao', s)">{{ s.substring(0, 50) }}...</button>
@@ -200,7 +224,6 @@
                 <textarea id="objetivo" [(ngModel)]="projeto.objetivo" name="objetivo" rows="2"
                           [class.filled]="projeto.objetivo"
                           placeholder="Objetivo do projeto..."></textarea>
-                @if (projeto.objetivo) { <button type="button" class="clear-field" (click)="limparCampo('objetivo')" aria-label="Limpar objetivo" title="Limpar campo">×</button> }
                 <div class="sugestoes">
                     @for (s of objetivos; track s) {
                         <button type="button" class="sugestao-chip" (click)="preencherCampo('objetivo', s)">{{ s.substring(0, 50) }}...</button>
@@ -212,7 +235,6 @@
                 <textarea id="justificativa" [(ngModel)]="projeto.justificativa" name="justificativa" rows="2"
                           [class.filled]="projeto.justificativa"
                           placeholder="Justificativa para o projeto..."></textarea>
-                @if (projeto.justificativa) { <button type="button" class="clear-field" (click)="limparCampo('justificativa')" aria-label="Limpar justificativa" title="Limpar campo">×</button> }
                 <div class="sugestoes">
                     @for (s of justificativas; track s) {
                         <button type="button" class="sugestao-chip" (click)="preencherCampo('justificativa', s)">{{ s.substring(0, 50) }}...</button>
@@ -224,7 +246,6 @@
                 <textarea id="beneficiosEsperados" [(ngModel)]="projeto.beneficiosEsperados" name="beneficiosEsperados" rows="2"
                           [class.filled]="projeto.beneficiosEsperados"
                           placeholder="Benefícios esperados..."></textarea>
-                @if (projeto.beneficiosEsperados) { <button type="button" class="clear-field" (click)="limparCampo('beneficiosEsperados')" aria-label="Limpar benefícios esperados" title="Limpar campo">×</button> }
                 <div class="sugestoes">
                     @for (s of beneficios; track s) {
                         <button type="button" class="sugestao-chip" (click)="preencherCampo('beneficiosEsperados', s)">{{ s.substring(0, 50) }}...</button>
@@ -234,12 +255,12 @@
         }
 
         <!-- Etapa 4: Planejamento e Recursos -->
-        @if (etapaAtual === 3) {
+        @if (etapaAtual === 4) {
             <div class="section-header">
                 <div class="section-bar"></div>
                 <div>
                     <h2>Planejamento e Recursos</h2>
-                    <p class="section-subtitle">Cronograma e orçamento do projeto</p>
+                    <p class="section-subtitle">Cronograma, orçamento e fases do projeto</p>
                 </div>
             </div>
 
@@ -248,65 +269,97 @@
                     <label for="dataInicio">Data Início Prevista</label>
                     <input id="dataInicio" type="date" [(ngModel)]="projeto.dataInicioPrevista" name="dataInicioPrevista"
                            [class.filled]="projeto.dataInicioPrevista">
-                    @if (projeto.dataInicioPrevista) { <button type="button" class="clear-field" (click)="limparCampo('dataInicioPrevista')" aria-label="Limpar data de início" title="Limpar campo">×</button> }
                 </div>
                 <div class="field">
                     <label for="dataConclusao">Data Conclusão Prevista</label>
                     <input id="dataConclusao" type="date" [(ngModel)]="projeto.dataConclusaoPrevista" name="dataConclusaoPrevista"
                            [class.filled]="projeto.dataConclusaoPrevista">
-                    @if (projeto.dataConclusaoPrevista) { <button type="button" class="clear-field" (click)="limparCampo('dataConclusaoPrevista')" aria-label="Limpar data de conclusão" title="Limpar campo">×</button> }
                 </div>
             </div>
-            <div class="field">
-                <label for="orcamento">Orçamento Estimado (R$)</label>
-                <input id="orcamento" type="number" [(ngModel)]="projeto.orcamentoEstimado" name="orcamentoEstimado"
-                       [class.filled]="projeto.orcamentoEstimado"
-                       placeholder="Digite ou selecione..."
-                       [matAutocomplete]="autoOrcamento">
-                <mat-autocomplete #autoOrcamento="matAutocomplete">
-                    @for (orcamento of orcamentosMock; track orcamento) {
-                        <mat-option [value]="orcamento">R$ {{ orcamento.toLocaleString('pt-BR') }}</mat-option>
-                    }
-                </mat-autocomplete>
-                <div class="budget-stepper" aria-label="Ajustar orçamento">
-                    <button type="button" (click)="ajustarOrcamento(50000)" aria-label="Aumentar orçamento" title="Aumentar orçamento"><mat-icon>keyboard_arrow_up</mat-icon></button>
-                    <button type="button" (click)="ajustarOrcamento(-50000)" aria-label="Diminuir orçamento" title="Diminuir orçamento"><mat-icon>keyboard_arrow_down</mat-icon></button>
+            <div class="field-row">
+                <div class="field">
+                    <label for="prazoQuadrante">Prazo (Quadrante)</label>
+                    <select id="prazoQuadrante" [(ngModel)]="projeto.prazoQuadrante" name="prazoQuadrante" [class.filled]="projeto.prazoQuadrante">
+                        <option [ngValue]="undefined" disabled>Selecione...</option>
+                        @for (q of quadrantesPrazo; track q.valor) {
+                            <option [value]="q.valor">{{ q.label }}</option>
+                        }
+                    </select>
                 </div>
-                @if (projeto.orcamentoEstimado) { <button type="button" class="clear-field" (click)="limparCampo('orcamentoEstimado')" aria-label="Limpar orçamento estimado" title="Limpar campo">×</button> }
+                <div class="field">
+                    <label for="custoQuadrante">Custo (Quadrante)</label>
+                    <select id="custoQuadrante" [(ngModel)]="projeto.custoQuadrante" name="custoQuadrante" [class.filled]="projeto.custoQuadrante">
+                        <option [ngValue]="undefined" disabled>Selecione...</option>
+                        @for (q of quadrantesCusto; track q.valor) {
+                            <option [value]="q.valor">{{ q.label }}</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    <label for="orcamento">Planejado (R$ M)</label>
+                    <input id="orcamento" type="number" [(ngModel)]="projeto.orcamentoEstimado" name="orcamentoEstimado"
+                           [class.filled]="projeto.orcamentoEstimado"
+                           placeholder="ex: 14.600">
+                </div>
+                <div class="field">
+                    <label for="custoRealizado">Realizado (R$ M)</label>
+                    <input id="custoRealizado" type="number" [(ngModel)]="projeto.custoRealizado" name="custoRealizado"
+                           [class.filled]="projeto.custoRealizado"
+                           placeholder="ex: 0.710">
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    <label for="qtdProprios">Alocação Próprios</label>
+                    <input id="qtdProprios" type="number" [(ngModel)]="projeto.qtdProprios" name="qtdProprios"
+                           [class.filled]="projeto.qtdProprios"
+                           min="0" placeholder="ex: 3">
+                </div>
+                <div class="field">
+                    <label for="qtdTerceiros">Alocação Terceirizados</label>
+                    <input id="qtdTerceiros" type="number" [(ngModel)]="projeto.qtdTerceiros" name="qtdTerceiros"
+                           [class.filled]="projeto.qtdTerceiros"
+                           min="0" placeholder="ex: 1">
+                </div>
+            </div>
+
+            <!-- Fases do Projeto -->
+            <div class="fases-section">
+                <label class="fases-label">Fases do Projeto</label>
+
+                @if (projeto.fases && projeto.fases.length > 0) {
+                    <div class="fases-lista">
+                        @for (fase of projeto.fases; track fase.nome; let i = $index) {
+                            <div class="fase-item">
+                                <span class="fase-numero">{{ i + 1 }}</span>
+                                <span class="fase-nome">{{ fase.nome }}</span>
+                                <span class="fase-duracao">{{ fase.duracaoMeses }} {{ fase.duracaoMeses === 1 ? 'mês' : 'meses' }}</span>
+                                <button type="button" class="fase-remover" (click)="removerFase(i)">
+                                    <mat-icon>close</mat-icon>
+                                </button>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <div class="fase-adicionar">
+                    <input type="text" [(ngModel)]="novaFase.nome" name="novaFaseNome"
+                           placeholder="Nome da fase (ex.: MVP, Produção)"
+                           class="fase-input-nome">
+                    <input type="number" [(ngModel)]="novaFase.duracaoMeses" name="novaFaseDuracao"
+                           min="1" max="6"
+                           class="fase-input-duracao">
+                    <span class="fase-duracao-label">meses</span>
+                    <button type="button" class="btn-add-fase" (click)="adicionarFase()" [disabled]="!novaFase.nome.trim()">
+                        <mat-icon>add</mat-icon> Incluir Fase
+                    </button>
+                </div>
             </div>
         }
 
-        <!-- Erros de validação -->
-        @if (errosValidacao.length > 0) {
-            <div class="validacao-erros">
-                <span class="validacao-titulo">Preencha os campos obrigatórios:</span>
-                <ul>
-                    @for (erro of errosValidacao; track erro) {
-                        <li>{{ erro }}</li>
-                    }
-                </ul>
-            </div>
-        }
-
-        <!-- Navegação dentro do card -->
-        <div class="nav-buttons">
-            @if (etapaAtual > 0) {
-                <button type="button" class="btn-nav-back" (click)="voltar()">← Voltar</button>
-            } @else {
-                <div></div>
-            }
-            @if (etapaAtual < etapasEsquerda.length - 1) {
-                <button type="button" class="btn-nav-next" (click)="avancar()">Avançar →</button>
-            } @else {
-                <button type="button" class="btn-nav-done" (click)="concluirEtapas()">Concluir ✓</button>
-            }
-        </div>
-
-    </section>
-
-    <!-- Coluna direita: Vínculo de TIC (sempre visível) -->
-    <div class="right-column">
-        <section class="form-section">
+        @if (etapaAtual === 3) {
             <div class="section-header">
                 <div class="section-bar"></div>
                 <div class="section-header-top">
@@ -314,43 +367,50 @@
                         <h2>Vínculo de TIC</h2>
                         <p class="section-subtitle">Vincule o projeto aos instrumentos de planejamento estratégico de TIC</p>
                     </div>
-                    <div class="progress-badge" [class.complete]="camposAlinhamentoPreenchidos === totalCamposAlinhamento">
-                        {{ camposAlinhamentoPreenchidos }}/{{ totalCamposAlinhamento }}
-                    </div>
                 </div>
             </div>
 
-            <div class="field">
-                <label for="programa">Programa do PDTIC <span class="required">*</span></label>
-                <input id="programa" type="text" [(ngModel)]="projeto.programa" name="programa"
-                       [class.filled]="projeto.programa"
-                       placeholder="Digite ou selecione..."
-                       (input)="filtrarProgramas($any($event.target).value)"
-                       (focus)="filtrarProgramas($any($event.target).value)"
-                       [matAutocomplete]="autoPrograma">
-                @if (projeto.programa) { <button type="button" class="clear-field" (click)="limparCampo('programa')" aria-label="Limpar programa do PDTIC" title="Limpar campo">×</button> }
-                <mat-autocomplete #autoPrograma="matAutocomplete">
-                    @for (p of programasFiltrados; track p) {
-                        <mat-option [value]="p">{{ p }}</mat-option>
-                    }
-                </mat-autocomplete>
+            <div class="field-row field-row-toggles">
+                <div class="field toggle-field">
+                <label class="toggle-label">
+                    <input type="checkbox" [(ngModel)]="projeto.priorizadoPdtic" name="priorizadoPdtic">
+                    <span class="toggle-switch"></span>
+                    <span>Priorizado pelo PDTIC</span>
+                </label>
             </div>
-            <div class="field">
-                <label for="objetivoEstrategico">Objetivo Estratégico <span class="required">*</span></label>
+                <div class="field toggle-field">
+                <label class="toggle-label">
+                    <input type="checkbox" [(ngModel)]="projeto.inovador" name="inovador">
+                    <span class="toggle-switch"></span>
+                    <span>Projeto Inovador</span>
+                </label>
+            </div>
+            </div>
+            @if (projeto.inovador) {
+                <div class="field">
+                    <label for="justificativaInovador">Justificativa da Inovação</label>
+                    <textarea id="justificativaInovador" [(ngModel)]="projeto.justificativaInovador" name="justificativaInovador" rows="2"
+                              [class.filled]="projeto.justificativaInovador"
+                              placeholder="Justifique por que este projeto é inovador..."></textarea>
+                </div>
+            }
+
+            <div class="field-row">
+                <div class="field">
+                <label for="objetivoEstrategico">Objetivo Estratégico</label>
                 <input id="objetivoEstrategico" type="text" [(ngModel)]="projeto.objetivoEstrategico" name="objetivoEstrategico"
                        [class.filled]="projeto.objetivoEstrategico"
                        placeholder="Digite ou selecione..."
                        (input)="filtrarObjetivos($any($event.target).value)"
                        (focus)="filtrarObjetivos($any($event.target).value)"
                        [matAutocomplete]="autoObj">
-                @if (projeto.objetivoEstrategico) { <button type="button" class="clear-field" (click)="limparCampo('objetivoEstrategico')" aria-label="Limpar objetivo estratégico" title="Limpar campo">×</button> }
                 <mat-autocomplete #autoObj="matAutocomplete">
                     @for (o of objetivosFiltrados; track o) {
                         <mat-option [value]="o">{{ o }}</mat-option>
                     }
                 </mat-autocomplete>
             </div>
-            <div class="field">
+                <div class="field">
                 <label for="iniciativaEstrategica">Iniciativa Estratégica</label>
                 <input id="iniciativaEstrategica" type="text" [(ngModel)]="projeto.iniciativaEstrategica" name="iniciativaEstrategica"
                        [class.filled]="projeto.iniciativaEstrategica"
@@ -358,12 +418,12 @@
                        (input)="filtrarIniciativas($any($event.target).value)"
                        (focus)="filtrarIniciativas($any($event.target).value)"
                        [matAutocomplete]="autoInic">
-                @if (projeto.iniciativaEstrategica) { <button type="button" class="clear-field" (click)="limparCampo('iniciativaEstrategica')" aria-label="Limpar iniciativa estratégica" title="Limpar campo">×</button> }
                 <mat-autocomplete #autoInic="matAutocomplete">
                     @for (i of iniciativasFiltradas; track i) {
                         <mat-option [value]="i">{{ i }}</mat-option>
                     }
                 </mat-autocomplete>
+            </div>
             </div>
             <div class="field">
                 <label for="indicadorEstrategico">Indicador Estratégico</label>
@@ -373,46 +433,107 @@
                        (input)="filtrarIndicadores($any($event.target).value)"
                        (focus)="filtrarIndicadores($any($event.target).value)"
                        [matAutocomplete]="autoInd">
-                @if (projeto.indicadorEstrategico) { <button type="button" class="clear-field" (click)="limparCampo('indicadorEstrategico')" aria-label="Limpar indicador estratégico" title="Limpar campo">×</button> }
                 <mat-autocomplete #autoInd="matAutocomplete">
                     @for (ind of indicadoresFiltrados; track ind) {
                         <mat-option [value]="ind">{{ ind }}</mat-option>
                     }
                 </mat-autocomplete>
             </div>
+        }
 
-            <!-- Rodapé do card direito -->
-            <div class="card-footer">
-                <div class="progress-bar-track">
-                    <div class="progress-bar-fill" [style.width.%]="(camposAlinhamentoPreenchidos / totalCamposAlinhamento) * 100"></div>
-                </div>
-                <span class="progress-text">{{ camposAlinhamentoPreenchidos }} de {{ totalCamposAlinhamento }} campos preenchidos</span>
+        <!-- Erros de validação -->
+        @if (errosValidacao.length > 0) {
+            <p class="validacao-erros" role="alert">
+                <mat-icon>error_outline</mat-icon>
+                Falta preencher: {{ errosValidacao.join(', ') }}
+            </p>
+        }
+
+        <!-- Ações dentro do card -->
+        <div class="nav-buttons">
+            @if (modoEdicao) {
+                <button type="button" class="btn-text" (click)="cancelarEdicao()">Cancelar</button>
+            } @else {
+                <button type="button" class="btn-text" (click)="limpar()">Cancelar</button>
+            }
+            <div class="nav-grupo">
+                @if (etapaAtual > 0) {
+                    <button type="button" class="btn-nav-back" (click)="voltar()"><mat-icon>arrow_back</mat-icon> Voltar</button>
+                }
+                @if (modoEdicao) {
+                    @if (etapaAtual < etapasEsquerda.length - 1) {
+                        <button type="button" class="btn-nav-next" (click)="avancar()">Avançar <mat-icon>arrow_forward</mat-icon></button>
+                    }
+                    <button type="button" class="btn-primary" (click)="salvarEdicao()">Salvar alterações</button>
+                } @else {
+                    <button type="button" class="btn-secondary" (click)="salvarRascunho()">Salvar como Rascunho</button>
+                    @if (etapaAtual < etapasEsquerda.length - 1) {
+                        <button type="button" class="btn-primary" (click)="avancar()">Avançar <mat-icon>arrow_forward</mat-icon></button>
+                    } @else if (!etapasConcluidas) {
+                        <button type="button" class="btn-primary" (click)="concluirEtapas()">Concluir ✓</button>
+                    } @else {
+                        <button type="button" class="btn-primary" [disabled]="!prontoParaSalvar" (click)="submeter()">Submeter para Aprovação</button>
+                    }
+                }
             </div>
-        </section>
+        </div>
+
+    </section>
     </div>
+
+    <!-- Painel de resumo (acompanha a rolagem) -->
+    <aside class="painel" aria-label="Resumo do projeto">
+        <h3 class="painel-titulo">Resumo</h3>
+
+        <div class="painel-projeto">
+            <span class="painel-nome">{{ projeto.nome || 'Projeto sem nome' }}</span>
+            @if (projeto.sigla) {
+                <span class="painel-sigla">{{ projeto.sigla }}</span>
+            }
+        </div>
+
+        <dl class="painel-lista">
+            <div><dt>Área solicitante</dt><dd>{{ projeto.areaSolicitante || '—' }}</dd></div>
+            <div><dt>Área executora</dt><dd>{{ projeto.areaExecutora || '—' }}</dd></div>
+            <div><dt>Tipo</dt><dd>{{ tipoLabel(projeto.tipo) }}</dd></div>
+            <div><dt>Fase do ciclo</dt><dd>{{ faseCicloLabel(projeto.faseCiclo) }}</dd></div>
+            <div><dt>Período</dt><dd>{{ formatarData(projeto.dataInicioPrevista) }} → {{ formatarData(projeto.dataConclusaoPrevista) }}</dd></div>
+            <div><dt>Orçamento planejado</dt><dd>{{ formatarMoeda(projeto.orcamentoEstimado) }}</dd></div>
+            <div><dt>Fases</dt><dd>{{ projeto.fases?.length || 0 }}</dd></div>
+        </dl>
+
+        <div class="painel-progresso">
+            <div class="painel-progresso-topo">
+                <span>Vínculo de TIC</span>
+                <span [class.completo]="camposVinculoPreenchidos === totalCamposVinculo">{{ camposVinculoPreenchidos }}/{{ totalCamposVinculo }}</span>
+            </div>
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill" [style.width.%]="(camposVinculoPreenchidos / totalCamposVinculo) * 100"></div>
+            </div>
+        </div>
+
+        @if (pendentes.length > 0) {
+            <div class="painel-pendentes">
+                <span class="painel-pendentes-titulo">Obrigatórios pendentes</span>
+                <ul>
+                    @for (item of pendentes; track item) {
+                        <li>{{ item }}</li>
+                    }
+                </ul>
+            </div>
+        } @else {
+            <p class="painel-ok"><mat-icon>check_circle</mat-icon> Campos obrigatórios preenchidos</p>
+        }
+    </aside>
 
 </form>
-
-<!-- Barra de ações inferior -->
-<div class="action-bar">
-    <div class="action-left">
-        @if (!prontoParaSalvar) {
-            <span class="action-hint">Conclua as etapas para submeter</span>
-        }
-    </div>
-    <div class="action-right">
-        <button type="button" class="btn-primary" [class.disabled]="!prontoParaSalvar" [disabled]="!prontoParaSalvar" (click)="submeter()">Submeter para Aprovação</button>
-        <button type="button" class="btn-secondary" (click)="salvarRascunho()">Salvar como Rascunho</button>
-        <button type="button" class="btn-text" (click)="limpar()">Cancelar</button>
-    </div>
-</div>
 
 <!-- Overlay de resumo -->
 @if (mostrarResumo) {
     <div class="resumo-overlay" (click)="fecharResumo()">
         <div class="resumo-card" (click)="$event.stopPropagation()">
             <h2>Resumo do Projeto</h2>
-            <p class="resumo-subtitle">Confira os dados antes de confirmar o salvamento</p>
+            <p class="resumo-subtitle">Confira os dados antes de confirmar a submissão</p>
 
             <div class="resumo-body">
 
@@ -429,12 +550,20 @@
                         <span class="resumo-valor">{{ projeto.sigla || '—' }}</span>
                     </div>
                     <div class="resumo-item">
-                        <span class="resumo-label">Área Responsável</span>
-                        <span class="resumo-valor">{{ projeto.area || '—' }}</span>
+                        <span class="resumo-label">Área Solicitante</span>
+                        <span class="resumo-valor">{{ projeto.areaSolicitante || '—' }}</span>
                     </div>
                     <div class="resumo-item">
-                        <span class="resumo-label">Unidade Executora</span>
-                        <span class="resumo-valor">{{ projeto.unidadeExecutora || '—' }}</span>
+                        <span class="resumo-label">Área Executora</span>
+                        <span class="resumo-valor">{{ projeto.areaExecutora || '—' }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Tipo</span>
+                        <span class="resumo-valor">{{ tipoLabel(projeto.tipo) }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Fase do Ciclo</span>
+                        <span class="resumo-valor">{{ faseCicloLabel(projeto.faseCiclo) }}</span>
                     </div>
                 </div>
             </div>
@@ -452,8 +581,8 @@
                         <span class="resumo-valor">{{ projeto.scrumMaster || '—' }}</span>
                     </div>
                     <div class="resumo-item">
-                        <span class="resumo-label">Sponsor</span>
-                        <span class="resumo-valor">{{ projeto.sponsor || '—' }}</span>
+                        <span class="resumo-label">Patrocinador</span>
+                        <span class="resumo-valor">{{ projeto.patrocinador || '—' }}</span>
                     </div>
                     <div class="resumo-item">
                         <span class="resumo-label">Gerente Responsável</span>
@@ -498,10 +627,41 @@
                         <span class="resumo-valor">{{ projeto.dataConclusaoPrevista || '—' }}</span>
                     </div>
                     <div class="resumo-item">
-                        <span class="resumo-label">Orçamento Estimado</span>
+                        <span class="resumo-label">Prazo (Quadrante)</span>
+                        <span class="resumo-valor">{{ prazoQuadranteLabel(projeto.prazoQuadrante) }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Custo (Quadrante)</span>
+                        <span class="resumo-valor">{{ custoQuadranteLabel(projeto.custoQuadrante) }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Planejado (R$ M)</span>
                         <span class="resumo-valor">{{ projeto.orcamentoEstimado ? 'R$ ' + projeto.orcamentoEstimado.toLocaleString('pt-BR') : '—' }}</span>
                     </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Realizado (R$ M)</span>
+                        <span class="resumo-valor">{{ projeto.custoRealizado ? 'R$ ' + projeto.custoRealizado.toLocaleString('pt-BR') : '—' }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Alocação Próprios</span>
+                        <span class="resumo-valor">{{ projeto.qtdProprios || '—' }}</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Alocação Terceirizados</span>
+                        <span class="resumo-valor">{{ projeto.qtdTerceiros || '—' }}</span>
+                    </div>
                 </div>
+                @if (projeto.fases && projeto.fases.length > 0) {
+                    <div class="resumo-fases">
+                        <span class="resumo-label">Fases</span>
+                        @for (fase of projeto.fases; track fase.nome; let i = $index) {
+                            <div class="resumo-fase-item">
+                                <span class="fase-numero">{{ i + 1 }}</span>
+                                {{ fase.nome }} — {{ fase.duracaoMeses }} {{ fase.duracaoMeses === 1 ? 'mês' : 'meses' }}
+                            </div>
+                        }
+                    </div>
+                }
             </div>
 
             <!-- Vínculo de TIC -->
@@ -509,8 +669,8 @@
                 <h3>Vínculo de TIC</h3>
                 <div class="resumo-grid">
                     <div class="resumo-item">
-                        <span class="resumo-label">Programa</span>
-                        <span class="resumo-valor">{{ projeto.programa || '—' }}</span>
+                        <span class="resumo-label">Priorizado pelo PDTIC</span>
+                        <span class="resumo-valor">{{ projeto.priorizadoPdtic ? 'Sim' : 'Não' }}</span>
                     </div>
                     <div class="resumo-item">
                         <span class="resumo-label">Objetivo Estratégico</span>
@@ -520,6 +680,16 @@
                         <span class="resumo-label">Iniciativa Estratégica</span>
                         <span class="resumo-valor">{{ projeto.iniciativaEstrategica || '—' }}</span>
                     </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Projeto Inovador</span>
+                        <span class="resumo-valor">{{ projeto.inovador ? 'Sim' : 'Não' }}</span>
+                    </div>
+                    @if (projeto.inovador && projeto.justificativaInovador) {
+                        <div class="resumo-item full">
+                            <span class="resumo-label">Justificativa da Inovação</span>
+                            <span class="resumo-valor">{{ projeto.justificativaInovador }}</span>
+                        </div>
+                    }
                     <div class="resumo-item">
                         <span class="resumo-label">Indicador Estratégico</span>
                         <span class="resumo-valor">{{ projeto.indicadorEstrategico || '—' }}</span>

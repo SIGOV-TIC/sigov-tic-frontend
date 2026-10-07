@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { ProjetoRequest } from '../models/projeto';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { ProjetoRequest, FaseProjeto, TipoProjeto, FaseCiclo, QuadrantePrazo, QuadranteCusto } from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
 
 @Component({
@@ -13,14 +14,21 @@ import { ProjetoService } from '../services/projeto.service';
   templateUrl: './cadastro-projeto.html',
   styleUrl: './cadastro-projeto.scss',
 })
-export class CadastroProjeto {
+export class CadastroProjeto implements OnInit {
+  projetoId: string | null = null;
+  etapasDescricao = ['Informações básicas', 'Equipe do projeto', 'Escopo e justificativa', 'Instrumentos estratégicos', 'Prazo, orçamento e fases'];
   etapaAtual = 0;
-  etapasEsquerda = ['Dados Gerais', 'Responsáveis', 'Descrição', 'Planejamento'];
+  etapasEsquerda = ['Dados Gerais', 'Responsáveis', 'Descrição', 'Vínculo de TIC', 'Planejamento'];
 
   projeto: ProjetoRequest = {
     nome: '',
     sigla: '',
+    fases: [],
+    priorizadoPdtic: false,
+    inovador: false,
   };
+
+  novaFase: FaseProjeto = { nome: '', duracaoMeses: 1 };
 
   nomes = [
     'Sistema de Governança de TIC',
@@ -73,13 +81,6 @@ export class CadastroProjeto {
     'Roberto Campos', 'Fernanda Lima', 'Lucas Oliveira',
     'Patrícia Mendes', 'Thiago Almeida',
   ];
-  programas = [
-    'Programa de Governança e Gestão de TIC',
-    'Programa de Transformação Digital',
-    'Programa de Segurança da Informação',
-    'Programa de Infraestrutura e Serviços de TIC',
-    'Programa de Sistemas e Soluções de TIC',
-  ];
   objetivosEstrategicos = [
     'Aprimorar a governança e gestão de TIC',
     'Fortalecer a segurança cibernética e proteção de dados',
@@ -105,8 +106,33 @@ export class CadastroProjeto {
   ];
   orcamentosMock = [250000, 500000, 1000000, 2500000];
 
+  tiposProjeto: { valor: TipoProjeto; label: string }[] = [
+    { valor: 'PRODUTO_TI', label: 'Produto TI' },
+    { valor: 'SOLUCAO_TECNOLOGICA', label: 'Solução Tecnológica' },
+  ];
+
+  fasesCiclo: { valor: FaseCiclo; label: string }[] = [
+    { valor: 'NAO_CLASSIFICADA', label: 'Não classificada' },
+    { valor: 'PLANEJAMENTO', label: 'Planejamento' },
+    { valor: 'EXECUCAO', label: 'Execução' },
+    { valor: 'ENCERRAMENTO', label: 'Encerramento' },
+  ];
+
+  quadrantesPrazo: { valor: QuadrantePrazo; label: string }[] = [
+    { valor: 'NO_PRAZO', label: 'No prazo' },
+    { valor: 'ATENCAO', label: 'Atenção' },
+    { valor: 'ATRASADO', label: 'Atrasado' },
+    { valor: 'CONCLUIDO', label: 'Concluído' },
+  ];
+
+  quadrantesCusto: { valor: QuadranteCusto; label: string }[] = [
+    { valor: 'NO_CUSTO', label: 'No custo' },
+    { valor: 'ATENCAO', label: 'Atenção' },
+    { valor: 'ESTOURADO', label: 'Estourado' },
+    { valor: 'CONCLUIDO', label: 'Concluído' },
+  ];
+
   pessoasFiltradas: string[] = [];
-  programasFiltrados: string[] = [];
   objetivosFiltrados: string[] = [];
   iniciativasFiltradas: string[] = [];
   indicadoresFiltrados: string[] = [];
@@ -115,29 +141,50 @@ export class CadastroProjeto {
   etapasConcluidas = false;
   errosValidacao: string[] = [];
 
-  constructor(private projetoService: ProjetoService, private router: Router) {
+  constructor(
+    private projetoService: ProjetoService,
+    private router: Router,
+    private route: ActivatedRoute,
+    private snackBar: MatSnackBar,
+  ) {
     this.nomesFiltrados = this.nomes;
     this.siglasFiltradas = this.siglas;
     this.areasFiltradas = this.areas;
     this.unidadesFiltradas = this.unidades;
     this.pessoasFiltradas = this.pessoas;
-    this.programasFiltrados = this.programas;
     this.objetivosFiltrados = this.objetivosEstrategicos;
     this.iniciativasFiltradas = this.iniciativasEstrategicas;
     this.indicadoresFiltrados = this.indicadoresEstrategicos;
   }
 
-  get camposAlinhamentoPreenchidos(): number {
+  ngOnInit() {
+    this.projetoId = this.route.snapshot.paramMap.get('id');
+    if (!this.projetoId) return;
+    this.projetoService.obter(this.projetoId).subscribe((p) => {
+      if (!p) {
+        this.router.navigate(['/portfolio']);
+        return;
+      }
+      const { id, createdAt, updatedAt, ...dados } = p;
+      this.projeto = { ...dados, fases: (dados.fases ?? []).map((f) => ({ ...f })) };
+    });
+  }
+
+  get modoEdicao(): boolean {
+    return !!this.projetoId;
+  }
+
+  get camposVinculoPreenchidos(): number {
     let count = 0;
-    if (this.projeto.programa) count++;
     if (this.projeto.objetivoEstrategico) count++;
     if (this.projeto.iniciativaEstrategica) count++;
     if (this.projeto.indicadorEstrategico) count++;
     return count;
   }
 
-  get totalCamposAlinhamento(): number {
-    return 4;
+  // Os toggles (PDTIC e Inovador) são marcações, não campos a preencher.
+  get totalCamposVinculo(): number {
+    return 3;
   }
 
   get prontoParaSalvar(): boolean {
@@ -150,41 +197,14 @@ export class CadastroProjeto {
     return lista.filter(item => item.toLowerCase().includes(termo));
   }
 
-  filtrarNomes(valor: string) {
-    this.nomesFiltrados = this.filtrar(valor, this.nomes);
-  }
-
-  filtrarSiglas(valor: string) {
-    this.siglasFiltradas = this.filtrar(valor, this.siglas);
-  }
-
-  filtrarAreas(valor: string) {
-    this.areasFiltradas = this.filtrar(valor, this.areas);
-  }
-
-  filtrarUnidades(valor: string) {
-    this.unidadesFiltradas = this.filtrar(valor, this.unidades);
-  }
-
-  filtrarPessoas(valor: string) {
-    this.pessoasFiltradas = this.filtrar(valor, this.pessoas);
-  }
-
-  filtrarProgramas(valor: string) {
-    this.programasFiltrados = this.filtrar(valor, this.programas);
-  }
-
-  filtrarObjetivos(valor: string) {
-    this.objetivosFiltrados = this.filtrar(valor, this.objetivosEstrategicos);
-  }
-
-  filtrarIniciativas(valor: string) {
-    this.iniciativasFiltradas = this.filtrar(valor, this.iniciativasEstrategicas);
-  }
-
-  filtrarIndicadores(valor: string) {
-    this.indicadoresFiltrados = this.filtrar(valor, this.indicadoresEstrategicos);
-  }
+  filtrarNomes(valor: string) { this.nomesFiltrados = this.filtrar(valor, this.nomes); }
+  filtrarSiglas(valor: string) { this.siglasFiltradas = this.filtrar(valor, this.siglas); }
+  filtrarAreas(valor: string) { this.areasFiltradas = this.filtrar(valor, this.areas); }
+  filtrarUnidades(valor: string) { this.unidadesFiltradas = this.filtrar(valor, this.unidades); }
+  filtrarPessoas(valor: string) { this.pessoasFiltradas = this.filtrar(valor, this.pessoas); }
+  filtrarObjetivos(valor: string) { this.objetivosFiltrados = this.filtrar(valor, this.objetivosEstrategicos); }
+  filtrarIniciativas(valor: string) { this.iniciativasFiltradas = this.filtrar(valor, this.iniciativasEstrategicas); }
+  filtrarIndicadores(valor: string) { this.indicadoresFiltrados = this.filtrar(valor, this.indicadoresEstrategicos); }
 
   preencherCampo(campo: keyof ProjetoRequest, valor: string) {
     (this.projeto as any)[campo] = valor;
@@ -197,6 +217,17 @@ export class CadastroProjeto {
   ajustarOrcamento(variacao: number) {
     const atual = Number(this.projeto.orcamentoEstimado) || 0;
     this.projeto.orcamentoEstimado = Math.max(0, atual + variacao);
+  }
+
+  adicionarFase() {
+    if (!this.novaFase.nome.trim()) return;
+    this.projeto.fases = this.projeto.fases || [];
+    this.projeto.fases.push({ ...this.novaFase });
+    this.novaFase = { nome: '', duracaoMeses: 1 };
+  }
+
+  removerFase(index: number) {
+    this.projeto.fases?.splice(index, 1);
   }
 
   avancar() {
@@ -221,7 +252,7 @@ export class CadastroProjeto {
     const erros: string[] = [];
     if (!this.projeto.nome?.trim()) erros.push('Nome do Projeto');
     if (!this.projeto.sigla?.trim()) erros.push('Sigla');
-    if (!this.projeto.area?.trim()) erros.push('Área Responsável');
+    if (!this.projeto.areaSolicitante?.trim()) erros.push('Área Solicitante');
     if (!this.projeto.descricao?.trim()) erros.push('Descrição');
     return erros;
   }
@@ -246,11 +277,10 @@ export class CadastroProjeto {
     this.projetoService.criar(this.projeto).subscribe({
       next: () => {
         this.mostrarResumo = false;
+        this.avisar('Projeto submetido para aprovação');
         this.router.navigate(['/portfolio']);
       },
-      error: (err) => {
-        alert('Erro ao criar projeto: ' + (err.error?.message || err.message));
-      },
+      error: (err) => this.avisar('Não foi possível criar o projeto: ' + (err.error?.message || err.message)),
     });
   }
 
@@ -258,20 +288,84 @@ export class CadastroProjeto {
     this.projeto.status = 'RASCUNHO';
     this.projetoService.criar(this.projeto).subscribe({
       next: () => {
+        this.avisar('Rascunho salvo');
         this.router.navigate(['/portfolio']);
       },
-      error: (err) => {
-        alert('Erro ao salvar rascunho: ' + (err.error?.message || err.message));
-      },
+      error: (err) => this.avisar('Não foi possível salvar o rascunho: ' + (err.error?.message || err.message)),
     });
+  }
+
+  salvarEdicao() {
+    this.errosValidacao = this.validarEtapas();
+    if (this.errosValidacao.length > 0) {
+      this.irParaPrimeiraPendencia();
+      return;
+    }
+    this.projetoService.atualizar(this.projetoId!, this.projeto).subscribe({
+      next: () => {
+        this.avisar('Alterações salvas');
+        this.router.navigate(['/projeto', this.projetoId]);
+      },
+      error: (err) => this.avisar('Não foi possível salvar: ' + (err.error?.message || err.message)),
+    });
+  }
+
+  // Leva o usuário à primeira etapa que tem campo obrigatório vazio.
+  private irParaPrimeiraPendencia() {
+    const etapaDe: Record<string, number> = { 'Nome do Projeto': 0, 'Sigla': 0, 'Área Solicitante': 0, 'Descrição': 2 };
+    const etapa = Math.min(...this.errosValidacao.map((e) => etapaDe[e] ?? this.etapaAtual));
+    this.etapaAtual = etapa;
+    this.etapasConcluidas = false;
+  }
+
+  invalido(rotulo: string, valor?: string): boolean {
+    return this.errosValidacao.includes(rotulo) && !valor?.trim();
+  }
+
+  private avisar(mensagem: string) {
+    this.snackBar.open(mensagem, 'Fechar', { duration: 4000 });
+  }
+
+  cancelarEdicao() {
+    this.router.navigate(['/projeto', this.projetoId]);
   }
 
   submeter() {
     this.abrirResumo();
   }
 
+  get pendentes(): string[] {
+    return this.validarEtapas();
+  }
+
+  formatarData(valor?: string): string {
+    if (!valor) return '—';
+    const [a, m, d] = valor.split('-');
+    return d && m && a ? `${d}/${m}/${a}` : '—';
+  }
+
+  formatarMoeda(valor?: number): string {
+    return valor ? 'R$ ' + Number(valor).toLocaleString('pt-BR') : '—';
+  }
+
+  tipoLabel(tipo?: TipoProjeto): string {
+    return this.tiposProjeto.find(t => t.valor === tipo)?.label || '—';
+  }
+
+  faseCicloLabel(fase?: FaseCiclo): string {
+    return this.fasesCiclo.find(f => f.valor === fase)?.label || '—';
+  }
+
+  prazoQuadranteLabel(q?: QuadrantePrazo): string {
+    return this.quadrantesPrazo.find(p => p.valor === q)?.label || '—';
+  }
+
+  custoQuadranteLabel(q?: QuadranteCusto): string {
+    return this.quadrantesCusto.find(c => c.valor === q)?.label || '—';
+  }
+
   limpar() {
-    this.projeto = { nome: '', sigla: '' };
+    this.projeto = { nome: '', sigla: '', fases: [], priorizadoPdtic: false, inovador: false };
     this.etapaAtual = 0;
     this.mostrarResumo = false;
     this.etapasConcluidas = false;

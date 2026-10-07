@@ -57,7 +57,7 @@ export class Portfolio implements OnInit {
       (p) =>
         p.nome.toLowerCase().includes(termo) ||
         p.sigla.toLowerCase().includes(termo) ||
-        p.area?.toLowerCase().includes(termo)
+        p.areaSolicitante?.toLowerCase().includes(termo)
     );
   }
 
@@ -75,7 +75,7 @@ export class Portfolio implements OnInit {
     }
   }
 
-  formatarData(iso: string): string {
+  formatarData(iso?: string): string {
     if (!iso) return '—';
     const d = new Date(iso);
     return d.toLocaleDateString('pt-BR');
@@ -99,5 +99,35 @@ export class Portfolio implements OnInit {
       REJEITADO: 'status-rejeitado',
     };
     return map[status || ''] || 'status-rascunho';
+  }
+
+  percentualDecorrido(projeto: ProjetoResponse): number | null {
+    if (!projeto.dataInicioPrevista || !projeto.dataConclusaoPrevista) return null;
+    const inicio = new Date(projeto.dataInicioPrevista).getTime();
+    const fim = new Date(projeto.dataConclusaoPrevista).getTime();
+    if (fim <= inicio) return 0;
+    const pct = ((Date.now() - inicio) / (fim - inicio)) * 100;
+    return Math.round(Math.min(100, Math.max(0, pct)));
+  }
+
+  formatarMoeda(valor?: number): string {
+    if (!valor) return '—';
+    return 'R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+
+  get totalOrcamento(): number {
+    return this.projetosFiltrados.reduce((acc, p) => acc + (p.orcamentoEstimado || 0), 0);
+  }
+
+  get totalRealizado(): number {
+    return this.projetosFiltrados.reduce((acc, p) => acc + (p.custoRealizado || 0), 0);
+  }
+
+  get totalProprios(): number {
+    return this.projetosFiltrados.reduce((acc, p) => acc + (p.qtdProprios || 0), 0);
+  }
+
+  get totalTerceiros(): number {
+    return this.projetosFiltrados.reduce((acc, p) => acc + (p.qtdTerceiros || 0), 0);
   }
 }
