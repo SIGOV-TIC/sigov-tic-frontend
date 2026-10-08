@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ProjetoResponse, StatusProjeto } from '../../projetos/models/projeto';
 import { ProjetoService } from '../../projetos/services/projeto.service';
+import { Estado, ICONE_ESTADO, ROTULO_ESTADO, estadoProjeto } from '../../projetos/utils/saude';
 
 @Component({
   selector: 'app-dashboard',
@@ -45,16 +46,13 @@ export class Dashboard implements OnInit {
     return this.projetos.reduce((acc, p) => acc + (p.custoRealizado || 0), 0);
   }
 
+  // Mesma regra do Cronograma, para os números não se contradizerem entre as telas.
   get projetosEmAtraso(): number {
-    const hoje = Date.now();
-    return this.projetos.filter(p => {
-      if (!p.dataConclusaoPrevista) return false;
-      return new Date(p.dataConclusaoPrevista).getTime() < hoje && p.status !== 'REJEITADO';
-    }).length;
+    return this.projetos.filter((p) => p.status !== 'REJEITADO' && estadoProjeto(p) === 'ATRASADO').length;
   }
 
-  get beneficiosPlanejados(): number {
-    return this.projetos.reduce((acc, p) => acc + (p.orcamentoEstimado || 0), 0);
+  get projetosEmRisco(): number {
+    return this.projetos.filter((p) => p.status !== 'REJEITADO' && estadoProjeto(p) === 'RISCO').length;
   }
 
   mostrarTodasAreas = false;
@@ -119,7 +117,7 @@ export class Dashboard implements OnInit {
       .slice(0, 5);
   }
 
-  get cronogramaConsolidado(): { nome: string; sigla: string; trimestres: boolean[] }[] {
+  get cronogramaConsolidado(): { nome: string; sigla: string; trimestres: boolean[]; estado: Estado }[] {
     return this.top5PorInvestimento.map(p => {
       const trimestres = [false, false, false, false];
       if (p.dataInicioPrevista && p.dataConclusaoPrevista) {
@@ -133,7 +131,7 @@ export class Dashboard implements OnInit {
           }
         }
       }
-      return { nome: p.nome, sigla: p.sigla, trimestres };
+      return { nome: p.nome, sigla: p.sigla, trimestres, estado: estadoProjeto(p) };
     });
   }
 
@@ -149,11 +147,18 @@ export class Dashboard implements OnInit {
     return 'R$ ' + valor.toLocaleString('pt-BR');
   }
 
+  // Situação de prazo calculada (mesma regra do Cronograma); rascunho ainda não tem prazo a acompanhar.
+  situacaoDe(p: ProjetoResponse): { estado: Estado; rotulo: string; icone: string } | null {
+    if (p.status === 'RASCUNHO') return null;
+    const estado = estadoProjeto(p);
+    return { estado, rotulo: ROTULO_ESTADO[estado], icone: ICONE_ESTADO[estado] };
+  }
+
   statusLabel(status?: StatusProjeto): string {
     const map: Record<string, string> = {
       RASCUNHO: 'Rascunho',
       AGUARDANDO_APROVACAO: 'Aguardando',
-      APROVADO: 'No Prazo',
+      APROVADO: 'Aprovado',
       REJEITADO: 'Rejeitado',
     };
     return map[status || ''] || 'Rascunho';

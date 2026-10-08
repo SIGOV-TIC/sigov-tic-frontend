@@ -29,17 +29,17 @@
         <div class="kpi-card">
             <span class="kpi-label">Orçamento Executado</span>
             <span class="kpi-valor">{{ formatarMoeda(orcamentoExecutado) }}</span>
-            <span class="kpi-detalhe">De {{ formatarMoeda(orcamentoTotal) }} autorizados</span>
+            <span class="kpi-detalhe">De {{ formatarMoeda(orcamentoTotal) }} orçados</span>
         </div>
         <div class="kpi-card">
             <span class="kpi-label">Projetos em Atraso</span>
             <span class="kpi-valor" [class.kpi-alerta]="projetosEmAtraso > 0">{{ projetosEmAtraso }}</span>
-            <span class="kpi-detalhe">Atenção necessária</span>
+            <span class="kpi-detalhe">{{ projetosEmAtraso > 0 ? 'Veja no Cronograma' : 'Nenhum atraso' }}</span>
         </div>
         <div class="kpi-card">
-            <span class="kpi-label">Benefícios Planejados</span>
-            <span class="kpi-valor">{{ formatarMoeda(beneficiosPlanejados) }}</span>
-            <span class="kpi-detalhe">Economia estimada anual</span>
+            <span class="kpi-label">Projetos em Risco</span>
+            <span class="kpi-valor" [class.kpi-risco]="projetosEmRisco > 0">{{ projetosEmRisco }}</span>
+            <span class="kpi-detalhe">{{ projetosEmRisco > 0 ? 'Andamento abaixo do esperado' : 'Nenhum em risco' }}</span>
         </div>
     </div>
 
@@ -63,7 +63,7 @@
                         @for (ativo of item.trimestres; track $index) {
                             <span class="cronograma-col-q">
                                 @if (ativo) {
-                                    <span class="cronograma-bar"></span>
+                                    <span class="cronograma-bar estado-{{ item.estado }}"></span>
                                 }
                             </span>
                         }
@@ -143,7 +143,7 @@
                         <th>Área</th>
                         <th>Orçamento</th>
                         <th>% Executado</th>
-                        <th>Status</th>
+                        <th>Situação</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -161,7 +161,13 @@
                                     <span class="exec-label">{{ percentualExecutado(projeto) }}%</span>
                                 </div>
                             </td>
-                            <td><span class="status-badge" [class]="statusClasse(projeto.status)">{{ statusLabel(projeto.status) }}</span></td>
+                            <td>
+                                @if (situacaoDe(projeto); as s) {
+                                    <span class="situacao estado-{{ s.estado }}"><mat-icon>{{ s.icone }}</mat-icon>{{ s.rotulo }}</span>
+                                } @else {
+                                    <span class="status-badge" [class]="statusClasse(projeto.status)">{{ statusLabel(projeto.status) }}</span>
+                                }
+                            </td>
                         </tr>
                     }
                 </tbody>

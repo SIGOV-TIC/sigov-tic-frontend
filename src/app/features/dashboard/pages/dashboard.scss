@@ -91,7 +91,11 @@
     line-height: 1.2;
 
     &.kpi-alerta {
-        color: var(--accent-red);
+        color: var(--estado-atrasado-fg);
+    }
+
+    &.kpi-risco {
+        color: var(--estado-risco-fg);
     }
 }
 
@@ -625,3 +629,28 @@
         color: var(--text-faint);
     }
 }
+
+// Situação de prazo: cor + ícone + texto (mesma regra do Cronograma)
+.estado-CONCLUIDO { --cor: var(--estado-concluido); }
+.estado-ANDAMENTO { --cor: var(--estado-andamento); }
+.estado-RISCO { --cor: var(--estado-risco); }
+.estado-ATRASADO { --cor: var(--estado-atrasado); }
+.estado-A_INICIAR { --cor: var(--estado-previsto); }
+
+.situacao {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-3xs);
+    padding: 2px var(--spacing-2xs) 2px var(--spacing-3xs);
+    font-size: var(--typescale-paragraph-x-small-size);
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--text-primary);
+    background-color: color-mix(in srgb, var(--cor) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--cor) 55%, transparent);
+    border-radius: var(--border-radius-pill);
+
+    mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--cor); }
+}
+
+.cronograma-bar[class*='estado-'] { background-color: var(--cor); }

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { ProjetoResponse, StatusProjeto } from '../../projetos/models/projeto';
 import { ProjetoService } from '../../projetos/services/projeto.service';
-import { indiceFaseAtual, situacaoFase } from '../../projetos/utils/fase';
+import { analisarProjeto, Estado } from '../../projetos/utils/saude';
 
 type Escala = 'MES' | 'TRIMESTRE';
 
@@ -23,8 +23,6 @@ interface Detalhe {
   percentual: number | null;
   motivo: string;
 }
-
-type Estado = 'CONCLUIDO' | 'ANDAMENTO' | 'RISCO' | 'ATRASADO' | 'A_INICIAR';
 
 // Um bloco da grade: o estado do projeto naquele período (null = fora da janela do projeto).
 interface Celula {
@@ -213,34 +211,19 @@ export class Cronograma implements OnInit {
   private montarLinha(p: ProjetoResponse): LinhaCronograma | null {
     const inicio = this.parseData(p.dataInicioPrevista);
     const fim = this.parseData(p.dataConclusaoPrevista);
-    if (!inicio || !fim || fim < inicio) return null;
+    const analise = analisarProjeto(p);
+    if (!inicio || !fim || !analise) return null;
 
-    const posInicio = this.posicao(inicio);
-    const posFim = this.posicao(fim) + 1 / 30;
+    // A regra de saúde é compartilhada (utils/saude); aqui só se converte para o período exibido.
+    const base = this.filtros.anoInicio * 12;
+    const posInicio = analise.posInicio - base;
+    const posFim = analise.posFim - base;
     if (posFim < 0 || posInicio > this.totalMeses) return { ...this.linhaVazia(p) };
 
-    const posHoje = this.posicao(new Date());
-    const atual = indiceFaseAtual(p);
+    const posHoje = analise.posHoje - base;
+    const janelas = analise.janelas.map((j) => ({ ini: j.ini - base, fim: j.fim - base }));
+    const { estados, estado, atual } = analise;
     const fases = p.fases ?? [];
-
-    // Janela de cada fase: datas da própria fase, ou duração acumulada a partir do início do projeto.
-    const totalDuracao = fases.reduce((acc, f) => acc + Math.max(f.duracaoMeses || 1, 1), 0);
-    const escala = totalDuracao > posFim - posInicio ? (posFim - posInicio) / totalDuracao : 1;
-    let acumulado = 0;
-    const janelas = fases.map((f) => {
-      const dur = Math.max(f.duracaoMeses || 1, 1) * escala;
-      const faseIni = this.parseData(f.dataInicio);
-      const faseFim = this.parseData(f.dataFim);
-      const janela =
-        faseIni && faseFim && faseFim > faseIni
-          ? { ini: this.posicao(faseIni), fim: this.posicao(faseFim) + 1 / 30 }
-          : { ini: posInicio + acumulado, fim: posInicio + acumulado + dur };
-      acumulado += dur;
-      return janela;
-    });
-
-    const estados = fases.map((_, i) => this.estadoFase(p, i, atual, janelas[i], posHoje));
-    const estado = this.estadoProjeto(p, estados, posHoje, posInicio, posFim);
 
     const inicioVisivel = Math.max(0, posInicio);
     const fimVisivel = Math.min(this.totalMeses, posFim);
@@ -354,44 +337,6 @@ export class Cronograma implements OnInit {
   }
 
   // ---- Estados (o que o diretor precisa ver de relance) ----
-
-  private estadoFase(
-    p: ProjetoResponse,
-    i: number,
-    atual: number,
-    janela: { ini: number; fim: number },
-    posHoje: number,
-  ): Estado {
-    if (situacaoFase(p, i) === 'CONCLUIDA') return 'CONCLUIDO';
-    if (posHoje < janela.ini) return 'A_INICIAR';
-    // Já deveria ter começado e a fase anterior ainda não fechou.
-    if (i !== atual) return 'ATRASADO';
-    if (posHoje > janela.fim) return 'ATRASADO';
-
-    const fase = p.fases![i];
-    if (fase.percentual != null) {
-      const tempo = ((posHoje - janela.ini) / (janela.fim - janela.ini)) * 100;
-      if (fase.percentual < tempo - 15) return 'RISCO';
-      return 'ANDAMENTO';
-    }
-    if (p.prazoQuadrante === 'ATRASADO') return 'ATRASADO';
-    if (p.prazoQuadrante === 'ATENCAO') return 'RISCO';
-    return 'ANDAMENTO';
-  }
-
-  private estadoProjeto(p: ProjetoResponse, estados: Estado[], posHoje: number, posInicio: number, posFim: number): Estado {
-    if (p.prazoQuadrante === 'CONCLUIDO' || (estados.length > 0 && estados.every((e) => e === 'CONCLUIDO'))) {
-      return 'CONCLUIDO';
-    }
-    if (estados.some((e) => e === 'ATRASADO')) return 'ATRASADO';
-    if (estados.some((e) => e === 'RISCO')) return 'RISCO';
-    if (posHoje < posInicio) return 'A_INICIAR';
-    if (estados.length === 0) {
-      if (posHoje > posFim || p.prazoQuadrante === 'ATRASADO') return 'ATRASADO';
-      if (p.prazoQuadrante === 'ATENCAO') return 'RISCO';
-    }
-    return 'ANDAMENTO';
-  }
 
   readonly estadosInfo: { estado: Estado; rotulo: string }[] = [
     { estado: 'ATRASADO', rotulo: 'Atrasados' },

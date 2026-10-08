@@ -21,7 +21,7 @@
   --text-primary: #FFFFFF;
   --text-secondary: #CCD3DB;
   --text-muted: #AAB4C0;
-  --text-faint: #6B7A8D;
+  --text-faint: #8392A6;
   --text-dim: #556677;
 
   --accent-yellow: #FACC15;
@@ -68,6 +68,11 @@
   --estado-atrasado: #EF4444;
   --estado-previsto: #6B7A8D;
   --estado-texto: #0A1628;
+  // Versões para TEXTO (contraste mínimo 4.5:1 sobre o fundo do tema)
+  --estado-concluido-fg: #22C55E;
+  --estado-andamento-fg: #60A5FA;
+  --estado-risco-fg: #F59E0B;
+  --estado-atrasado-fg: #F87171;
 
   color-scheme: dark;
 }
@@ -90,7 +95,7 @@
   --text-primary: #0F1D32;
   --text-secondary: #1E3050;
   --text-muted: #3D5068;
-  --text-faint: #6B7F96;
+  --text-faint: #4F5D73;
   --text-dim: #6B7F96;
 
   --accent-yellow: #2563EB;
@@ -130,12 +135,16 @@
   --toggle-bg: #B0B9C8;
   --toggle-knob: #8E99AB;
 
-  --estado-concluido: #16A34A;
+  --estado-concluido: #15803D;
   --estado-andamento: #2563EB;
-  --estado-risco: #D97706;
+  --estado-risco: #B45309;
   --estado-atrasado: #DC2626;
-  --estado-previsto: #6B7F96;
+  --estado-previsto: #586B82;
   --estado-texto: #FFFFFF;
+  --estado-concluido-fg: #166534;
+  --estado-andamento-fg: #1D4ED8;
+  --estado-risco-fg: #92400E;
+  --estado-atrasado-fg: #B91C1C;
 
   color-scheme: light;
 }

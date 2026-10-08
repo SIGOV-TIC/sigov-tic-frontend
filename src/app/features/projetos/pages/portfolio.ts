@@ -26,6 +26,7 @@ export class Portfolio implements OnInit {
   constructor(private projetoService: ProjetoService) {}
 
   ngOnInit() {
+    this.projetoService.seedSeNecessario();
     this.carregar();
   }
 

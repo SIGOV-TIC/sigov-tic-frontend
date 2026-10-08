@@ -170,11 +170,11 @@
 }
 
 // Cor = estado, sempre a mesma em toda a tela.
-.estado-CONCLUIDO { --cor-estado: var(--estado-concluido); }
-.estado-ANDAMENTO { --cor-estado: var(--estado-andamento); }
-.estado-RISCO { --cor-estado: var(--estado-risco); }
-.estado-ATRASADO { --cor-estado: var(--estado-atrasado); }
-.estado-A_INICIAR { --cor-estado: var(--estado-previsto); }
+.estado-CONCLUIDO { --cor-estado: var(--estado-concluido); --cor-texto: var(--estado-concluido-fg); }
+.estado-ANDAMENTO { --cor-estado: var(--estado-andamento); --cor-texto: var(--estado-andamento-fg); }
+.estado-RISCO { --cor-estado: var(--estado-risco); --cor-texto: var(--estado-risco-fg); }
+.estado-ATRASADO { --cor-estado: var(--estado-atrasado); --cor-texto: var(--estado-atrasado-fg); }
+.estado-A_INICIAR { --cor-estado: var(--estado-previsto); --cor-texto: var(--text-muted); }
 .estado-sem { --cor-estado: var(--estado-previsto); }
 
 // Resumo em números: faixa compacta
@@ -200,7 +200,7 @@
     font-size: var(--typescale-title-base-size);
     line-height: 1;
     font-weight: 700;
-    color: var(--cor-estado);
+    color: var(--cor-texto);
     font-variant-numeric: tabular-nums;
 }
 
@@ -519,3 +519,37 @@ button.bloco { border: none; padding: 0; cursor: pointer; width: 100%; font: inh
 }
 
 .painel-abrir { margin-top: auto; justify-content: center; text-decoration: none; }
+
+// A cor nunca é o único sinal (WCAG 1.4.1): cada estado também tem um padrão.
+.bloco.estado-ATRASADO, .amostra.estado-ATRASADO {
+    background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.34) 0 4px, transparent 4px 9px);
+}
+
+.bloco.estado-RISCO, .amostra.estado-RISCO {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.5) 1.6px, transparent 1.8px);
+    background-size: 8px 8px;
+}
+
+.bloco.estado-CONCLUIDO::after {
+    content: '\2713';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--estado-texto);
+}
+
+.amostra {
+    display: inline-block;
+    width: 18px;
+    height: 12px;
+    margin-right: var(--spacing-3xs);
+    border-radius: 3px;
+    background-color: var(--cor-estado);
+    align-self: center;
+
+    &.estado-A_INICIAR { background-color: color-mix(in srgb, var(--estado-previsto) 22%, transparent); border: 1px dashed var(--estado-previsto); }
+    &.estado-CONCLUIDO { position: relative; &::after { content: '\2713'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--estado-texto); } }
+}

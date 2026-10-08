@@ -73,6 +73,7 @@
     <div class="resumo-estados" role="list">
         @for (r of resumoEstados; track r.estado) {
             <div class="resumo-estado estado-{{ r.estado }}" role="listitem" [class.zerado]="r.qtd === 0">
+                <span class="amostra estado-{{ r.estado }}" aria-hidden="true"></span>
                 <span class="resumo-qtd">{{ r.qtd }}</span>
                 <span class="resumo-rotulo">{{ r.rotulo }}</span>
             </div>
