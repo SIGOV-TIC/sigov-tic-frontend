@@ -1,0 +1,78 @@
+<div class="page-header">
+    <h1>Objetivos Estratégicos</h1>
+    <p>Cada objetivo com o avanço dos projetos que o atendem e quais estão fora do trilho</p>
+</div>
+
+@if (carregando) {
+    <div class="estado-vazio"><p>Carregando objetivos...</p></div>
+} @else {
+    <div class="resumo" role="list">
+        <div class="resumo-item" role="listitem">
+            <span class="resumo-valor">{{ objetivos.length }}</span>
+            <span class="resumo-rotulo">{{ objetivos.length === 1 ? 'objetivo' : 'objetivos' }}</span>
+        </div>
+        <div class="resumo-item" role="listitem">
+            <span class="resumo-valor">{{ totalProjetos }}</span>
+            <span class="resumo-rotulo">{{ totalProjetos === 1 ? 'projeto vinculado' : 'projetos vinculados' }}</span>
+        </div>
+        <div class="resumo-item resumo-atencao" role="listitem" [class.zerado]="exigemAtencao === 0">
+            <span class="resumo-valor"><mat-icon>{{ exigemAtencao ? 'warning' : 'check_circle' }}</mat-icon>{{ exigemAtencao }}</span>
+            <span class="resumo-rotulo">{{ exigemAtencao === 1 ? 'objetivo precisa de atenção' : 'objetivos precisam de atenção' }}</span>
+        </div>
+    </div>
+
+    @if (objetivos.length === 0) {
+        <div class="estado-vazio"><p>Nenhum projeto com objetivo estratégico informado.</p></div>
+    }
+
+    <div class="grade">
+        @for (o of objetivos; track o.titulo) {
+            <article class="objetivo" [class.objetivo-sem]="o.semDefinicao">
+                <header class="objetivo-topo">
+                    <h2>{{ o.titulo }}</h2>
+                    <span class="objetivo-qtd">{{ o.projetos.length }} {{ o.projetos.length === 1 ? 'projeto' : 'projetos' }}</span>
+                </header>
+
+                <div class="progresso" role="img" [attr.aria-label]="'Avanço médio dos projetos: ' + o.progresso + '%'">
+                    <span class="progresso-rotulo">Avanço médio</span>
+                    <span class="progresso-valor">{{ o.progresso }}%</span>
+                    <span class="progresso-trilho"><span class="progresso-fill" [style.width.%]="o.progresso"></span></span>
+                </div>
+
+                @if (atencao(o); as texto) {
+                    <p class="atencao estado-{{ o.pior }}"><mat-icon>{{ icone[o.pior] }}</mat-icon>{{ texto }}</p>
+                } @else {
+                    <p class="atencao estado-CONCLUIDO"><mat-icon>check_circle</mat-icon>Nenhum projeto fora do prazo</p>
+                }
+
+                <ul class="projetos">
+                    @for (x of o.projetos; track x.projeto.id) {
+                        <li>
+                            <a class="proj estado-{{ x.estado }}" [routerLink]="['/projeto', x.projeto.id]" [title]="x.projeto.nome + ' · ' + rotulo[x.estado] + ' · avanço ' + x.avanco + '%'">
+                                <mat-icon>{{ icone[x.estado] }}</mat-icon>
+                                <span class="proj-sigla">{{ x.projeto.sigla }}</span>
+                                <span class="proj-avanco">{{ x.avanco }}%</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+
+                @if (o.iniciativas.length || o.indicadores.length) {
+                    <dl class="vinculos">
+                        @if (o.iniciativas.length) {
+                            <dt>Iniciativas</dt><dd>{{ o.iniciativas.join(' · ') }}</dd>
+                        }
+                        @if (o.indicadores.length) {
+                            <dt>Indicadores</dt><dd>{{ o.indicadores.join(' · ') }}</dd>
+                        }
+                    </dl>
+                }
+            </article>
+        }
+    </div>
+
+    <p class="rodape">
+        Avanço médio = média do avanço de cada projeto (fases concluídas e percentual da fase em andamento, ponderados pela duração).
+        Estado de cada projeto segue a mesma regra do Cronograma.
+    </p>
+}

@@ -1,0 +1,132 @@
+<div class="page-header">
+    <h1>Orçamento</h1>
+    <p>Quanto foi orçado, quanto já foi gasto e se o gasto acompanha o avanço de cada projeto</p>
+</div>
+
+@if (carregando) {
+    <div class="estado-vazio"><p>Carregando orçamento...</p></div>
+} @else {
+    <div class="barra-filtro">
+        <label class="filtro">
+            <span>Área</span>
+            <select name="area" [(ngModel)]="area">
+                <option value="">Todas</option>
+                @for (a of areas; track a) {
+                    <option [value]="a">{{ a }}</option>
+                }
+            </select>
+        </label>
+    </div>
+
+    <div class="resumo" role="list">
+        <div class="resumo-item" role="listitem">
+            <span class="resumo-valor">{{ moeda(totalOrcado) }}</span>
+            <span class="resumo-rotulo">Orçado</span>
+        </div>
+        <div class="resumo-item" role="listitem">
+            <span class="resumo-valor">{{ moeda(totalGasto) }}</span>
+            <span class="resumo-rotulo">Gasto</span>
+        </div>
+        <div class="resumo-item" role="listitem">
+            <span class="resumo-valor">{{ moeda(saldo) }}</span>
+            <span class="resumo-rotulo">Saldo</span>
+        </div>
+        <div class="resumo-item" role="listitem">
+            <span class="resumo-valor">{{ execucao }}%</span>
+            <span class="resumo-rotulo">Executado</span>
+        </div>
+        <div class="resumo-item resumo-atencao" role="listitem" [class.zerado]="atencao.length === 0">
+            <span class="resumo-valor"><mat-icon>{{ atencao.length ? 'warning' : 'check_circle' }}</mat-icon>{{ atencao.length }}</span>
+            <span class="resumo-rotulo">{{ atencao.length === 1 ? 'projeto precisa de atenção' : 'projetos precisam de atenção' }}</span>
+        </div>
+    </div>
+
+    <section class="card">
+        <h2>Precisa de atenção</h2>
+        @if (atencao.length === 0) {
+            <p class="vazio-ok"><mat-icon>check_circle</mat-icon> Nenhum projeto com gasto acima do avanço ou do orçado.</p>
+        } @else {
+            <ul class="atencao-lista">
+                @for (l of atencao; track l.projeto.id) {
+                    <li>
+                        <a [routerLink]="['/projeto', l.projeto.id]" class="atencao-item">
+                            <span class="chip situacao-{{ l.situacao }}"><mat-icon>{{ icones[l.situacao] }}</mat-icon>{{ rotulos[l.situacao] }}</span>
+                            <span class="atencao-nome"><strong>{{ l.projeto.sigla }}</strong> {{ l.projeto.nome }}</span>
+                            <span class="atencao-motivo">{{ l.motivo }}</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+
+    <section class="card">
+        <div class="card-topo">
+            <h2>Por área</h2>
+            <span class="legenda"><span class="legenda-gasto"></span> Gasto <span class="legenda-marca"></span> Avanço do projeto</span>
+        </div>
+        <ul class="areas">
+            @for (a of porArea; track a.area) {
+                <li class="area situacao-{{ a.situacao }}">
+                    <span class="area-nome">{{ a.area }}</span>
+                    <span class="trilho" role="img" [attr.aria-label]="a.area + ': gasto ' + a.pctGasto + '% do orçado, avanço ' + a.avanco + '%'">
+                        <span class="trilho-gasto" [style.width.%]="largura(a.pctGasto)"></span>
+                        <span class="trilho-marca" [style.left.%]="largura(a.avanco)"></span>
+                    </span>
+                    <span class="area-valores">
+                        {{ moeda(a.gasto) }} de {{ moeda(a.orcado) }}
+                        <span class="area-sub">gasto {{ a.pctGasto }}% · avanço {{ a.avanco }}%</span>
+                    </span>
+                    <span class="chip situacao-{{ a.situacao }}"><mat-icon>{{ icones[a.situacao] }}</mat-icon>{{ rotulos[a.situacao] }}</span>
+                </li>
+            }
+        </ul>
+    </section>
+
+    <section class="card">
+        <h2>Todos os projetos</h2>
+        <div class="tabela-rolagem">
+            <table class="tabela">
+                <thead>
+                    <tr>
+                        <th>Projeto</th>
+                        <th>Área</th>
+                        <th class="num">Orçado</th>
+                        <th class="num">Gasto</th>
+                        <th class="num">Saldo</th>
+                        <th>Gasto × avanço</th>
+                        <th>Situação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (l of linhas; track l.projeto.id) {
+                        <tr>
+                            <td>
+                                <a [routerLink]="['/projeto', l.projeto.id]" class="proj">
+                                    <strong>{{ l.projeto.sigla }}</strong>
+                                    <span>{{ l.projeto.nome }}</span>
+                                </a>
+                            </td>
+                            <td class="area-col">{{ l.projeto.areaSolicitante || 'Sem área' }}</td>
+                            <td class="num">{{ moeda(l.orcado) }}</td>
+                            <td class="num">{{ moeda(l.gasto) }}</td>
+                            <td class="num" [class.negativo]="l.saldo < 0">{{ moeda(l.saldo) }}</td>
+                            <td>
+                                <span class="trilho trilho-curto situacao-{{ l.situacao }}" role="img" [attr.aria-label]="'Gasto ' + l.pctGasto + '%, avanço ' + l.avanco + '%'">
+                                    <span class="trilho-gasto" [style.width.%]="largura(l.pctGasto)"></span>
+                                    <span class="trilho-marca" [style.left.%]="largura(l.avanco)"></span>
+                                </span>
+                                <span class="par">{{ l.pctGasto }}% / {{ l.avanco }}%</span>
+                            </td>
+                            <td><span class="chip situacao-{{ l.situacao }}"><mat-icon>{{ icones[l.situacao] }}</mat-icon>{{ rotulos[l.situacao] }}</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="rodape">
+            Gasto à frente do avanço = gasto acima do avanço em mais de {{ margem }} pontos percentuais (limite definido pelo sistema).
+            @if (semOrcamento > 0) { {{ semOrcamento }} {{ semOrcamento === 1 ? 'projeto sem orçamento informado não aparece' : 'projetos sem orçamento informado não aparecem' }} aqui. }
+        </p>
+    </section>
+}

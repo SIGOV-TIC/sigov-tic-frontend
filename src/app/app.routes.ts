@@ -4,6 +4,8 @@ import { Portfolio } from './features/projetos/pages/portfolio';
 import { VisualizarProjeto } from './features/projetos/pages/visualizar-projeto';
 import { Cronograma } from './features/cronograma/pages/cronograma';
 import { Dashboard } from './features/dashboard/pages/dashboard';
+import { Orcamento } from './features/orcamento/pages/orcamento';
+import { Objetivos } from './features/objetivos/pages/objetivos';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
@@ -11,6 +13,8 @@ export const routes: Routes = [
   { path: 'cadastro', component: CadastroProjeto },
   { path: 'portfolio', component: Portfolio },
   { path: 'cronograma', component: Cronograma },
+  { path: 'orcamento', component: Orcamento },
+  { path: 'objetivos', component: Objetivos },
   { path: 'projeto/:id', component: VisualizarProjeto },
   { path: 'projeto/:id/editar', component: CadastroProjeto },
 ];

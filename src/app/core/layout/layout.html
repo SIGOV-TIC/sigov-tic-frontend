@@ -20,6 +20,14 @@
                 <mat-icon class="nav-icon">calendar_view_month</mat-icon>
                 Cronograma
             </a>
+            <a class="nav-item" routerLink="/orcamento" routerLinkActive="active">
+                <mat-icon class="nav-icon">payments</mat-icon>
+                Orçamento
+            </a>
+            <a class="nav-item" routerLink="/objetivos" routerLinkActive="active">
+                <mat-icon class="nav-icon">flag</mat-icon>
+                Objetivos
+            </a>
             <a class="nav-item" routerLink="/cadastro" routerLinkActive="active">
                 <mat-icon class="nav-icon">add_circle_outline</mat-icon>
                 Novo Projeto
@@ -89,6 +97,10 @@
                     <span class="breadcrumb-current">Projeto</span>
                 } @else if (estaNoCronograma) {
                     <span class="breadcrumb-current">Cronograma Geral</span>
+                } @else if (estaNoOrcamento) {
+                    <span class="breadcrumb-current">Orçamento</span>
+                } @else if (estaNosObjetivos) {
+                    <span class="breadcrumb-current">Objetivos Estratégicos</span>
                 } @else if (estaNoDashboard) {
                     <span class="breadcrumb-current">Dashboard</span>
                 } @else if (estaNoPortfolio) {

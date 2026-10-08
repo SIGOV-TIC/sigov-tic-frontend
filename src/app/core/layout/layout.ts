@@ -45,6 +45,14 @@ export class Layout implements OnInit {
     return this.router.url.startsWith('/cronograma');
   }
 
+  get estaNoOrcamento(): boolean {
+    return this.router.url.startsWith('/orcamento');
+  }
+
+  get estaNosObjetivos(): boolean {
+    return this.router.url.startsWith('/objetivos');
+  }
+
   get estaNoDashboard(): boolean {
     return this.router.url.startsWith('/dashboard');
   }
