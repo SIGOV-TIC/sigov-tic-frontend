@@ -1,0 +1,34 @@
+<button type="button" class="botao no-print" (click)="abrir()" title="Feedback" aria-label="Enviar feedback">
+    <mat-icon>chat_bubble_outline</mat-icon>
+    Feedback
+</button>
+
+@if (aberto()) {
+    <div class="fundo no-print" (click)="fechar()"></div>
+    <aside class="painel no-print" role="dialog" aria-label="Feedback">
+        <button type="button" class="fechar" (click)="fechar()" aria-label="Fechar"><mat-icon>close</mat-icon></button>
+        <h3>Feedback</h3>
+
+        @if (enviado()) {
+            <p class="ok"><mat-icon>check_circle</mat-icon>Recebido. Obrigado!</p>
+            <div class="acoes">
+                <button type="button" class="secundario" (click)="enviado.set(false)">Escrever outro</button>
+                <button type="button" class="primario" (click)="fechar()">Fechar</button>
+            </div>
+        } @else {
+            <form (ngSubmit)="enviar()">
+                <textarea name="texto" [(ngModel)]="texto" rows="8" autofocus
+                          placeholder="O que você tentou fazer e o que aconteceu?"></textarea>
+                <p class="contexto">Tela: {{ tela }}</p>
+                @if (erro()) {
+                    <p class="erro" role="alert">{{ erro() }}</p>
+                }
+                <div class="acoes">
+                    <button type="submit" class="primario" [disabled]="enviando() || !texto.trim()">
+                        {{ enviando() ? 'Enviando…' : 'Enviar' }}
+                    </button>
+                </div>
+            </form>
+        }
+    </aside>
+}

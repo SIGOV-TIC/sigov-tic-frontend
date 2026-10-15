@@ -140,6 +140,12 @@ thead {
         .group-custo {
             background-color: var(--accent-blue);
             color: #FFFFFF;
+            border-right: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .group-desvio {
+            background-color: var(--accent-blue);
+            color: #FFFFFF;
         }
     }
 
@@ -190,6 +196,32 @@ tbody {
 
 .col-center {
     text-align: center;
+}
+
+.col-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.indice-fora {
+    color: var(--accent-red);
+}
+
+.desvio {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--accent-green);
+}
+
+.desvio-fora {
+    color: var(--accent-red);
+}
+
+.desvio-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
 }
 
 .valor-vazio {

@@ -1,9 +1,5 @@
 .page-header {
-    margin-bottom: 20px;
-    background-color: var(--bg-card-inner);
-    padding: 20px 24px;
-    border-radius: 6px;
-    border: 1px solid var(--border-subtle);
+    margin: 8px 0 20px;
 
     h1 {
         font-size: 22px;
@@ -77,11 +73,9 @@
 }
 
 .kpi-label {
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 500;
     color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
 }
 
 .kpi-valor {
@@ -123,14 +117,10 @@
     padding: 20px;
 
     h3 {
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 600;
-        color: var(--accent-yellow);
+        color: var(--text-primary);
         margin: 0 0 16px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid var(--border-main);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
 }
 
@@ -181,7 +171,7 @@
         font-size: 11px;
         color: var(--text-faint);
         font-weight: 600;
-        text-transform: uppercase;
+        
         letter-spacing: 0.3px;
     }
 }
@@ -296,10 +286,8 @@
 }
 
 .donut-center-label {
-    font-size: 10px;
+    font-size: 12px;
     color: var(--text-faint);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
     line-height: 1.2;
 }
 
@@ -411,7 +399,7 @@
             font-size: 11px;
             font-weight: 600;
             color: var(--text-muted);
-            text-transform: uppercase;
+            
             letter-spacing: 0.4px;
             border-bottom: 1px solid var(--border-main);
         }
@@ -654,3 +642,5 @@
 }
 
 .cronograma-bar[class*='estado-'] { background-color: var(--cor); }
+
+.sem-cronograma { font-size: 12px; color: var(--text-faint); }

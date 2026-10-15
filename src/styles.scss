@@ -78,44 +78,44 @@
 }
 
 [data-theme="light"] {
-  // Sidebar clara + conteúdo claro com estrutura
-  --bg-body: #D5DAE3;
-  --bg-sidebar: #E0E5ED;
-  --bg-sidebar-header: #D8DDE6;
-  --bg-header: #D5DAE3;
-  --bg-header-bar: #E8ECF2;
-  --bg-card: #E8ECF2;
-  --bg-card-inner: #DEE3EB;
-  --bg-input: #E8ECF2;
+  // Claro suave: superfícies neutras-quentes e texto grafite, para não ofuscar em uso prolongado
+  --bg-body: #DCDAD5;
+  --bg-sidebar: #E2E0DB;
+  --bg-sidebar-header: #DAD8D2;
+  --bg-header: #DCDAD5;
+  --bg-header-bar: #E5E3DE;
+  --bg-card: #E5E3DE;
+  --bg-card-inner: #DDDBD5;
+  --bg-input: #EAE8E3;
 
-  --border-main: #C5CCD8;
-  --border-subtle: #CDD4DE;
-  --border-sidebar: #C5CCD8;
+  --border-main: #C9C6BF;
+  --border-subtle: #D3D0C9;
+  --border-sidebar: #C9C6BF;
 
-  --text-primary: #0F1D32;
-  --text-secondary: #1E3050;
-  --text-muted: #3D5068;
-  --text-faint: #4F5D73;
-  --text-dim: #6B7F96;
+  --text-primary: #24272C;
+  --text-secondary: #383D45;
+  --text-muted: #535962;
+  --text-faint: #5A6069;
+  --text-dim: #6E747C;
 
-  --accent-yellow: #2563EB;
-  --accent-yellow-hover: #1D4ED8;
-  --accent-blue: #2563EB;
+  --accent-yellow: #2F5BB5;
+  --accent-yellow-hover: #2B55AD;
+  --accent-blue: #2F5BB5;
   --accent-green: #16A34A;
   --accent-green-hover: #15803D;
   --accent-red: #DC2626;
 
-  --nav-hover-bg: #CDD4DE;
-  --nav-active-bg: #C5CDD9;
-  --nav-text: #3D5068;
+  --nav-hover-bg: #D3D0C9;
+  --nav-active-bg: #CBC8C0;
+  --nav-text: #535962;
 
-  --scrollbar-track: #D5DAE3;
-  --scrollbar-thumb: #B0B9C8;
-  --scrollbar-thumb-hover: #8E99AB;
+  --scrollbar-track: #DCDAD5;
+  --scrollbar-thumb: #B5B2AB;
+  --scrollbar-thumb-hover: #96938C;
 
-  --autocomplete-bg: #E8ECF2;
+  --autocomplete-bg: #E5E3DE;
   --autocomplete-hover: rgba(37, 99, 235, 0.08);
-  --autocomplete-selected: #D5DAE3;
+  --autocomplete-selected: #DCDAD5;
 
   --overlay-bg: rgba(15, 29, 50, 0.4);
   --row-hover: rgba(37, 99, 235, 0.06);
@@ -129,14 +129,14 @@
   --badge-rejeitado-bg: rgba(220, 38, 38, 0.1);
   --badge-rejeitado-text: #991B1B;
 
-  --donut-track: #C5CCD8;
-  --donut-fill: #2563EB;
+  --donut-track: #C9C6BF;
+  --donut-fill: #2F5BB5;
 
   --toggle-bg: #B0B9C8;
   --toggle-knob: #8E99AB;
 
   --estado-concluido: #15803D;
-  --estado-andamento: #2563EB;
+  --estado-andamento: #2F5BB5;
   --estado-risco: #B45309;
   --estado-atrasado: #DC2626;
   --estado-previsto: #586B82;
@@ -217,13 +217,61 @@ html, body {
   }
 }
 
-// Impressão: só o conteúdo da página, em paisagem.
+// Impressão: só o conteúdo da página, em A4 paisagem, sempre no tema claro e em tinta de papel.
 @page {
-  size: landscape;
-  margin: 12mm;
+  size: A4 landscape;
+  margin: 12mm 12mm 16mm;
+
+  @bottom-left {
+    content: 'SIGOV-TIC · Governança do PDTIC';
+    font: 8pt 'Inter', sans-serif;
+    color: #586B82;
+  }
+
+  @bottom-right {
+    content: 'Página ' counter(page) ' de ' counter(pages);
+    font: 8pt 'Inter', sans-serif;
+    color: #586B82;
+  }
 }
 
 @media print {
+  html,
+  html[data-theme],
+  body {
+    --bg-body: #FFFFFF;
+    --bg-card: #FFFFFF;
+    --bg-card-inner: #F3F5F8;
+    --bg-input: #FFFFFF;
+    --border-main: #C5CCD8;
+    --border-subtle: #DDE2EA;
+    --text-primary: #0F1D32;
+    --text-secondary: #1E3050;
+    --text-muted: #3D5068;
+    --text-faint: #4F5D73;
+    --text-dim: #6B7F96;
+    --accent-yellow: #2563EB;
+    --accent-blue: #2563EB;
+    --accent-green: #16A34A;
+    --accent-red: #DC2626;
+    --estado-concluido: #15803D;
+    --estado-andamento: #2563EB;
+    --estado-risco: #B45309;
+    --estado-atrasado: #DC2626;
+    --estado-previsto: #586B82;
+    --estado-texto: #FFFFFF;
+    --estado-concluido-fg: #166534;
+    --estado-andamento-fg: #1D4ED8;
+    --estado-risco-fg: #92400E;
+    --estado-atrasado-fg: #B91C1C;
+    color-scheme: light;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   .sidebar,
   .header,
   .footer,
@@ -239,6 +287,7 @@ html, body {
     overflow: visible !important;
     margin: 0 !important;
     padding: 0 !important;
+    background: #fff !important;
   }
 
   html, body {
@@ -263,5 +312,26 @@ html, body {
   .mdc-button__label {
     font-family: 'Inter', sans-serif;
     font-weight: 600;
+  }
+}
+
+// Falha ao buscar dados da API (mesma mensagem em todas as telas).
+.falha-api {
+  color: var(--accent-red);
+}
+
+.falha-tentar {
+  margin-top: 12px;
+  padding: 6px 16px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: none;
+  border: 1px solid var(--border-main);
+  border-radius: 6px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-primary);
   }
 }

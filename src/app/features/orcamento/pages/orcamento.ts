@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { ProjetoResponse } from '../../projetos/models/projeto';
 import { ProjetoService } from '../../projetos/services/projeto.service';
 import { MARGEM_RISCO_PONTOS } from '../../projetos/utils/saude';
+import { moedaCompacta } from '../../projetos/utils/moeda';
 import { analisarCusto, ORDEM_CUSTO, SituacaoCusto, situacaoCusto } from '../../projetos/utils/custo';
 
 interface LinhaOrcamento {
@@ -24,11 +25,13 @@ interface LinhaArea {
   gasto: number;
   pctGasto: number;
   avanco: number;
-  projetos: number;
   situacao: SituacaoCusto;
+  linhas: LinhaOrcamento[];
 }
 
 @Component({
+  // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-orcamento',
   imports: [RouterLink, FormsModule, MatIconModule],
   templateUrl: './orcamento.html',
@@ -37,7 +40,11 @@ interface LinhaArea {
 export class Orcamento implements OnInit {
   projetos: ProjetoResponse[] = [];
   carregando = true;
+  erro = false;
   area = '';
+
+  // Áreas abertas na tabela. As que têm projeto fora do previsto abrem sozinhas na primeira carga.
+  abertas = new Set<string>();
 
   readonly margem = MARGEM_RISCO_PONTOS;
 
@@ -60,9 +67,13 @@ export class Orcamento implements OnInit {
     this.projetoService.listar(0, 200).subscribe({
       next: (res) => {
         this.projetos = res.content;
+        this.porArea.filter((a) => a.linhas.some((l) => l.situacao !== 'OK')).forEach((a) => this.abertas.add(a.area));
         this.carregando = false;
       },
-      error: () => (this.carregando = false),
+      error: () => {
+        this.carregando = false;
+        this.erro = true;
+      },
     });
   }
 
@@ -138,23 +149,37 @@ export class Orcamento implements OnInit {
         const avanco = Math.round(ls.reduce((a, l) => a + l.avanco * l.orcado, 0) / orcado);
         const pctGasto = Math.round((gasto / orcado) * 100);
         const situacao = situacaoCusto(orcado, gasto, avanco);
-        return { area, orcado, gasto, pctGasto, avanco, projetos: ls.length, situacao };
+        return { area, orcado, gasto, pctGasto, avanco, situacao, linhas: ls };
       })
       .sort((a, b) => ORDEM_CUSTO.indexOf(a.situacao) - ORDEM_CUSTO.indexOf(b.situacao) || b.orcado - a.orcado);
+  }
+
+  alternar(area: string) {
+    if (this.abertas.has(area)) this.abertas.delete(area);
+    else this.abertas.add(area);
+  }
+
+  get todasAbertas(): boolean {
+    const areas = this.porArea;
+    return areas.length > 0 && areas.every((a) => this.abertas.has(a.area));
+  }
+
+  alternarTodas() {
+    if (this.todasAbertas) this.abertas.clear();
+    else this.porArea.forEach((a) => this.abertas.add(a.area));
   }
 
   // ---- Formatação ----
 
   moeda(valor: number): string {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      notation: 'compact',
-      maximumFractionDigits: 1,
-    }).format(valor);
+    return moedaCompacta(valor);
   }
 
   largura(pct: number): number {
     return Math.max(0, Math.min(100, pct));
+  }
+
+  recarregar() {
+    location.reload();
   }
 }

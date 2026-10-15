@@ -1,0 +1,108 @@
+.login {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background-color: var(--bg-body);
+}
+
+.login-form {
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+
+    h1 {
+        margin: 8px 0 4px;
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    label {
+        margin: 16px 0 6px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-secondary);
+    }
+
+    input {
+        height: 40px;
+        padding: 0 12px;
+        font: inherit;
+        font-size: 14px;
+        color: var(--text-primary);
+        background-color: var(--bg-input);
+        border: 1px solid var(--border-main);
+        border-radius: 6px;
+
+        &:focus {
+            outline: 2px solid var(--accent-blue);
+            outline-offset: -1px;
+        }
+    }
+
+    button[type="submit"] {
+        margin-top: 24px;
+        height: 40px;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        color: #FFFFFF;
+        background-color: var(--accent-blue);
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+
+        &:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+    }
+}
+
+.login-marca {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--accent-yellow);
+}
+
+.login-sub {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.login-erro {
+    margin: 16px 0 0;
+    font-size: 13px;
+    color: var(--accent-red);
+}
+
+.login-dica {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--text-faint);
+}
+
+.login-troca {
+    margin: 20px 0 0;
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.login-link {
+    padding: 0;
+    font: inherit;
+    font-weight: 600;
+    color: var(--accent-blue);
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}

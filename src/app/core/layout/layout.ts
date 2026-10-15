@@ -1,9 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { AuthService } from '../auth/auth.service';
+import { BuscaGlobal } from './busca-global';
+import { MenuUsuario } from './menu-usuario';
+import { FeedbackBotao } from '../feedback/feedback-botao';
 
 @Component({
-  imports: [RouterLink, RouterLinkActive, MatIconModule],
+  // Mantém as páginas abaixo alcançáveis pela detecção de mudanças após respostas da API.
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [RouterLink, RouterLinkActive, MatIconModule, BuscaGlobal, MenuUsuario, FeedbackBotao],
   selector: 'app-layout',
   styleUrl: './layout.scss',
   templateUrl: './layout.html',
@@ -11,7 +17,14 @@ import { MatIconModule } from '@angular/material/icon';
 export class Layout implements OnInit {
   temaClaro = false;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    readonly auth: AuthService,
+  ) {}
+
+  sair() {
+    this.auth.logout().subscribe({ complete: () => this.router.navigate(['/login']), error: () => this.router.navigate(['/login']) });
+  }
 
   ngOnInit() {
     try {
@@ -59,5 +72,9 @@ export class Layout implements OnInit {
 
   get estaNoPortfolio(): boolean {
     return this.router.url.startsWith('/portfolio');
+  }
+
+  get estaNoFeedback(): boolean {
+    return this.router.url.startsWith('/feedback');
   }
 }

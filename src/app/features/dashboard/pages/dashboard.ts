@@ -1,11 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ProjetoResponse, StatusProjeto } from '../../projetos/models/projeto';
 import { ProjetoService } from '../../projetos/services/projeto.service';
-import { Estado, ICONE_ESTADO, ROTULO_ESTADO, estadoProjeto } from '../../projetos/utils/saude';
+import { analisarProjeto, Estado, ICONE_ESTADO, ROTULO_ESTADO, estadoProjeto } from '../../projetos/utils/saude';
+import { moedaCompacta } from '../../projetos/utils/moeda';
 
 @Component({
+  // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-dashboard',
   imports: [RouterLink, MatIconModule],
   templateUrl: './dashboard.html',
@@ -14,6 +17,7 @@ import { Estado, ICONE_ESTADO, ROTULO_ESTADO, estadoProjeto } from '../../projet
 export class Dashboard implements OnInit {
   projetos: ProjetoResponse[] = [];
   carregando = true;
+  erro = false;
 
   constructor(private projetoService: ProjetoService) {}
 
@@ -26,6 +30,7 @@ export class Dashboard implements OnInit {
       },
       error: () => {
         this.carregando = false;
+        this.erro = true;
       },
     });
   }
@@ -141,15 +146,12 @@ export class Dashboard implements OnInit {
   }
 
   formatarMoeda(valor: number): string {
-    if (!valor) return 'R$ 0';
-    if (valor >= 1000000) return 'R$ ' + (valor / 1000000).toFixed(1) + 'M';
-    if (valor >= 1000) return 'R$ ' + (valor / 1000).toFixed(0) + 'K';
-    return 'R$ ' + valor.toLocaleString('pt-BR');
+    return moedaCompacta(valor);
   }
 
-  // Situação de prazo calculada (mesma regra do Cronograma); rascunho ainda não tem prazo a acompanhar.
+  // Situação de prazo (mesma regra do Cronograma). O status do cadastro é outra coisa e não entra aqui.
   situacaoDe(p: ProjetoResponse): { estado: Estado; rotulo: string; icone: string } | null {
-    if (p.status === 'RASCUNHO') return null;
+    if (!analisarProjeto(p)) return null;
     const estado = estadoProjeto(p);
     return { estado, rotulo: ROTULO_ESTADO[estado], icone: ICONE_ESTADO[estado] };
   }
@@ -172,5 +174,9 @@ export class Dashboard implements OnInit {
       REJEITADO: 'status-rejeitado',
     };
     return map[status || ''] || 'status-rascunho';
+  }
+
+  recarregar() {
+    location.reload();
   }
 }

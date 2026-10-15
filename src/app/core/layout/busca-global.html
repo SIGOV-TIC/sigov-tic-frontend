@@ -1,0 +1,56 @@
+<div class="busca" [class.aberta]="aberto">
+    <label class="busca-campo">
+        <mat-icon class="busca-icone">search</mat-icon>
+        <input
+            #campo
+            type="text"
+            placeholder="Buscar no sistema..."
+            autocomplete="off"
+            spellcheck="false"
+            [(ngModel)]="termo"
+            (focus)="abrir()"
+            (ngModelChange)="aoDigitar()"
+            (keydown)="aoTeclarNoCampo($event)">
+        @if (!aberto) {
+            <kbd class="busca-tecla">Ctrl K</kbd>
+        }
+    </label>
+
+    @if (aberto) {
+        <div class="busca-painel" role="listbox">
+            @for (grupo of grupos; track grupo.rotulo) {
+                <div class="busca-grupo">
+                    <div class="busca-grupo-titulo">{{ grupo.rotulo }}</div>
+                    @for (item of grupo.itens; track item) {
+                        <button
+                            type="button"
+                            class="busca-item"
+                            role="option"
+                            [class.ativo]="posicao(item) === ativo"
+                            (mouseenter)="ativo = posicao(item)"
+                            (click)="ir(item)">
+                            <mat-icon class="busca-item-icone">{{ icone[item.tipo] }}</mat-icon>
+                            <span class="busca-item-texto">
+                                <span class="busca-item-titulo">
+                                    @for (p of partes(item.titulo); track $index) {
+                                        @if (p.m) { <mark>{{ p.t }}</mark> } @else { {{ p.t }} }
+                                    }
+                                </span>
+                                @if (item.detalhe) {
+                                    <span class="busca-item-detalhe">{{ item.detalhe }}</span>
+                                }
+                            </span>
+                        </button>
+                    }
+                </div>
+            } @empty {
+                <div class="busca-vazio">{{ rotuloVazio }}</div>
+            }
+            <div class="busca-rodape">
+                <span><kbd>↑</kbd><kbd>↓</kbd> navegar</span>
+                <span><kbd>↵</kbd> abrir</span>
+                <span><kbd>esc</kbd> fechar</span>
+            </div>
+        </div>
+    }
+</div>

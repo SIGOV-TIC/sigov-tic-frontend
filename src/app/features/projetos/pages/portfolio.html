@@ -50,6 +50,7 @@
                     <th colspan="3" class="group-descricao">Descrição</th>
                     <th colspan="3" class="group-prazo">Prazo</th>
                     <th colspan="4" class="group-custo">Custo</th>
+                    <th colspan="3" class="group-desvio">Desempenho</th>
                 </tr>
                 <tr class="header-columns">
                     <th>Projeto</th>
@@ -58,10 +59,13 @@
                     <th>Início</th>
                     <th>Término</th>
                     <th>% Decorrido</th>
-                    <th>Planejado (R$) mil</th>
-                    <th>Realizado (R$) mil</th>
+                    <th>Planejado</th>
+                    <th>Realizado</th>
                     <th>Alocação Próprios</th>
                     <th>Alocação Terceirizados</th>
+                    <th title="Índice de desempenho de prazo: avanço físico ÷ prazo decorrido">IDP</th>
+                    <th title="Índice de desempenho de custo: valor entregue ÷ custo realizado">IDC</th>
+                    <th title="IDP × IDC − 1. Faixa aceitável: ±{{ tolerancia }}%">Desvio real</th>
                 </tr>
             </thead>
             <tbody>
@@ -88,6 +92,19 @@
                         <td>{{ formatarMoeda(projeto.custoRealizado) }}</td>
                         <td class="col-center">{{ projeto.qtdProprios || '—' }}</td>
                         <td class="col-center">{{ projeto.qtdTerceiros || '—' }}</td>
+                        @let d = desvio(projeto);
+                        <td class="col-num" [class.indice-fora]="d.noPrazo === false">{{ formatarIndice(d.idp) }}</td>
+                        <td class="col-num" [class.indice-fora]="d.idc != null && d.idc < 1 - tolerancia / 100">{{ formatarIndice(d.idc) }}</td>
+                        <td class="col-num">
+                            @if (d.desvioReal != null) {
+                                <span class="desvio" [class.desvio-fora]="!d.dentro">
+                                    <mat-icon class="desvio-icon">{{ d.dentro ? 'check_circle' : 'error' }}</mat-icon>
+                                    {{ formatarDesvio(d.desvioReal) }}
+                                </span>
+                            } @else {
+                                <span class="valor-vazio">—</span>
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -99,6 +116,7 @@
                     <td><strong>{{ formatarMoeda(totalRealizado) }}</strong></td>
                     <td class="col-center"><strong>{{ totalProprios || '—' }}</strong></td>
                     <td class="col-center"><strong>{{ totalTerceiros || '—' }}</strong></td>
+                    <td colspan="3" class="col-center"><strong>{{ foraDaFaixa }} fora da faixa</strong></td>
                 </tr>
             </tfoot>
         </table>

@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,6 +11,8 @@ import { CORES_FASE, indiceFaseAtual, materializarSituacoes, situacaoFase } from
 type CampoTexto = 'atualizacoes' | 'pontoAtencao' | 'recomendacao';
 
 @Component({
+  // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-visualizar-projeto',
   imports: [RouterLink, FormsModule, MatIconModule, NgTemplateOutlet],
   templateUrl: './visualizar-projeto.html',
@@ -19,6 +21,7 @@ type CampoTexto = 'atualizacoes' | 'pontoAtencao' | 'recomendacao';
 export class VisualizarProjeto implements OnInit {
   projeto!: ProjetoResponse;
   carregando = true;
+  erro = false;
   campoEmEdicao: CampoTexto | null = null;
   textoEdicao = '';
   faseSelecionada: number | null = null;
@@ -33,9 +36,15 @@ export class VisualizarProjeto implements OnInit {
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id')!;
-    this.projetoService.obter(id).subscribe((p) => {
-      this.projeto = p;
-      this.carregando = false;
+    this.projetoService.obter(id).subscribe({
+      next: (p) => {
+        this.projeto = p;
+        this.carregando = false;
+      },
+      error: () => {
+        this.carregando = false;
+        this.erro = true;
+      },
     });
   }
 
@@ -218,5 +227,9 @@ export class VisualizarProjeto implements OnInit {
       REJEITADO: 'status-rejeitado',
     };
     return map[status || ''] || 'status-rascunho';
+  }
+
+  recarregar() {
+    location.reload();
   }
 }

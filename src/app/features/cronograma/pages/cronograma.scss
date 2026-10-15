@@ -1,9 +1,5 @@
 .page-header {
-    margin-bottom: 16px;
-    background-color: var(--bg-card-inner);
-    padding: 20px 24px;
-    border-radius: 6px;
-    border: 1px solid var(--border-subtle);
+    margin: 8px 0 20px;
 
     h1 { font-size: 22px; font-weight: 700; color: var(--text-primary); }
     p { margin: 4px 0 0; font-size: 13px; color: var(--text-muted); }
@@ -61,11 +57,7 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 12px 20px;
-    margin-bottom: 12px;
-    padding: 10px 14px;
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-main);
-    border-radius: 6px;
+    margin-bottom: 20px;
 }
 
 .filtro {
@@ -127,48 +119,6 @@
 
 .filtros-acoes { margin-left: auto; display: flex; gap: 8px; }
 
-// Card e legenda
-.cronograma-card {
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-main);
-    border-radius: 6px;
-    padding: 20px;
-}
-
-.cronograma-topo {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    padding-bottom: 12px;
-    margin-bottom: 4px;
-    border-bottom: 1px solid var(--border-main);
-
-    h3 {
-        margin: 0;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--accent-yellow);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-}
-
-.legenda { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); font-size: var(--typescale-paragraph-x-small-size); color: var(--text-muted); }
-.legenda-item { display: inline-flex; align-items: center; gap: var(--spacing-2xs); }
-.legenda-hoje { width: 2px; height: 14px; background-color: var(--accent-red); }
-.legenda-marco { width: 8px; height: 8px; border-radius: 2px; background-color: var(--text-primary); }
-.legenda-cor {
-    width: 18px;
-    height: 10px;
-    border-radius: 3px;
-    background-color: var(--cor-estado);
-    border: 1.5px solid var(--cor-estado);
-
-    &.estado-A_INICIAR { background-color: transparent; border-style: dashed; }
-}
-
 // Cor = estado, sempre a mesma em toda a tela.
 .estado-CONCLUIDO { --cor-estado: var(--estado-concluido); --cor-texto: var(--estado-concluido-fg); }
 .estado-ANDAMENTO { --cor-estado: var(--estado-andamento); --cor-texto: var(--estado-andamento-fg); }
@@ -177,244 +127,289 @@
 .estado-A_INICIAR { --cor-estado: var(--estado-previsto); --cor-texto: var(--text-muted); }
 .estado-sem { --cor-estado: var(--estado-previsto); }
 
-// Resumo em números: faixa compacta
+// Resumo: contagem por situação, em texto corrido
 .resumo-estados {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: var(--spacing-xs) var(--spacing-lg);
-    margin-bottom: var(--spacing-sm);
-    padding: 0 var(--spacing-2xs);
-    .legenda { margin-left: auto; }
+    gap: 6px 20px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--text-muted);
 }
 
 .resumo-estado {
     display: inline-flex;
-    align-items: baseline;
-    gap: var(--spacing-2xs);
-
-    &.zerado { opacity: 0.45; }
-}
-
-.resumo-qtd {
-    font-size: var(--typescale-title-base-size);
-    line-height: 1;
-    font-weight: 700;
-    color: var(--cor-texto);
-    font-variant-numeric: tabular-nums;
-}
-
-.resumo-rotulo {
-    font-size: var(--typescale-paragraph-small-size);
-    color: var(--text-secondary);
-}
-
-// Matriz
-.gantt-rolagem { overflow-x: auto; }
-
-.gantt {
-    --largura-nome: 260px;
-    min-width: calc(var(--largura-nome) + var(--largura-min, 600px));
-}
-
-.gantt-linha {
-    display: flex;
-    align-items: stretch;
-    border-bottom: 1px solid var(--border-subtle);
-    min-height: 46px;
-}
-
-.gantt-nome {
-    position: sticky;
-    left: 0;
-    z-index: 2;
-    flex: 0 0 var(--largura-nome);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 1px;
-    padding: 0 12px 0 4px;
-    background-color: var(--bg-card);
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-size: 13px;
-    min-width: 0;
-
-    &:hover .gantt-nome-texto { color: var(--text-primary); text-decoration: underline; }
-}
-
-.gantt-nome-cab {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    color: var(--text-muted);
-    align-items: flex-end;
-    justify-content: flex-end;
-    padding-bottom: 6px;
-}
-
-.gantt-nome-texto { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; font-size: 11px; color: var(--text-muted); }
-.gantt-sigla { font-size: 14px; font-weight: 700; color: var(--text-primary); letter-spacing: 0.2px; }
-
-.gantt-cabecalho { border-bottom: 1px solid var(--border-main); min-height: 0; }
-
-.gantt-trilha-cab { position: relative; flex: 1; display: flex; flex-direction: column; min-width: 0; }
-
-.gantt-anos, .gantt-colunas { display: flex; }
-
-.gantt-anos span {
-    text-align: center;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-primary);
-    padding: 6px 0 2px;
-    border-left: 1px solid var(--border-main);
-}
-
-.gantt-colunas span {
-    flex: 1;
-    text-align: center;
-    font-size: 10px;
-    text-transform: uppercase;
-    color: var(--text-faint);
-    padding: 2px 0 6px;
-}
-
-.gantt-trilha {
-    position: relative;
-    flex: 1;
-    min-width: 0;
-    display: grid;
-    grid-template-columns: repeat(var(--colunas), minmax(0, 1fr));
-    gap: 3px;
-    padding: 6px 0;
-}
-
-.gantt-hoje {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    margin-left: -1px;
-    background-color: var(--accent-red);
-    z-index: 3;
-    pointer-events: none;
-}
-
-.gantt-hoje-etiqueta {
-    position: absolute;
-    top: 4px;
-    transform: translateX(-50%);
-    padding: 1px 7px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    background-color: var(--accent-red);
-    color: #fff;
-    z-index: 3;
-}
-
-.bloco, .bloco-vazio {
-    position: relative;
-    height: 32px;
-    border-radius: 5px;
-    box-sizing: border-box;
-}
-
-.bloco {
-    display: block;
-    background-color: var(--cor-estado);
-
-    &:hover { filter: brightness(1.15); }
-    &:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
-
-    // Previsto: tom claro do cinza, sem contorno nem texto.
-    &.estado-A_INICIAR { background-color: color-mix(in srgb, var(--estado-previsto) 22%, transparent); }
-
-    // O "agora": o bloco onde o projeto está hoje.
-    &.bloco-atual { box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px var(--cor-estado); z-index: 2; }
-}
-
-// Marco de entrega: quadradinho no fim de cada fase.
-.marco {
-    position: absolute;
-    right: 3px;
-    bottom: 3px;
-    width: 8px;
-    height: 8px;
-    border-radius: 2px;
-    background-color: var(--estado-texto);
-    border: 1.5px solid var(--estado-texto);
-
-    &.marco-A_INICIAR { background-color: transparent; border-color: var(--text-muted); }
-}
-
-.gantt-fora {
-    grid-column: 1 / -1;
-    display: flex;
     align-items: center;
-    padding-left: 12px;
-    font-size: 11px;
-    font-style: italic;
-    color: var(--text-faint);
+    gap: 5px;
+
+    mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--cor-estado); }
+    b { font-weight: 600; color: var(--text-primary); }
 }
 
-// Agrupamento por área
-.gantt-grupo {
-    padding: 14px 4px 6px;
-    border-bottom: 1px solid var(--border-subtle);
-    position: sticky;
-    left: 0;
-}
-
-.gantt-grupo-titulo {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-}
-
-.gantt-grupo-qtd {
-    margin-left: 6px;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--text-faint);
-    background-color: var(--border-subtle);
-    padding: 1px 8px;
-    border-radius: 10px;
-}
-
-// Sem cronograma, integrado à matriz
-.gantt-grupo-pendente { margin-top: 8px; border-top: 1px dashed var(--border-main); }
-
-.gantt-trilha-sem {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0 12px;
-    background-image: none;
-    background-color: var(--bg-card-inner);
-    border-radius: 4px;
-    margin: 6px 0;
-    border: 1px dashed var(--border-main);
-}
-
-.sem-texto { font-size: 12px; color: var(--text-faint); flex: 1; }
-
-.sem-link {
+.resumo-abrir {
+    margin-left: auto;
     display: inline-flex;
     align-items: center;
     gap: 4px;
+
+    mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+// ---- Linha do tempo ----
+
+.tl {
+    --tl-tabela: 440px;
+    --tl-altura: 40px;
+    overflow-x: auto;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-main);
+    border-radius: 6px;
+}
+
+.tl-conteudo {
+    min-width: calc(var(--tl-tabela) + var(--tl-largura));
+}
+
+.tl-linha {
+    display: flex;
+    min-height: var(--tl-altura);
+}
+
+// Coluna da tabela: fica parada na rolagem horizontal.
+.tl-tabela {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    flex: 0 0 var(--tl-tabela);
+    width: var(--tl-tabela);
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 0 12px 0 8px;
+    background-color: var(--bg-card);
+    border-right: 1px solid var(--border-main);
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.tl-grade {
+    position: relative;
+    flex: 1 0 var(--tl-largura);
+}
+
+.tl-col-nome {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.tl-col-data {
+    flex: 0 0 70px;
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+}
+
+.tl-col-num {
+    flex: 0 0 52px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+}
+
+// Cabeçalho
+.tl-cab {
+    position: relative;
+    z-index: 4;
+    border-bottom: 1px solid var(--border-main);
+    min-height: 52px;
+
+    .tl-tabela { align-items: flex-end; padding-bottom: 8px; font-size: 12px; color: var(--text-muted); }
+}
+
+.tl-anos, .tl-periodos { display: flex; }
+
+.tl-anos span {
+    padding: 8px 8px 2px;
     font-size: 12px;
     font-weight: 600;
-    color: var(--accent-blue);
-    text-decoration: none;
-    mat-icon { font-size: 16px; width: 16px; height: 16px; }
-    &:hover { text-decoration: underline; }
+    color: var(--text-secondary);
+    border-left: 1px solid var(--border-subtle);
 }
+
+.tl-periodos span {
+    flex: 1;
+    padding: 2px 8px 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.tl-hoje-rotulo {
+    position: absolute;
+    top: 6px;
+    transform: translateX(-50%);
+    padding: 0 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent-red);
+    background-color: var(--bg-card);
+}
+
+// Corpo: grade de fundo e linha de hoje cobrem todas as linhas de uma vez.
+.tl-corpo { position: relative; }
+
+.tl-fundo {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--tl-tabela);
+    right: 0;
+    display: flex;
+    pointer-events: none;
+
+    > span { flex: 1; border-left: 1px solid color-mix(in srgb, var(--border-subtle) 60%, transparent); }
+    > span:first-child { border-left: none; }
+    > .tl-virada { border-left-color: var(--border-main); }
+}
+
+.tl-hoje {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 2;
+    width: 2px;
+    margin-left: -1px;
+    background-color: var(--accent-red);
+}
+
+.tl-projeto { border-top: 1px solid var(--border-subtle); }
+.tl-corpo > .tl-projeto:first-of-type { border-top: none; }
+
+.tl-abrir, .tl-abrir-vazio {
+    flex: 0 0 24px;
+    height: 24px;
+}
+
+.tl-abrir {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+
+    &:hover { color: var(--text-primary); background-color: var(--border-subtle); }
+    mat-icon { font-size: 20px; width: 20px; height: 20px; }
+}
+
+.tl-icone {
+    flex: 0 0 16px;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: var(--cor-estado);
+}
+
+.tl-nome {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-secondary);
+    text-decoration: none;
+
+    b { font-weight: 600; color: var(--text-primary); }
+    span { margin-left: 6px; color: var(--text-muted); }
+    &:hover b { text-decoration: underline; }
+}
+
+// Barra do projeto: fina, com o avanço preenchido.
+.tl-resumo {
+    position: absolute;
+    top: 50%;
+    height: 10px;
+    margin-top: -5px;
+    border-radius: 5px;
+    overflow: hidden;
+    background-color: color-mix(in srgb, var(--cor-estado) 28%, transparent);
+}
+
+.tl-feito {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background-color: var(--cor-estado);
+}
+
+// Fases
+.tl-fase {
+    --tl-altura: 34px;
+    background-color: color-mix(in srgb, var(--bg-card-inner) 55%, transparent);
+
+    .tl-tabela { background-color: var(--bg-card-inner); }
+}
+
+.tl-fase-nome {
+    padding-left: 48px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+    color: var(--text-secondary);
+}
+
+.tl-barra {
+    position: absolute;
+    top: 50%;
+    height: 22px;
+    margin-top: -11px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    overflow: hidden;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    background-color: color-mix(in srgb, var(--cor-estado) 30%, var(--bg-card));
+
+    &.estado-A_INICIAR { background-color: color-mix(in srgb, var(--estado-previsto) 18%, var(--bg-card)); }
+    &:hover, &.tl-barra-aberta { outline: 2px solid var(--text-primary); outline-offset: 1px; }
+}
+
+.tl-barra-texto {
+    position: relative;
+    display: block;
+    padding: 0 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 22px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.tl-barra .tl-feito { opacity: 0.85; }
+
+.tl-fora {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: var(--text-faint);
+
+    a { margin-left: 6px; color: var(--accent-blue); text-decoration: none; }
+}
+
+.tl-sem { border-top: 1px dashed var(--border-main); }
+
+.tl-vazio { padding: 32px 0; text-align: center; font-size: 13px; color: var(--text-faint); }
 
 .status-badge {
     display: inline-block;
@@ -429,10 +424,6 @@
 .status-aprovado { background-color: var(--badge-aprovado-bg); color: var(--badge-aprovado-text); }
 .status-rejeitado { background-color: var(--badge-rejeitado-bg); color: var(--badge-rejeitado-text); }
 
-.gantt-vazio { padding: 32px 0; text-align: center; font-size: 13px; color: var(--text-faint); }
-
-.cronograma-rodape { margin: 12px 0 0; font-size: 12px; color: var(--text-faint); }
-
 .estado-vazio {
     padding: 60px 24px;
     text-align: center;
@@ -442,8 +433,6 @@
     border-radius: 6px;
 }
 
-button.bloco { border: none; padding: 0; cursor: pointer; width: 100%; font: inherit; }
-.bloco.bloco-aberto { box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px var(--text-primary); z-index: 2; }
 
 // Painel de detalhe
 .painel-fundo { position: fixed; inset: 0; z-index: 40; background-color: rgba(0, 0, 0, 0.25); }
@@ -520,36 +509,50 @@ button.bloco { border: none; padding: 0; cursor: pointer; width: 100%; font: inh
 
 .painel-abrir { margin-top: auto; justify-content: center; text-decoration: none; }
 
-// A cor nunca é o único sinal (WCAG 1.4.1): cada estado também tem um padrão.
-.bloco.estado-ATRASADO, .amostra.estado-ATRASADO {
-    background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.34) 0 4px, transparent 4px 9px);
-}
+// ---- Impressão ----
 
-.bloco.estado-RISCO, .amostra.estado-RISCO {
-    background-image: radial-gradient(rgba(255, 255, 255, 0.5) 1.6px, transparent 1.8px);
-    background-size: 8px 8px;
-}
+.impressao-cabecalho { display: none; }
 
-.bloco.estado-CONCLUIDO::after {
-    content: '\2713';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--estado-texto);
-}
+@media print {
+    .impressao-cabecalho {
+        display: block;
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--text-primary);
+    }
 
-.amostra {
-    display: inline-block;
-    width: 18px;
-    height: 12px;
-    margin-right: var(--spacing-3xs);
-    border-radius: 3px;
-    background-color: var(--cor-estado);
-    align-self: center;
+    .impressao-marca {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+    }
 
-    &.estado-A_INICIAR { background-color: color-mix(in srgb, var(--estado-previsto) 22%, transparent); border: 1px dashed var(--estado-previsto); }
-    &.estado-CONCLUIDO { position: relative; &::after { content: '\2713'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--estado-texto); } }
+    .impressao-emissao { font-weight: 500; letter-spacing: 0; text-transform: none; }
+
+    .impressao-cabecalho h1 { margin: 4px 0 0; font-size: 20px; font-weight: 700; color: var(--text-primary); }
+    .impressao-cabecalho p { margin: 2px 0 0; font-size: 11px; color: var(--text-muted); }
+
+    .impressao-filtros {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px 18px;
+        margin-top: 8px;
+        font-size: 10px;
+        color: var(--text-muted);
+
+        b { font-weight: 600; color: var(--text-primary); }
+    }
+
+    .resumo-estados { margin: 0 0 8px; break-inside: avoid; }
+
+    .tl { overflow: visible; border: none; background: none; --tl-tabela: 300px; }
+    .tl-conteudo { min-width: 0; }
+    .tl-grade { flex: 1 1 auto; }
+    .tl-tabela { position: static; background: none; }
+    .tl-linha { break-inside: avoid; }
 }

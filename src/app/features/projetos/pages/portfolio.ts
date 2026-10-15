@@ -1,11 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ProjetoResponse, StatusProjeto } from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
+import { calcularDesvio, Desvio, TOLERANCIA_DESVIO } from '../utils/desvio';
 
 @Component({
+  // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-portfolio',
   imports: [FormsModule, RouterLink, MatIconModule],
   templateUrl: './portfolio.html',
@@ -126,6 +129,25 @@ export class Portfolio implements OnInit {
 
   get totalProprios(): number {
     return this.projetosFiltrados.reduce((acc, p) => acc + (p.qtdProprios || 0), 0);
+  }
+
+  readonly tolerancia = TOLERANCIA_DESVIO;
+
+  desvio(projeto: ProjetoResponse): Desvio {
+    return calcularDesvio(projeto);
+  }
+
+  formatarIndice(valor: number | null): string {
+    return valor == null ? '—' : valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  formatarDesvio(valor: number): string {
+    const arred = Math.round(valor);
+    return (arred > 0 ? '+' : '') + arred + '%';
+  }
+
+  get foraDaFaixa(): number {
+    return this.projetosFiltrados.filter((p) => calcularDesvio(p).dentro === false).length;
   }
 
   get totalTerceiros(): number {

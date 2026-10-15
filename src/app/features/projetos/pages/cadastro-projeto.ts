@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
@@ -9,6 +9,8 @@ import { ProjetoRequest, FaseProjeto, TipoProjeto, FaseCiclo, QuadrantePrazo, Qu
 import { ProjetoService } from '../services/projeto.service';
 
 @Component({
+  // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-cadastro-projeto',
   imports: [FormsModule, MatAutocompleteModule, MatIconModule, MatInputModule],
   templateUrl: './cadastro-projeto.html',

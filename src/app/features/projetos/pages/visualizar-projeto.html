@@ -2,6 +2,11 @@
     <div class="estado-vazio">
         <p>Carregando projeto...</p>
     </div>
+} @else if (erro) {
+    <div class="estado-vazio">
+        <p class="falha-api">Não foi possível carregar os dados. Verifique a conexão e tente de novo.</p>
+        <button class="falha-tentar" (click)="recarregar()">Tentar novamente</button>
+    </div>
 } @else {
 
 <div class="projeto-header">

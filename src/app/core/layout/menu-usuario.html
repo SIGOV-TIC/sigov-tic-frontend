@@ -1,0 +1,22 @@
+<div class="menu">
+    <button type="button" class="menu-gatilho" [class.aberto]="aberto" aria-haspopup="menu" [attr.aria-expanded]="aberto" (click)="alternar()">
+        <span class="menu-avatar">{{ iniciais }}</span>
+        <span class="menu-nome">{{ nome }}</span>
+        <mat-icon class="menu-seta">expand_more</mat-icon>
+    </button>
+
+    @if (aberto) {
+        <div class="menu-painel" role="menu">
+            <div class="menu-cabecalho">
+                <span class="menu-cabecalho-nome">{{ nome }}</span>
+                @if (perfil) {
+                    <span class="menu-cabecalho-perfil">{{ perfil }}</span>
+                }
+            </div>
+            <button type="button" class="menu-item" role="menuitem" (click)="aoSair()">
+                <mat-icon>logout</mat-icon>
+                <span>Sair</span>
+            </button>
+        </div>
+    }
+</div>
