@@ -31,11 +31,7 @@
                             (click)="ir(item)">
                             <mat-icon class="busca-item-icone">{{ icone[item.tipo] }}</mat-icon>
                             <span class="busca-item-texto">
-                                <span class="busca-item-titulo">
-                                    @for (p of partes(item.titulo); track $index) {
-                                        @if (p.m) { <mark>{{ p.t }}</mark> } @else { {{ p.t }} }
-                                    }
-                                </span>
+                                <span class="busca-item-titulo">@for (p of partes(item.titulo); track $index) {@if (p.m) {<mark>{{ p.t }}</mark>} @else {{{ p.t }}}}</span>
                                 @if (item.detalhe) {
                                     <span class="busca-item-detalhe">{{ item.detalhe }}</span>
                                 }

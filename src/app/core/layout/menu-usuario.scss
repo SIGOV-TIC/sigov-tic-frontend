@@ -55,7 +55,7 @@
     position: absolute;
     top: calc(100% + 6px);
     right: 0;
-    min-width: 200px;
+    min-width: 280px;
     background-color: var(--bg-card, var(--bg-input));
     border: 1px solid var(--border-main);
     border-radius: 8px;
@@ -110,7 +110,22 @@
     }
 
     &:disabled {
-        opacity: 0.5;
         cursor: default;
+
+        mat-icon,
+        .menu-item-texto > span:first-child {
+            opacity: 0.55;
+        }
     }
+}
+
+.menu-item-texto {
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-item-nota {
+    font-size: 12px;
+    white-space: nowrap;
+    color: var(--text-dim);
 }
