@@ -17,10 +17,6 @@ export class FeedbackService {
 
   constructor(private http: HttpClient) {}
 
-  listar(): Observable<Feedback[]> {
-    return this.http.get<Feedback[]>(this.url);
-  }
-
   // Usuário e data são registrados pela API; a tela e o tema vão daqui.
   enviar(texto: string, tela: string, tema: string): Observable<Feedback> {
     return this.http.post<Feedback>(this.url, { texto, tela, tema });

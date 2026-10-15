@@ -8,7 +8,6 @@ import { Orcamento } from './features/orcamento/pages/orcamento';
 import { Objetivos } from './features/objetivos/pages/objetivos';
 import { Login } from './features/login/login';
 import { authGuard } from './core/auth/auth.guard';
-import { FeedbackPagina } from './features/feedback/feedback';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -25,7 +24,6 @@ export const routes: Routes = [
       { path: 'objetivos', component: Objetivos },
       { path: 'projeto/:id', component: VisualizarProjeto },
       { path: 'projeto/:id/editar', component: CadastroProjeto },
-      { path: 'feedback', component: FeedbackPagina },
     ],
   },
 ];

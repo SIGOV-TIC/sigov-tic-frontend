@@ -73,8 +73,4 @@ export class Layout implements OnInit {
   get estaNoPortfolio(): boolean {
     return this.router.url.startsWith('/portfolio');
   }
-
-  get estaNoFeedback(): boolean {
-    return this.router.url.startsWith('/feedback');
-  }
 }

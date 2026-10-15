@@ -34,13 +34,6 @@
             </a>
         </nav>
 
-        <nav class="nav-section">
-            <span class="nav-label">Gestão</span>
-            <a class="nav-item" routerLink="/feedback" routerLinkActive="active">
-                <mat-icon class="nav-icon">chat_bubble_outline</mat-icon>
-                Feedback
-            </a>
-        </nav>
 
 
     </aside>
@@ -79,8 +72,6 @@
                     <span class="breadcrumb-current">Objetivos Estratégicos</span>
                 } @else if (estaNoDashboard) {
                     <span class="breadcrumb-current">Dashboard</span>
-                } @else if (estaNoFeedback) {
-                    <span class="breadcrumb-current">Feedback</span>
                 } @else if (estaNoPortfolio) {
                     <span class="breadcrumb-current">Portfólio</span>
                 } @else {
