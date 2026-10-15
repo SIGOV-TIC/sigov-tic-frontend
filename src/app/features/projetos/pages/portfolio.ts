@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ProjetoResponse, StatusProjeto } from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
+import { moedaCompacta } from '../utils/moeda';
 import { calcularDesvio, Desvio, TOLERANCIA_DESVIO } from '../utils/desvio';
 
 @Component({
@@ -112,6 +113,20 @@ export class Portfolio implements OnInit {
     if (fim <= inicio) return 0;
     const pct = ((Date.now() - inicio) / (fim - inicio)) * 100;
     return Math.round(Math.min(100, Math.max(0, pct)));
+  }
+
+  moeda(valor: number): string {
+    return moedaCompacta(valor);
+  }
+
+  mesAno(iso?: string): string {
+    if (!iso) return '—';
+    return new Date(iso.slice(0, 10) + 'T00:00').toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }).replace('.', '').replace(' de ', '/');
+  }
+
+  percentualGasto(projeto: ProjetoResponse): number | null {
+    if (!projeto.orcamentoEstimado) return null;
+    return Math.round(((projeto.custoRealizado || 0) / projeto.orcamentoEstimado) * 100);
   }
 
   formatarMoeda(valor?: number): string {

@@ -1,27 +1,10 @@
 .page-header {
-    margin-bottom: 20px;
-    background-color: var(--bg-card-inner);
-    padding: 20px 24px;
-    border-radius: 6px;
-    border: 1px solid var(--border-subtle);
-
-    h1 {
-        font-size: 22px;
-        font-weight: 700;
-        color: var(--text-primary);
-    }
-
-    p {
-        color: var(--text-muted);
-        font-size: 14px;
-        margin-top: 6px;
-    }
-}
-
-.page-header-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin: 8px 0 16px;
+
+    h1 { margin: 0; font-size: 22px; font-weight: 700; color: var(--text-primary); }
 }
 
 .btn-novo {
@@ -110,163 +93,84 @@
 table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 900px;
+    min-width: 860px;
 }
 
-thead {
-    .header-group {
-        th {
-            text-align: center;
-            padding: 10px 16px;
-            font-size: 13px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            border-bottom: 2px solid var(--border-main);
-        }
-
-        .group-descricao {
-            background-color: var(--accent-blue);
-            color: #FFFFFF;
-            border-right: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .group-prazo {
-            background-color: var(--accent-blue);
-            color: #FFFFFF;
-            border-right: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .group-custo {
-            background-color: var(--accent-blue);
-            color: #FFFFFF;
-            border-right: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .group-desvio {
-            background-color: var(--accent-blue);
-            color: #FFFFFF;
-        }
-    }
-
-    .header-columns {
-        background-color: var(--bg-card-inner);
-
-        th {
-            text-align: left;
-            padding: 10px 14px;
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-            border-bottom: 1px solid var(--border-main);
-            white-space: nowrap;
-        }
-    }
-}
-
-tbody {
-    tr {
-        border-bottom: 1px solid var(--border-subtle);
-        transition: background-color 0.15s;
-
-        &:last-child {
-            border-bottom: none;
-        }
-
-        &:hover {
-            background-color: var(--row-hover);
-            cursor: pointer;
-        }
-    }
-
-    td {
-        padding: 12px 14px;
-        font-size: 13px;
-        color: var(--text-secondary);
-        white-space: nowrap;
-    }
-}
-
-.col-nome {
-    color: var(--text-primary);
-    font-weight: 500;
-}
-
-.col-center {
-    text-align: center;
-}
-
-.col-num {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-}
-
-.indice-fora {
-    color: var(--accent-red);
-}
-
-.desvio {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    color: var(--accent-green);
-}
-
-.desvio-fora {
-    color: var(--accent-red);
-}
-
-.desvio-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-}
-
-.valor-vazio {
-    color: var(--text-faint);
-}
-
-.progress-cell {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.progress-mini-track {
-    width: 50px;
-    height: 6px;
-    background-color: var(--border-main);
-    border-radius: 3px;
-    overflow: hidden;
-    flex-shrink: 0;
-}
-
-.progress-mini-fill {
-    height: 100%;
-    background-color: var(--accent-blue);
-    border-radius: 3px;
-    transition: width 0.3s;
-}
-
-.progress-mini-label {
-    font-size: 12px;
-    color: var(--text-muted);
+th, td {
+    padding: 10px 16px;
+    text-align: left;
+    vertical-align: top;
     white-space: nowrap;
 }
 
-tfoot {
-    .row-total {
-        background-color: var(--accent-blue);
-        border-top: 2px solid var(--border-main);
+thead th {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background-color: var(--bg-card);
+    border-bottom: 1px solid var(--border-main);
+}
 
-        td {
-            padding: 12px 14px;
-            font-size: 13px;
-            color: #FFFFFF;
-        }
-    }
+tbody tr {
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background-color 0.15s;
+
+    &:hover { cursor: pointer; }
+    &:hover .col-nome .linha1 { text-decoration: underline; }
+}
+
+td { font-size: 13px; color: var(--text-secondary); }
+
+.linha1 { display: block; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.linha2 { display: block; margin-top: 3px; font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.de { color: var(--text-muted); }
+
+// Nome do projeto fica parado quando a tabela rola para o lado.
+.col-nome {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    white-space: normal;
+    background-color: var(--bg-card);
+
+    .linha1 { font-weight: 500; }
+}
+
+// Fundo opaco também na coluna parada, para o texto que rola não aparecer por trás.
+tbody tr:hover td { background: linear-gradient(var(--row-hover), var(--row-hover)), var(--bg-card); }
+
+.col-num { text-align: right; font-variant-numeric: tabular-nums; }
+.col-num .linha1 { display: flex; justify-content: flex-end; }
+
+.barra {
+    display: block;
+    width: 140px;
+    height: 4px;
+    margin-top: 6px;
+    border-radius: 2px;
+    background-color: var(--border-main);
+}
+
+.barra-fill { display: block; height: 100%; border-radius: 2px; background-color: var(--text-muted); }
+.barra-acima { background-color: var(--accent-red); }
+
+.indice-fora { color: var(--accent-red); }
+
+.desvio { align-items: center; gap: 4px; color: var(--accent-green); }
+.desvio-fora { color: var(--accent-red); }
+.desvio-icon { font-size: 16px; width: 16px; height: 16px; }
+.valor-vazio { color: var(--text-faint); }
+
+tfoot .row-total td {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-top: 1px solid var(--border-main);
+    background-color: var(--bg-card-inner);
+
+    .de { font-weight: 400; }
 }
 
 .status-badge {
