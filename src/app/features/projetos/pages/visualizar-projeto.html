@@ -143,8 +143,8 @@
                                 <input type="date" [(ngModel)]="fase.dataInicio">
                             </label>
                             <label class="fase-campo">
-                                <span>Data de fim</span>
-                                <input type="date" [(ngModel)]="fase.dataFim">
+                                <span>Data de fim *</span>
+                                <input type="date" [(ngModel)]="fase.dataFim" required>
                             </label>
                             <label class="fase-campo">
                                 <span>Percentual concluído (%)</span>
@@ -152,6 +152,9 @@
                             </label>
                         </div>
 
+                        @if (erroFase) {
+                            <p class="fase-erro" role="alert">{{ erroFase }}</p>
+                        }
                         <div class="fase-acoes">
                             @if (situacaoDe(faseSelecionada!) !== 'CONCLUIDA') {
                                 <button type="button" class="btn-concluir-fase" (click)="concluirFase(faseSelecionada!)">

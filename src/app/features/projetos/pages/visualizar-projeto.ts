@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FaseProjeto, ProjetoResponse, SituacaoFase, StatusProjeto } from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
-import { CORES_FASE, indiceFaseAtual, materializarSituacoes, situacaoFase } from '../utils/fase';
+import { CORES_FASE, indiceFaseAtual, janelaFase, materializarSituacoes, situacaoFase } from '../utils/fase';
 
 type CampoTexto = 'atualizacoes' | 'pontoAtencao' | 'recomendacao';
 
@@ -39,6 +39,7 @@ export class VisualizarProjeto implements OnInit {
     this.projetoService.obter(id).subscribe({
       next: (p) => {
         this.projeto = p;
+        this.preencherDatasPlanejadas();
         this.carregando = false;
       },
       error: () => {
@@ -79,14 +80,38 @@ export class VisualizarProjeto implements OnInit {
     fase.percentual = Number.isFinite(valor) ? Math.min(100, Math.max(0, Math.round(valor))) : 0;
   }
 
+  erroFase = '';
+
   alternarEdicaoFase() {
     materializarSituacoes(this.projeto);
+    this.erroFase = '';
     this.editandoFase = !this.editandoFase;
+  }
+
+  // Fases cadastradas antes da data de fim obrigatória recebem as datas planejadas, que o gestor pode ajustar.
+  private preencherDatasPlanejadas() {
+    const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    (this.projeto.fases ?? []).forEach((f, i) => {
+      if (f.dataInicio && f.dataFim) return;
+      const janela = janelaFase(this.projeto, i);
+      if (!janela) return;
+      f.dataInicio = f.dataInicio || iso(janela.ini);
+      f.dataFim = f.dataFim || iso(new Date(janela.fim.getTime() - 86400000));
+    });
   }
 
   salvarFase() {
     const fase = this.faseAberta;
     if (!fase) return;
+    if (!fase.dataFim) {
+      this.erroFase = 'Informe a data de fim da fase.';
+      return;
+    }
+    if (fase.dataInicio && fase.dataFim < fase.dataInicio) {
+      this.erroFase = 'A data de fim precisa ser posterior à data de início.';
+      return;
+    }
+    this.erroFase = '';
     materializarSituacoes(this.projeto);
     this.ajustarPercentual(fase);
     this.persistir();

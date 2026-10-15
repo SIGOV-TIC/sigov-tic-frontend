@@ -605,3 +605,5 @@
   display: flex;
   gap: var(--spacing-2xs);
 }
+
+.fase-painel .fase-erro { margin: 8px 0 0; font-size: 13px; color: var(--estado-atrasado-fg); }
