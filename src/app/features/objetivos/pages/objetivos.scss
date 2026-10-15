@@ -113,7 +113,8 @@
     b { font-weight: 600; color: var(--cor); }
 }
 
-.resumo-nota { font-size: 12px; color: var(--text-faint); }
+// Termo com explicação ao passar o mouse.
+.dica { cursor: help; text-decoration: underline dotted; text-underline-offset: 3px; }
 
 .objetivo-sem .objetivo-titulo { font-weight: 500; color: var(--text-muted); }
 

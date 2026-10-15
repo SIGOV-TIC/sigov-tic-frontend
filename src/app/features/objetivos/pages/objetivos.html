@@ -19,7 +19,6 @@
         @if (metasForaDoPrevisto > 0) {
             <span class="resumo-atencao"><mat-icon>warning</mat-icon><b>{{ metasForaDoPrevisto }}</b> {{ metasForaDoPrevisto === 1 ? 'meta fora do previsto' : 'metas fora do previsto' }}</span>
         }
-        <span class="resumo-nota">*Hoje: onde a meta deveria estar pelo tempo decorrido até o prazo</span>
         <button type="button" class="resumo-abrir" (click)="alternarTodos()">
             <mat-icon>{{ todosAbertos ? 'unfold_less' : 'unfold_more' }}</mat-icon>
             {{ todosAbertos ? 'Recolher tudo' : 'Abrir tudo' }}
@@ -58,7 +57,7 @@
                                         <tr>
                                             <th>Meta</th>
                                             <th class="num">Atual</th>
-                                            <th class="num" title="Onde a meta deveria estar hoje, pelo tempo decorrido até o prazo">Hoje*</th>
+                                            <th class="num"><span class="dica" title="Onde a meta deveria estar hoje, pelo tempo decorrido até o prazo">Hoje</span></th>
                                             <th class="num">Alvo</th>
                                             <th>Prazo</th>
                                             <th>Responsável</th>

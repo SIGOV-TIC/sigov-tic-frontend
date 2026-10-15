@@ -15,6 +15,7 @@ import {
   progressoProjeto,
 } from '../../projetos/utils/saude';
 import { Meta, MetaRequest, MetaService } from '../services/meta.service';
+import { avaliarMeta } from '../utils/meta';
 
 interface LinhaMeta {
   meta: Meta;
@@ -134,27 +135,7 @@ export class Objetivos implements OnInit {
 
   // Situação da meta: o caminho percorrido comparado com o tempo já decorrido até o prazo.
   private linhaMeta(m: Meta): LinhaMeta {
-    const hoje = new Date();
-    const prazo = this.data(m.prazo)!;
-    const inicio = this.data(m.dataInicio) ?? new Date(m.createdAt);
-    const fmtPrazo = prazo.toLocaleDateString('pt-BR');
-    const total = prazo.getTime() - inicio.getTime();
-    const esperado = total > 0 ? Math.min(100, Math.max(0, Math.round(((hoje.getTime() - inicio.getTime()) / total) * 100))) : 100;
-    const valorEsperado = m.valorInicial + (esperado / 100) * (m.valorAlvo - m.valorInicial);
-    const base = { meta: m, esperado, valorEsperado, foraDoRitmo: false };
-
-    if (m.valorAtual == null) {
-      return { ...base, atingido: null, estado: 'A_INICIAR', motivo: 'Ainda sem medição registrada.' };
-    }
-    const atingido = Math.max(0, Math.round(((m.valorAtual - m.valorInicial) / (m.valorAlvo - m.valorInicial)) * 100));
-    if (atingido >= 100) return { ...base, atingido: 100, estado: 'CONCLUIDO', motivo: 'Meta atingida.' };
-    if (hoje > prazo) {
-      return { ...base, atingido, foraDoRitmo: true, estado: 'ATRASADO', motivo: `Prazo vencido em ${fmtPrazo}.` };
-    }
-    if (atingido < esperado - MARGEM_RISCO_PONTOS) {
-      return { ...base, atingido, foraDoRitmo: true, estado: 'RISCO', motivo: 'Abaixo do ritmo.' };
-    }
-    return { ...base, atingido, estado: 'ANDAMENTO', motivo: 'No ritmo.' };
+    return { meta: m, ...avaliarMeta(m) };
   }
 
   // ---- Resumo ----
