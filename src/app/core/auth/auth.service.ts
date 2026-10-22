@@ -33,6 +33,7 @@ const CHAVE = 'sigov_sessao';
 export class AuthService {
   readonly sessao = signal<Sessao | null>(this.lerSessao());
   readonly ehAdmin = computed(() => this.sessao()?.roles.includes('ROLE_ADMIN') ?? false);
+  readonly ehEscritorio = computed(() => this.sessao()?.roles.includes('ROLE_ESCRITORIO') ?? false);
   readonly rotuloPerfil = computed(() => {
     const s = this.sessao();
     const perfil = s?.perfil ?? s?.roles[0]?.replace(/^ROLE_/, '');
@@ -41,9 +42,11 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  // Mesma regra da API: admin faz tudo; PO e Scrum Master editam só o próprio projeto.
+  // Mesma regra da API: admin cuida das contas; o Escritório de Projetos cria e edita projetos e metas;
+  // PO e Scrum Master editam só o próprio projeto.
   pode(acao: Acao, projeto?: VinculoProjeto | null): boolean {
-    if (this.ehAdmin()) return true;
+    if (acao === 'gerenciarUsuarios') return this.ehAdmin();
+    if (this.ehEscritorio()) return true;
     if (acao !== 'editarProjeto' || !projeto) return false;
     const id = this.sessao()?.id;
     return !!id && (projeto.po?.id === id || projeto.scrumMaster?.id === id);

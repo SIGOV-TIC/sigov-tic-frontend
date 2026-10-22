@@ -15,11 +15,17 @@ export const adminGuard: CanActivateFn = () => {
   return inject(Router).createUrlTree(['/dashboard']);
 };
 
-// Edição de projeto: admin, ou PO e Scrum Master do próprio projeto. Os demais voltam à tela do projeto.
+// Cadastro de projeto: só o Escritório de Projetos.
+export const criacaoProjetoGuard: CanActivateFn = () => {
+  if (inject(AuthService).pode('criarProjeto')) return true;
+  return inject(Router).createUrlTree(['/portfolio']);
+};
+
+// Edição de projeto: Escritório de Projetos, ou PO e Scrum Master do próprio projeto. Os demais voltam à tela do projeto.
 export const edicaoProjetoGuard: CanActivateFn = (route) => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  if (auth.ehAdmin()) return true;
+  if (auth.ehEscritorio()) return true;
   const id = route.paramMap.get('id')!;
   const telaDoProjeto = router.createUrlTree(['/projeto', id]);
   return inject(ProjetoService)

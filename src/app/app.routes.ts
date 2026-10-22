@@ -8,7 +8,7 @@ import { Orcamento } from './features/orcamento/pages/orcamento';
 import { Objetivos } from './features/objetivos/pages/objetivos';
 import { Login } from './features/login/login';
 import { Usuarios } from './features/usuarios/pages/usuarios';
-import { adminGuard, authGuard, edicaoProjetoGuard } from './core/auth/auth.guard';
+import { adminGuard, authGuard, criacaoProjetoGuard, edicaoProjetoGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -18,7 +18,7 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: Dashboard },
-      { path: 'cadastro', component: CadastroProjeto, canActivate: [adminGuard] },
+      { path: 'cadastro', component: CadastroProjeto, canActivate: [criacaoProjetoGuard] },
       { path: 'portfolio', component: Portfolio },
       { path: 'cronograma', component: Cronograma },
       { path: 'orcamento', component: Orcamento },
