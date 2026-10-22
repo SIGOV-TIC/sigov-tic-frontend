@@ -1,15 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
-export type Perfil = 'ADMIN' | 'GESTOR_PROJETO' | 'USER';
-
-// Perfis oferecidos na tela; o enum do backend ainda guarda outros, sem uso.
-export const PERFIS: { valor: Perfil; rotulo: string; descricao: string }[] = [
-  { valor: 'ADMIN', rotulo: 'Administrador', descricao: 'Cria projetos e metas e gerencia contas' },
-  { valor: 'GESTOR_PROJETO', rotulo: 'Gestor de projeto', descricao: 'PO ou Scrum Master; edita os projetos a que está vinculado' },
-  { valor: 'USER', rotulo: 'Visualizador', descricao: 'Só consulta' },
-];
+import { Perfil } from '../../../core/auth/perfis';
 
 export interface Usuario {
   id: string;

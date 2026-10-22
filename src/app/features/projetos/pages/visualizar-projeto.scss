@@ -401,6 +401,13 @@
 
 .fase-campo-largo { grid-column: 1 / -1; }
 
+.fase-valor {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
 .fase-acoes {
     display: flex;
     justify-content: flex-end;

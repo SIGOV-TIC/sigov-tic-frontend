@@ -20,7 +20,8 @@ export class MenuUsuario {
   ) {}
 
   get nome(): string {
-    return this.auth.sessao()?.username ?? '';
+    const s = this.auth.sessao();
+    return s?.nome || s?.username || '';
   }
 
   get iniciais(): string {
@@ -28,9 +29,7 @@ export class MenuUsuario {
   }
 
   get perfil(): string {
-    const r = (this.auth.sessao()?.roles ?? [])[0] ?? '';
-    const limpo = r.replace(/^ROLE_/, '').toLowerCase();
-    return limpo ? limpo[0].toUpperCase() + limpo.slice(1) : '';
+    return this.auth.rotuloPerfil();
   }
 
   alternar() {

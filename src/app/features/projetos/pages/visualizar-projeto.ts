@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FaseProjeto, ProjetoResponse, SituacaoFase, StatusProjeto } from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
+import { AuthService } from '../../../core/auth/auth.service';
 import { CORES_FASE, indiceFaseAtual, janelaFase, materializarSituacoes, situacaoFase } from '../utils/fase';
 
 type CampoTexto = 'atualizacoes' | 'pontoAtencao' | 'recomendacao';
@@ -32,7 +33,13 @@ export class VisualizarProjeto implements OnInit {
     private route: ActivatedRoute,
     private projetoService: ProjetoService,
     private snackBar: MatSnackBar,
+    private auth: AuthService,
   ) {}
+
+  // Quem não pode editar vê o projeto e as fases só para leitura.
+  get podeEditar(): boolean {
+    return this.auth.pode('editarProjeto', this.projeto);
+  }
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id')!;

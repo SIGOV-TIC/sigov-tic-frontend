@@ -3,7 +3,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/auth/auth.service';
-import { PERFIS, Usuario, UsuarioRequest, UsuarioService } from '../services/usuario.service';
+import { PERFIS, rotuloPerfil } from '../../../core/auth/perfis';
+import { Usuario, UsuarioRequest, UsuarioService } from '../services/usuario.service';
 
 type Edicao = UsuarioRequest & { id?: string };
 
@@ -54,7 +55,7 @@ export class Usuarios implements OnInit {
   }
 
   rotuloPerfil(perfil: string): string {
-    return PERFIS.find((p) => p.valor === perfil)?.rotulo ?? perfil;
+    return rotuloPerfil(perfil);
   }
 
   // A própria conta não pode perder o perfil de admin nem ser desativada: ninguém ficaria para desfazer.
