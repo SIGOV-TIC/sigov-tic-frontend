@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { MatIconRegistry } from '@angular/material/icon';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
@@ -24,4 +25,9 @@ export class App {
     ),
     { initialValue: location.pathname.startsWith('/login') },
   );
+
+  constructor() {
+    // Ícones de traço fino (Material Symbols); o peso fica em styles.scss.
+    inject(MatIconRegistry).setDefaultFontSetClass('material-symbols-outlined');
+  }
 }

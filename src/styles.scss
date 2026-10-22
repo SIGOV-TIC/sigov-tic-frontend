@@ -335,3 +335,12 @@ html, body {
     color: var(--text-primary);
   }
 }
+
+// Ícones: um conjunto só, traço 300, sem preenchimento. `.icone-cheio` é para quando a forma carrega informação (gravidade).
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-outlined.icone-cheio {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
