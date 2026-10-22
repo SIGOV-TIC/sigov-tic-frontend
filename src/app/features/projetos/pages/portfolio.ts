@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ProjetoResponse, StatusProjeto } from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
+import { AuthService } from '../../../core/auth/auth.service';
 import { moedaCompacta } from '../utils/moeda';
 import { calcularDesvio, Desvio, TOLERANCIA_DESVIO } from '../utils/desvio';
 
@@ -27,7 +28,10 @@ export class Portfolio implements OnInit {
   totalElementos = 0;
   totalPaginas = 0;
 
-  constructor(private projetoService: ProjetoService) {}
+  constructor(
+    private projetoService: ProjetoService,
+    readonly auth: AuthService,
+  ) {}
 
   ngOnInit() {
     this.projetoService.seedSeNecessario();

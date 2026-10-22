@@ -34,6 +34,11 @@ export class UsuarioService {
 
   constructor(private http: HttpClient) {}
 
+  // Gestores ativos, os que podem ser PO ou Scrum Master; aberto a qualquer conta logada.
+  gestores(): Observable<Usuario[]> {
+    return this.http.get<Usuario[]>(`${this.url}/gestores`);
+  }
+
   listar(): Observable<Usuario[]> {
     return this.http.get<Usuario[]>(this.url);
   }

@@ -18,7 +18,7 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: Dashboard },
-      { path: 'cadastro', component: CadastroProjeto },
+      { path: 'cadastro', component: CadastroProjeto, canActivate: [adminGuard] },
       { path: 'portfolio', component: Portfolio },
       { path: 'cronograma', component: Cronograma },
       { path: 'orcamento', component: Orcamento },

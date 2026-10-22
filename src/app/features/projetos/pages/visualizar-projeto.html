@@ -38,11 +38,11 @@
             <div class="responsaveis-grid">
                 <div class="responsavel-item">
                     <span class="responsavel-label">PO</span>
-                    <span class="responsavel-valor">{{ projeto.po || '—' }}</span>
+                    <span class="responsavel-valor">{{ projeto.po?.nome || '—' }}</span>
                 </div>
                 <div class="responsavel-item">
                     <span class="responsavel-label">Scrum Master</span>
-                    <span class="responsavel-valor">{{ projeto.scrumMaster || '—' }}</span>
+                    <span class="responsavel-valor">{{ projeto.scrumMaster?.nome || '—' }}</span>
                 </div>
                 <div class="responsavel-item">
                     <span class="responsavel-label">Patrocinador</span>

@@ -33,8 +33,9 @@ export interface ProjetoRequest {
   indicadorEstrategico?: string;
   tipo?: TipoProjeto;
   faseCiclo?: FaseCiclo;
-  po?: string;
-  scrumMaster?: string;
+  // Contas de gestor de projeto escolhidas como PO e Scrum Master.
+  poId?: string | null;
+  scrumMasterId?: string | null;
   patrocinador?: string;
   gerenteResponsavel?: string;
   dataInicioPrevista?: string;
@@ -52,8 +53,15 @@ export interface ProjetoRequest {
   status?: StatusProjeto;
 }
 
+export interface PessoaResumo {
+  id: string;
+  nome: string;
+}
+
 export interface ProjetoResponse extends ProjetoRequest {
   id: string;
+  po?: PessoaResumo | null;
+  scrumMaster?: PessoaResumo | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -28,10 +28,12 @@
                 <mat-icon class="nav-icon">flag</mat-icon>
                 Objetivos
             </a>
-            <a class="nav-item" routerLink="/cadastro" routerLinkActive="active">
-                <mat-icon class="nav-icon">add_circle_outline</mat-icon>
-                Novo Projeto
-            </a>
+            @if (auth.ehAdmin()) {
+                <a class="nav-item" routerLink="/cadastro" routerLinkActive="active">
+                    <mat-icon class="nav-icon">add_circle_outline</mat-icon>
+                    Novo Projeto
+                </a>
+            }
         </nav>
 
         @if (auth.ehAdmin()) {

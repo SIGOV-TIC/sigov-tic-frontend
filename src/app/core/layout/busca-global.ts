@@ -213,7 +213,7 @@ export class BuscaGlobal {
         tipo: 'projeto',
         titulo: p.nome,
         detalhe,
-        alvo: normalizar([p.nome, p.sigla, p.areaSolicitante, p.areaExecutora, p.gerenteResponsavel, p.po].filter(Boolean).join(' ')),
+        alvo: normalizar([p.nome, p.sigla, p.areaSolicitante, p.areaExecutora, p.gerenteResponsavel, p.po?.nome].filter(Boolean).join(' ')),
         rota: ['/projeto', p.id],
       });
       const obj = (p.objetivoEstrategico ?? '').trim();

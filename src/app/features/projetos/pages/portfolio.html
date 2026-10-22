@@ -1,9 +1,11 @@
 <div class="page-header">
     <h1>Portfólio de Projetos</h1>
-    <a routerLink="/cadastro" class="btn-novo">
-        <mat-icon class="btn-novo-icon">add</mat-icon>
-        Novo Projeto
-    </a>
+    @if (auth.ehAdmin()) {
+        <a routerLink="/cadastro" class="btn-novo">
+            <mat-icon class="btn-novo-icon">add</mat-icon>
+            Novo Projeto
+        </a>
+    }
 </div>
 
 <div class="toolbar">
@@ -34,7 +36,9 @@
             <p>Nenhum projeto encontrado para "{{ busca }}"</p>
         } @else {
             <p>Nenhum projeto cadastrado ainda</p>
-            <a routerLink="/cadastro" class="btn-novo-inline">Cadastrar primeiro projeto</a>
+            @if (auth.ehAdmin()) {
+                <a routerLink="/cadastro" class="btn-novo-inline">Cadastrar primeiro projeto</a>
+            }
         }
     </div>
 } @else {
@@ -57,7 +61,7 @@
                     <tr class="row-link" [routerLink]="['/projeto', projeto.id]">
                         <td class="col-nome">
                             <span class="linha1">{{ projeto.nome }}</span>
-                            <span class="linha2">{{ projeto.sigla }} · {{ projeto.areaSolicitante || 'sem área' }} · {{ projeto.po || 'sem PO' }}</span>
+                            <span class="linha2">{{ projeto.sigla }} · {{ projeto.areaSolicitante || 'sem área' }} · {{ projeto.po?.nome || 'sem PO' }}</span>
                         </td>
                         <td [title]="formatarData(projeto.dataInicioPrevista) + ' a ' + formatarData(projeto.dataConclusaoPrevista)">
                             <span class="linha1">{{ mesAno(projeto.dataInicioPrevista) }} → {{ mesAno(projeto.dataConclusaoPrevista) }}</span>

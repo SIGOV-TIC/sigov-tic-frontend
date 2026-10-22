@@ -16,6 +16,7 @@ import {
 } from '../../projetos/utils/saude';
 import { Meta, MetaRequest, MetaService } from '../services/meta.service';
 import { avaliarMeta } from '../utils/meta';
+import { AuthService } from '../../../core/auth/auth.service';
 
 interface LinhaMeta {
   meta: Meta;
@@ -71,6 +72,7 @@ export class Objetivos implements OnInit {
     private projetoService: ProjetoService,
     private metaService: MetaService,
     private route: ActivatedRoute,
+    readonly auth: AuthService,
   ) {}
 
   ngOnInit() {

@@ -139,33 +139,26 @@
             <div class="field-row">
                 <div class="field">
                     <label for="po">PO</label>
-                    <input id="po" type="text" [(ngModel)]="projeto.po" name="po"
-                           [class.filled]="projeto.po"
-                           placeholder="Digite ou selecione..."
-                           (input)="filtrarPessoas($any($event.target).value)"
-                           (focus)="filtrarPessoas($any($event.target).value)"
-                           [matAutocomplete]="autoPo">
-                    <mat-autocomplete #autoPo="matAutocomplete">
-                        @for (p of pessoasFiltradas; track p) {
-                            <mat-option [value]="p">{{ p }}</mat-option>
+                    <select id="po" name="po" [(ngModel)]="projeto.poId" [class.filled]="projeto.poId">
+                        <option [ngValue]="null">Sem PO definido</option>
+                        @for (g of opcoesGestor; track g.id) {
+                            <option [ngValue]="g.id">{{ g.nome }}</option>
                         }
-                    </mat-autocomplete>
+                    </select>
                 </div>
                 <div class="field">
                     <label for="scrumMaster">Scrum Master</label>
-                    <input id="scrumMaster" type="text" [(ngModel)]="projeto.scrumMaster" name="scrumMaster"
-                           [class.filled]="projeto.scrumMaster"
-                           placeholder="Digite ou selecione..."
-                           (input)="filtrarPessoas($any($event.target).value)"
-                           (focus)="filtrarPessoas($any($event.target).value)"
-                           [matAutocomplete]="autoSm">
-                    <mat-autocomplete #autoSm="matAutocomplete">
-                        @for (p of pessoasFiltradas; track p) {
-                            <mat-option [value]="p">{{ p }}</mat-option>
+                    <select id="scrumMaster" name="scrumMaster" [(ngModel)]="projeto.scrumMasterId" [class.filled]="projeto.scrumMasterId">
+                        <option [ngValue]="null">Sem Scrum Master definido</option>
+                        @for (g of opcoesGestor; track g.id) {
+                            <option [ngValue]="g.id">{{ g.nome }}</option>
                         }
-                    </mat-autocomplete>
+                    </select>
                 </div>
             </div>
+            @if (opcoesGestor.length === 0) {
+                <p class="fase-dica">Nenhum gestor de projeto ativo. O administrador cadastra e ativa os gestores em Usuários.</p>
+            }
             <div class="field-row">
                 <div class="field">
                     <label for="patrocinador">Patrocinador</label>
@@ -582,11 +575,11 @@
                 <div class="resumo-grid">
                     <div class="resumo-item">
                         <span class="resumo-label">PO</span>
-                        <span class="resumo-valor">{{ projeto.po || '—' }}</span>
+                        <span class="resumo-valor">{{ nomeGestor(projeto.poId) || '—' }}</span>
                     </div>
                     <div class="resumo-item">
                         <span class="resumo-label">Scrum Master</span>
-                        <span class="resumo-valor">{{ projeto.scrumMaster || '—' }}</span>
+                        <span class="resumo-valor">{{ nomeGestor(projeto.scrumMasterId) || '—' }}</span>
                     </div>
                     <div class="resumo-item">
                         <span class="resumo-label">Patrocinador</span>

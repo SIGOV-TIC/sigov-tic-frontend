@@ -5,8 +5,9 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ProjetoRequest, FaseProjeto, TipoProjeto, FaseCiclo, QuadrantePrazo, QuadranteCusto } from '../models/projeto';
+import { PessoaResumo, ProjetoRequest, FaseProjeto, TipoProjeto, FaseCiclo, QuadrantePrazo, QuadranteCusto } from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
+import { UsuarioService } from '../../usuarios/services/usuario.service';
 import { janelaFase } from '../utils/fase';
 
 @Component({
@@ -29,7 +30,13 @@ export class CadastroProjeto implements OnInit {
     fases: [],
     priorizadoPdtic: false,
     inovador: false,
+    poId: null,
+    scrumMasterId: null,
   };
+
+  // Gestores ativos; o PO/SM atual entra mesmo que a conta tenha sido desativada depois.
+  gestores: PessoaResumo[] = [];
+  vinculados: PessoaResumo[] = [];
 
   novaFase: FaseProjeto = { nome: '', duracaoMeses: 1, dataFim: '' };
   erroFase = '';
@@ -150,6 +157,7 @@ export class CadastroProjeto implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private snackBar: MatSnackBar,
+    private usuarioService: UsuarioService,
   ) {
     this.nomesFiltrados = this.nomes;
     this.siglasFiltradas = this.siglas;
@@ -162,6 +170,10 @@ export class CadastroProjeto implements OnInit {
   }
 
   ngOnInit() {
+    this.usuarioService.gestores().subscribe({
+      next: (gs) => (this.gestores = gs.map(({ id, nome }) => ({ id, nome }))),
+      error: () => (this.gestores = []),
+    });
     this.projetoId = this.route.snapshot.paramMap.get('id');
     if (!this.projetoId) return;
     this.projetoService.obter(this.projetoId).subscribe((p) => {
@@ -169,10 +181,25 @@ export class CadastroProjeto implements OnInit {
         this.router.navigate(['/portfolio']);
         return;
       }
-      const { id, createdAt, updatedAt, ...dados } = p;
-      this.projeto = { ...dados, fases: (dados.fases ?? []).map((f) => ({ ...f })) };
+      const { id, createdAt, updatedAt, po, scrumMaster, ...dados } = p;
+      this.vinculados = [po, scrumMaster].filter((g): g is PessoaResumo => !!g);
+      this.projeto = {
+        ...dados,
+        poId: po?.id ?? null,
+        scrumMasterId: scrumMaster?.id ?? null,
+        fases: (dados.fases ?? []).map((f) => ({ ...f })),
+      };
       this.preencherDatasPlanejadas();
     });
+  }
+
+  get opcoesGestor(): PessoaResumo[] {
+    const porId = new Map([...this.vinculados, ...this.gestores].map((g) => [g.id, g]));
+    return [...porId.values()].sort((a, b) => a.nome.localeCompare(b.nome));
+  }
+
+  nomeGestor(id?: string | null): string {
+    return this.opcoesGestor.find((g) => g.id === id)?.nome ?? '';
   }
 
   get modoEdicao(): boolean {
@@ -414,7 +441,7 @@ export class CadastroProjeto implements OnInit {
   }
 
   limpar() {
-    this.projeto = { nome: '', sigla: '', fases: [], priorizadoPdtic: false, inovador: false };
+    this.projeto = { nome: '', sigla: '', fases: [], priorizadoPdtic: false, inovador: false, poId: null, scrumMasterId: null };
     this.etapaAtual = 0;
     this.mostrarResumo = false;
     this.etapasConcluidas = false;

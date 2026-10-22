@@ -1,6 +1,8 @@
 <div class="page-header">
     <h1>Objetivos Estratégicos</h1>
-    <button type="button" class="btn-acao" (click)="novaMeta()"><mat-icon>add</mat-icon>Nova meta</button>
+    @if (auth.ehAdmin()) {
+        <button type="button" class="btn-acao" (click)="novaMeta()"><mat-icon>add</mat-icon>Nova meta</button>
+    }
 </div>
 
 @if (carregando) {
@@ -89,9 +91,11 @@
                                                 <td>{{ prazoCurto(m.meta.prazo) }}</td>
                                                 <td>{{ m.meta.responsavel || '—' }}</td>
                                                 <td class="acao">
-                                                    <button type="button" class="editar" (click)="editar(m.meta)" [attr.aria-label]="'Atualizar meta ' + m.meta.indicador">
-                                                        <mat-icon>edit</mat-icon>
-                                                    </button>
+                                                    @if (auth.ehAdmin()) {
+                                                        <button type="button" class="editar" (click)="editar(m.meta)" [attr.aria-label]="'Atualizar meta ' + m.meta.indicador">
+                                                            <mat-icon>edit</mat-icon>
+                                                        </button>
+                                                    }
                                                 </td>
                                             </tr>
                                         }
@@ -100,7 +104,9 @@
                             } @else {
                                 <p class="itens-vazio">Nenhuma meta cadastrada para este objetivo.</p>
                             }
-                            <button type="button" class="link" (click)="novaMeta(o.titulo)"><mat-icon>add</mat-icon>Adicionar meta</button>
+                            @if (auth.ehAdmin()) {
+                                <button type="button" class="link" (click)="novaMeta(o.titulo)"><mat-icon>add</mat-icon>Adicionar meta</button>
+                            }
                         }
 
                         <div class="projetos">
