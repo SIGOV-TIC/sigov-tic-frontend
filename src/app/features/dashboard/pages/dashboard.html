@@ -13,74 +13,42 @@
 } @else {
     @let als = alertas;
 
-    <div class="kpis">
-        <section class="cartao manchete">
-            @if (als.length > 0) {
-                <p class="manchete-numero">{{ als.length }}</p>
-                <p class="manchete-texto">{{ als.length === 1 ? 'item precisa de atenção' : 'itens precisam de atenção' }}</p>
-                <p class="manchete-sub">
-                    @if (graves > 0) { <span class="grave">{{ graves }} {{ graves === 1 ? 'grave' : 'graves' }}</span> · }
-                    {{ als.length - graves }} em atenção
-                </p>
-            } @else {
-                <mat-icon class="manchete-ok">check_circle</mat-icon>
-                <p class="manchete-texto">Tudo dentro do previsto.</p>
-            }
-        </section>
-
-        @for (l of panorama; track l.chave) {
-            @let v = variacao(l);
-            <section class="cartao kpi">
-                <a class="kpi-nome" [routerLink]="l.link">{{ l.nome }}</a>
-                <p class="kpi-valor"><b>{{ l.ok }}</b> de {{ l.total }}</p>
-                <p class="kpi-rotulo">{{ l.unidade }} {{ l.situacao }}</p>
-                <div class="pan-unidades" role="list" [attr.aria-label]="l.nome + ': ' + l.resumo">
-                    @for (u of l.unidades; track $index) {
-                        <a class="unidade u-{{ u.classe }}" role="listitem" [routerLink]="u.link" [queryParams]="u.query" [title]="u.rotulo" [attr.aria-label]="u.rotulo"></a>
-                    }
-                </div>
-                @if (v) {
-                    <p class="kpi-tendencia">
-                        @if (v.serie.length > 2) {
-                            <svg class="spark" viewBox="0 0 120 24" preserveAspectRatio="none" aria-hidden="true"><polyline [attr.points]="linha(v.serie)" /></svg>
-                        }
-                        <span [class.melhora]="v.delta > 0" [class.piora]="v.delta < 0">
-                            {{ v.delta > 0 ? '▲ ' + v.delta : v.delta < 0 ? '▼ ' + -v.delta : 'sem mudança' }}
-                        </span>
-                        desde {{ v.desde }}
-                    </p>
-                }
-            </section>
+    <section class="faixa" aria-label="Indicadores do portfólio">
+        @for (i of indicadores; track i.nome) {
+            <a class="ind" [class.g-grave]="i.gravidade === 'grave'" [class.g-atencao]="i.gravidade === 'atencao'" [routerLink]="i.link">
+                <span class="ind-cab">{{ i.nome }}<mat-icon>arrow_forward</mat-icon></span>
+                <span class="ind-valor"><b>{{ i.valor }}</b>@if (i.rotulo) { <span>{{ i.rotulo }}</span> }</span>
+                <span class="ind-sub">{{ i.sub }}</span>
+            </a>
         }
-    </div>
-
-    <p class="legenda">
-        <span><i class="unidade u-ok"></i>no previsto</span>
-        <span><i class="unidade u-concluido"></i>concluído</span>
-        <span><i class="unidade u-atencao"></i>em atenção</span>
-        <span><i class="unidade u-grave"></i>grave</span>
-        <span><i class="unidade u-vazio"></i>sem dados</span>
-    </p>
+    </section>
 
     <div class="corpo">
         <section class="cartao">
-            <h2>Precisa de atenção</h2>
+            <h2>Precisa de atenção @if (als.length > 0) { <span class="qtd">{{ als.length }}</span> }</h2>
             @if (als.length > 0) {
                 @let pagAl = alertasDaPagina(als);
+                <div class="tab tab-cab" aria-hidden="true">
+                    <span></span><span>Projeto / meta</span><span>Tipo</span><span>Situação</span><span>Responsável</span><span></span>
+                </div>
                 <ul class="alertas">
                     @for (a of pagAl.itens; track $index) {
                         <li>
-                            <a class="alerta g-{{ a.gravidade }}" [routerLink]="a.link" [queryParams]="a.query">
-                                <mat-icon class="alerta-icone">{{ a.gravidade === 'grave' ? 'error' : 'warning' }}</mat-icon>
-                                <span class="alerta-corpo">
-                                    <span class="alerta-titulo">@if (a.sigla) { <b>{{ a.sigla }}</b> }{{ a.titulo }}@if (a.objetivo) { <span class="alerta-objetivo">· {{ a.objetivo }}</span> }</span>
-                                    <span class="alerta-motivo">{{ a.motivo }}</span>
+                            <a class="tab alerta g-{{ a.gravidade }}" [routerLink]="a.link" [queryParams]="a.query">
+                                <mat-icon class="icone-cheio sev" [attr.aria-label]="a.gravidade === 'grave' ? 'Grave' : 'Em atenção'">{{ a.gravidade === 'grave' ? 'error' : 'warning' }}</mat-icon>
+                                <span class="dupla">
+                                    <span class="a">@if (a.sigla) { <b>{{ a.sigla }}</b> }{{ a.titulo }}</span>
+                                    <span class="b">{{ a.contexto }}</span>
                                 </span>
-                                <span class="alerta-tipo">{{ a.tipo }}</span>
-                                <span class="alerta-pessoa">
-                                    @if (a.responsavel) { <span class="avatar">{{ iniciais(a.responsavel) }}</span>{{ a.responsavel }} }
+                                <span class="tipo">{{ a.tipo }}</span>
+                                <span class="dupla sit">
+                                    <span class="a">{{ a.situacao }}</span>
+                                    <span class="b">{{ a.referencia }}</span>
                                 </span>
-                                <mat-icon class="alerta-ir">chevron_right</mat-icon>
+                                <span class="pessoa">
+                                    @if (a.responsavel) { <span class="avatar">{{ iniciais(a.responsavel) }}</span><span class="pessoa-nome">{{ a.responsavel }}</span> } @else { <span class="sem">—</span> }
+                                </span>
+                                <mat-icon class="ir">chevron_right</mat-icon>
                             </a>
                         </li>
                     }
@@ -91,38 +59,27 @@
             }
         </section>
 
-        <aside class="lateral">
-            <section class="cartao">
-                <h2>Próximos 30 dias</h2>
-                @let ps = proximos;
-                @if (ps.length > 0) {
-                    <ul class="proximos">
-                        @for (v of ps; track $index) {
-                            <li>
-                                <a [routerLink]="v.link" [queryParams]="v.query">
-                                    <span class="prox-data"><b>{{ dia(v.data) }}</b>{{ emDias(v.data) }}</span>
-                                    <span class="prox-corpo">
-                                        <span class="prox-titulo">{{ v.titulo }}</span>
-                                        <span class="prox-sub">{{ v.tipo }} · {{ v.sub }}</span>
-                                    </span>
-                                </a>
-                            </li>
-                        }
-                    </ul>
-                } @else {
-                    <p class="vazio">Nenhuma fase ou meta vence nos próximos 30 dias.</p>
-                }
-            </section>
-
-            <section class="cartao">
-                <h2>Portfólio</h2>
-                <dl class="numeros">
-                    <div><dt>Executado</dt><dd><b>{{ moeda(gasto) }}</b> de {{ moeda(orcado) }}</dd></div>
-                    <div class="barra"><span [style.width.%]="orcado ? (gasto / orcado * 100) : 0"></span></div>
-                    <div><dt>Projetos</dt><dd><b>{{ projetos.length }}</b> · {{ emAndamento }} em andamento · {{ concluidos }} {{ concluidos === 1 ? 'concluído' : 'concluídos' }}</dd></div>
-                    <div><dt>Avanço médio</dt><dd><b>{{ avancoMedio }}%</b></dd></div>
-                </dl>
-            </section>
-        </aside>
+        <section class="cartao">
+            <h2>Próximos 30 dias</h2>
+            @let ps = proximos;
+            @if (ps.length > 0) {
+                <ul class="marcos">
+                    @for (v of ps; track $index) {
+                        <li>
+                            <a [routerLink]="v.link" [queryParams]="v.query">
+                                <span class="dia"><b>{{ diaDoMes(v.data) }}</b><small>{{ mes(v.data) }}</small></span>
+                                <span class="dupla">
+                                    <span class="a"><b>{{ v.marco }}</b> — {{ v.dono }}</span>
+                                    <span class="b">{{ v.sub }}</span>
+                                </span>
+                                <span class="quando">{{ emDias(v.data) }}</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            } @else {
+                <p class="vazio">Nenhuma fase ou meta vence nos próximos 30 dias.</p>
+            }
+        </section>
     </div>
 }

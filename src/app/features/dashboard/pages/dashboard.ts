@@ -4,8 +4,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { catchError, forkJoin, of } from 'rxjs';
 import { ProjetoResponse } from '../../projetos/models/projeto';
 import { ProjetoService } from '../../projetos/services/projeto.service';
-import { analisarProjeto, Estado, ORDEM_ESTADOS, progressoProjeto } from '../../projetos/utils/saude';
-import { analisarCusto, SituacaoCusto } from '../../projetos/utils/custo';
+import { analisarProjeto } from '../../projetos/utils/saude';
+import { analisarCusto } from '../../projetos/utils/custo';
 import { moedaCompacta } from '../../projetos/utils/moeda';
 import { Meta, MetaService } from '../../objetivos/services/meta.service';
 import { avaliarMeta } from '../../objetivos/utils/meta';
@@ -21,52 +21,38 @@ interface Alerta {
   gravidade: Gravidade;
   titulo: string;
   sigla?: string;
-  // Objetivo da meta: o mesmo indicador pode aparecer em mais de um.
-  objetivo?: string;
-  motivo: string;
+  // Linha de baixo do título: fase atual do projeto ou objetivo da meta.
+  contexto: string;
+  // Coluna Situação: o desvio em cima, a referência embaixo.
+  situacao: string;
+  referencia: string;
   responsavel?: string;
   link: unknown[];
   query?: Record<string, string>;
 }
 
-// Um quadradinho do panorama: um projeto ou uma meta.
-interface Unidade {
-  rotulo: string;
-  classe: 'ok' | 'concluido' | 'grave' | 'atencao' | 'vazio';
-  link: unknown[];
-  query?: Record<string, string>;
-}
-
-interface LinhaPanorama {
-  chave: 'prazo' | 'custo' | 'metas';
+// Um número da faixa do topo; nos de problema, o número é o que está fora do previsto.
+interface Indicador {
   nome: string;
-  ok: number;
-  total: number;
-  unidade: string;
-  situacao: string;
-  unidades: Unidade[];
-  resumo: string;
   link: string;
+  valor: number | string;
+  rotulo: string;
+  sub: string;
+  gravidade: Gravidade | null;
 }
 
 // Fase ou meta que vence nos próximos dias.
 interface Vencimento {
   data: Date;
-  tipo: 'Fase' | 'Meta';
-  titulo: string;
+  marco: string;
+  dono: string;
   sub: string;
   link: unknown[];
   query?: Record<string, string>;
 }
 
-// Comparação com o retrato mais antigo dentro da janela.
-interface Variacao {
-  delta: number;
-  desde: string;
-  serie: number[];
-}
-
 const DIAS_PROXIMOS = 30;
+const MESES = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
 
 @Component({
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
@@ -79,7 +65,6 @@ const DIAS_PROXIMOS = 30;
 export class Dashboard implements OnInit {
   projetos: ProjetoResponse[] = [];
   metas: Meta[] = [];
-  retratos: Retrato[] = [];
   carregando = true;
   erro = false;
 
@@ -96,13 +81,10 @@ export class Dashboard implements OnInit {
     forkJoin({
       projetos: this.projetoService.listar(0, 100),
       metas: this.metaService.listar(),
-      // Sem histórico o painel funciona igual, só não mostra a tendência.
-      retratos: this.retratoService.listar().pipe(catchError(() => of([] as Retrato[]))),
     }).subscribe({
-      next: ({ projetos, metas, retratos }) => {
+      next: ({ projetos, metas }) => {
         this.projetos = projetos.content.filter((p) => p.status !== 'REJEITADO');
         this.metas = metas;
-        this.retratos = retratos;
         this.carregando = false;
         this.registrarRetrato();
       },
@@ -118,9 +100,63 @@ export class Dashboard implements OnInit {
     return texto.charAt(0).toUpperCase() + texto.slice(1);
   }
 
+  // ---- Faixa do topo ----
+
+  get indicadores(): Indicador[] {
+    const prazo = this.projetos.map((p) => analisarProjeto(p)?.estado).filter((e) => !!e);
+    const atrasados = prazo.filter((e) => e === 'ATRASADO').length;
+    const emRisco = prazo.filter((e) => e === 'RISCO').length;
+
+    const custos = this.projetos.map((p) => analisarCusto(p)).filter((c) => !!c);
+    const acima = custos.filter((c) => c.situacao === 'ESTOURADO').length;
+    const aFrente = custos.filter((c) => c.situacao === 'ALERTA').length;
+
+    const metas = this.metas.map((m) => avaliarMeta(m));
+    const fora = metas.filter((a) => a.foraDoRitmo);
+    const vencidas = fora.filter((a) => a.estado === 'ATRASADO').length;
+
+    const de = (n: number, coisa: string) => `de ${n} ${coisa}`;
+    return [
+      {
+        nome: 'Projetos',
+        link: '/portfolio',
+        valor: this.projetos.length,
+        rotulo: '',
+        sub: `${this.emAndamento} em andamento · ${this.concluidos} ${this.concluidos === 1 ? 'concluído' : 'concluídos'}`,
+        gravidade: null,
+      },
+      {
+        nome: 'Prazo',
+        link: '/cronograma',
+        valor: atrasados,
+        rotulo: atrasados === 1 ? 'atrasado' : 'atrasados',
+        sub: emRisco ? `${emRisco} em risco · ${de(prazo.length, 'projetos')}` : de(prazo.length, 'projetos'),
+        gravidade: atrasados ? 'grave' : emRisco ? 'atencao' : null,
+      },
+      {
+        nome: 'Custo',
+        link: '/orcamento',
+        valor: acima,
+        rotulo: 'acima do orçado',
+        sub: aFrente
+          ? `${aFrente} com gasto à frente do avanço`
+          : `${moedaCompacta(this.gasto)} de ${moedaCompacta(this.orcado)} executados`,
+        gravidade: acima ? 'grave' : aFrente ? 'atencao' : null,
+      },
+      {
+        nome: 'Metas',
+        link: '/objetivos',
+        valor: fora.length,
+        rotulo: 'fora do ritmo',
+        sub: de(metas.length, 'metas'),
+        gravidade: vencidas ? 'grave' : fora.length ? 'atencao' : null,
+      },
+    ];
+  }
+
   // ---- O que precisa de atenção ----
 
-  // A manchete e os cartões contam a lista inteira; a página só recorta o que aparece.
+  // A contagem e a faixa do topo valem para a lista inteira; a página só recorta o que aparece.
   readonly tamanhoPagina = 8;
   readonly pagina = paginaNaUrl();
 
@@ -134,13 +170,16 @@ export class Dashboard implements OnInit {
 
     this.projetos.forEach((p) => {
       const a = analisarProjeto(p);
+      const fases = p.fases ?? [];
+      const faseAtual = a && fases[a.atual] ? `Fase atual: ${fases[a.atual].nome}` : p.areaSolicitante || '';
       if (a && (a.estado === 'ATRASADO' || a.estado === 'RISCO')) {
         lista.push({
           tipo: 'Prazo',
           gravidade: a.estado === 'ATRASADO' ? 'grave' : 'atencao',
           titulo: p.nome,
           sigla: p.sigla,
-          motivo: this.motivoPrazo(p),
+          contexto: faseAtual,
+          ...this.situacaoPrazo(p),
           responsavel: p.gerenteResponsavel,
           link: ['/cronograma'],
         });
@@ -152,10 +191,9 @@ export class Dashboard implements OnInit {
           gravidade: c.situacao === 'ESTOURADO' ? 'grave' : 'atencao',
           titulo: p.nome,
           sigla: p.sigla,
-          motivo:
-            c.situacao === 'ESTOURADO'
-              ? `Gastou ${moedaCompacta(c.gasto - c.orcado)} além do orçado.`
-              : `Gastou ${c.pctGasto}% do orçado com ${c.avanco}% de avanço.`,
+          contexto: faseAtual,
+          situacao: c.situacao === 'ESTOURADO' ? `${moedaCompacta(c.gasto - c.orcado)} acima` : `${c.pctGasto}% gasto`,
+          referencia: c.situacao === 'ESTOURADO' ? `de ${moedaCompacta(c.orcado)} orçados` : `${c.avanco}% de avanço`,
           responsavel: p.gerenteResponsavel,
           link: ['/orcamento'],
         });
@@ -165,16 +203,15 @@ export class Dashboard implements OnInit {
     this.metas.forEach((m) => {
       const av = avaliarMeta(m);
       if (!av.foraDoRitmo) return;
-      const n = (v: number) => v.toLocaleString('pt-BR', { maximumFractionDigits: Math.abs(v) < 10 ? 1 : 0 });
+      const pct = m.unidade === '%';
+      const n = (v: number) => v.toLocaleString('pt-BR', { maximumFractionDigits: Math.abs(v) < 10 ? 1 : 0 }) + (pct ? '%' : '');
       lista.push({
         tipo: 'Meta',
         gravidade: av.estado === 'ATRASADO' ? 'grave' : 'atencao',
         titulo: m.indicador,
-        objetivo: m.objetivo,
-        motivo:
-          av.estado === 'ATRASADO'
-            ? av.motivo
-            : `Está em ${n(m.valorAtual!)}${m.unidade === '%' ? '%' : ''}; pelo tempo decorrido, deveria estar em ${n(av.valorEsperado)}${m.unidade === '%' ? '%' : ''}.`,
+        contexto: m.objetivo,
+        situacao: pct ? `${n(m.valorAtual!)} realizado` : `Atual ${n(m.valorAtual!)}`,
+        referencia: av.estado === 'ATRASADO' ? `prazo venceu em ${this.dia(this.lerData(m.prazo))}` : `${n(av.valorEsperado)} esperado`,
         responsavel: m.responsavel,
         link: ['/objetivos'],
         query: { abrir: m.objetivo },
@@ -186,23 +223,25 @@ export class Dashboard implements OnInit {
     return lista.sort((a, b) => peso(a) - peso(b) || ordemTipo[a.tipo] - ordemTipo[b.tipo]);
   }
 
-  // Por que o projeto está atrasado ou em risco, em uma frase.
-  private motivoPrazo(p: ProjetoResponse): string {
+  // Desvio do prazo em duas partes curtas: o que está errado e contra o quê.
+  private situacaoPrazo(p: ProjetoResponse): { situacao: string; referencia: string } {
     const a = analisarProjeto(p)!;
     const fases = p.fases ?? [];
     const i = a.estados.findIndex((e) => e === a.estado);
-    if (i < 0) return a.estado === 'ATRASADO' ? 'Marcado como atrasado no cadastro.' : 'Marcado em atenção no cadastro.';
+    const atrasado = a.estado === 'ATRASADO';
+    if (i < 0) return { situacao: atrasado ? 'Atrasado' : 'Em risco', referencia: 'marcado no cadastro' };
     const nome = fases[i].nome;
     const janela = a.janelas[i];
-    const data = (pos: number) => this.dataDePosicao(pos).toLocaleDateString('pt-BR');
-    if (a.estado === 'ATRASADO') {
-      if (i !== a.atual) return `A fase ${nome} deveria ter começado em ${data(janela.ini)}.`;
-      if (a.posHoje > janela.fim) return `O prazo da fase ${nome} venceu em ${data(janela.fim - 1 / 30)}.`;
-      return `Marcado como atrasado no cadastro; fase atual: ${nome}.`;
+    if (atrasado) {
+      if (i !== a.atual) return { situacao: 'Atrasado', referencia: `${nome} devia ter começado em ${this.dia(this.dataDePosicao(janela.ini))}` };
+      if (a.posHoje > janela.fim) return { situacao: 'Atrasado', referencia: `${nome} venceu em ${this.dia(this.dataDePosicao(janela.fim - 1 / 30))}` };
+      return { situacao: 'Atrasado', referencia: 'marcado no cadastro' };
     }
     const tempo = Math.round(((a.posHoje - janela.ini) / (janela.fim - janela.ini)) * 100);
     const perc = fases[i].percentual;
-    return perc != null ? `Fase ${nome} em ${perc}%; pelo tempo, o esperado seria ${tempo}%.` : `Fase ${nome} com andamento abaixo do esperado.`;
+    return perc != null
+      ? { situacao: `${perc}% concluído`, referencia: `${tempo}% esperado` }
+      : { situacao: 'Em risco', referencia: `${nome} abaixo do esperado` };
   }
 
   private dataDePosicao(pos: number): Date {
@@ -212,127 +251,25 @@ export class Dashboard implements OnInit {
     return new Date(ano, mes, 1 + Math.floor((pos - Math.floor(pos)) * dias));
   }
 
-  get graves(): number {
-    return this.alertas.filter((a) => a.gravidade === 'grave').length;
-  }
+  // ---- Histórico ----
 
-  // ---- Panorama: cada projeto ou meta como um quadradinho ----
-
-  get panorama(): LinhaPanorama[] {
-    const ordem = (e: Estado) => ORDEM_ESTADOS.indexOf(e);
-    const prazo = this.projetos
-      .map((p) => ({ p, estado: analisarProjeto(p)?.estado ?? null }))
-      .sort((x, y) => (x.estado ? ordem(x.estado) : 9) - (y.estado ? ordem(y.estado) : 9));
-    const noPrazo = prazo.filter((x) => x.estado && x.estado !== 'ATRASADO' && x.estado !== 'RISCO').length;
-
-    const ordemCusto: Record<SituacaoCusto, number> = { ESTOURADO: 0, ALERTA: 1, OK: 2 };
-    const custo = this.projetos
-      .map((p) => ({ p, c: analisarCusto(p) }))
-      .sort((x, y) => (x.c ? ordemCusto[x.c.situacao] : 9) - (y.c ? ordemCusto[y.c.situacao] : 9));
-    const comOrcamento = custo.filter((x) => x.c);
-    const custoOk = comOrcamento.filter((x) => x.c!.situacao === 'OK').length;
-
-    const metas = this.metas.map((m) => ({ m, av: avaliarMeta(m) })).sort((x, y) => ordem(x.av.estado) - ordem(y.av.estado));
-    const metasOk = metas.filter((x) => !x.av.foraDoRitmo).length;
-
-    const classePrazo = (e: Estado | null): Unidade['classe'] =>
-      !e ? 'vazio' : e === 'ATRASADO' ? 'grave' : e === 'RISCO' ? 'atencao' : e === 'CONCLUIDO' ? 'concluido' : 'ok';
-
-    return [
-      {
-        chave: 'prazo',
-        nome: 'Prazo',
-        link: '/cronograma',
-        ok: noPrazo,
-        total: prazo.length,
-        unidade: 'projetos',
-        situacao: 'no prazo',
-        resumo: `${noPrazo} de ${prazo.length} projetos no prazo`,
-        unidades: prazo.map(({ p, estado }) => ({
-          rotulo: `${p.sigla}: ${estado ? this.rotulo(estado) : 'sem cronograma'}`,
-          classe: classePrazo(estado),
-          link: ['/projeto', p.id],
-        })),
-      },
-      {
-        chave: 'custo',
-        nome: 'Custo',
-        link: '/orcamento',
-        ok: custoOk,
-        total: comOrcamento.length,
-        unidade: 'projetos',
-        situacao: 'dentro do previsto',
-        resumo: `${custoOk} de ${comOrcamento.length} projetos dentro do previsto`,
-        unidades: custo.map(({ p, c }) => ({
-          rotulo: `${p.sigla}: ${!c ? 'sem orçamento' : c.situacao === 'OK' ? `${c.pctGasto}% gasto, ${c.avanco}% de avanço` : c.situacao === 'ESTOURADO' ? 'acima do orçado' : 'gasto à frente do avanço'}`,
-          classe: !c ? 'vazio' : c.situacao === 'ESTOURADO' ? 'grave' : c.situacao === 'ALERTA' ? 'atencao' : 'ok',
-          link: ['/projeto', p.id],
-        })),
-      },
-      {
-        chave: 'metas',
-        nome: 'Metas',
-        link: '/objetivos',
-        ok: metasOk,
-        total: metas.length,
-        unidade: 'metas',
-        situacao: 'no ritmo',
-        resumo: `${metasOk} de ${metas.length} metas no ritmo`,
-        unidades: metas.map(({ m, av }) => ({
-          rotulo: `${m.indicador}: ${av.motivo.replace(/\.$/, '').toLowerCase()}`,
-          classe: av.estado === 'ATRASADO' ? 'grave' : av.estado === 'RISCO' ? 'atencao' : av.estado === 'CONCLUIDO' ? 'concluido' : av.atingido === null ? 'vazio' : 'ok',
-          link: ['/objetivos'],
-          query: { abrir: m.objetivo },
-        })),
-      },
-    ];
-  }
-
-  // ---- Tendência ----
-
-  // Grava a leitura de hoje; o histórico nasce daqui.
+  // Grava a leitura de hoje; é daqui que sai a tendência quando houver semanas de dados.
   private registrarRetrato() {
-    const [prazo, custo, metas] = this.panorama;
+    const prazo = this.projetos.map((p) => analisarProjeto(p)?.estado).filter((e) => !!e);
+    const custos = this.projetos.map((p) => analisarCusto(p)).filter((c) => !!c);
+    const metas = this.metas.map((m) => avaliarMeta(m));
     this.retratoService
       .registrarHoje({
-        prazoOk: prazo.ok,
-        prazoTotal: prazo.total,
-        custoOk: custo.ok,
-        custoTotal: custo.total,
-        metasOk: metas.ok,
-        metasTotal: metas.total,
+        prazoOk: prazo.filter((e) => e !== 'ATRASADO' && e !== 'RISCO').length,
+        prazoTotal: prazo.length,
+        custoOk: custos.filter((c) => c.situacao === 'OK').length,
+        custoTotal: custos.length,
+        metasOk: metas.filter((a) => !a.foraDoRitmo).length,
+        metasTotal: metas.length,
         alertas: this.alertas.length,
       })
-      .pipe(catchError(() => of(null)))
+      .pipe(catchError(() => of(null as Retrato | null)))
       .subscribe();
-  }
-
-  private hojeIso(): string {
-    const d = this.hoje;
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  }
-
-  // Variação de "quantos no previsto" contra o dia mais próximo de 30 dias atrás.
-  variacao(l: LinhaPanorama): Variacao | null {
-    const anteriores = this.retratos.filter((r) => r.data < this.hojeIso());
-    if (!anteriores.length) return null;
-    const limite = new Date(this.hoje.getTime() - 30 * 86400000);
-    const base = [...anteriores].reverse().find((r) => this.lerData(r.data) <= limite) ?? anteriores[0];
-    const ok = { prazo: base.prazoOk, custo: base.custoOk, metas: base.metasOk }[l.chave];
-    const serie = [...anteriores.map((r) => ({ prazo: r.prazoOk, custo: r.custoOk, metas: r.metasOk })[l.chave]), l.ok];
-    return {
-      delta: l.ok - ok,
-      desde: this.lerData(base.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-      serie,
-    };
-  }
-
-  // Pontos de uma linha pequena (120 x 24) com a série.
-  linha(serie: number[]): string {
-    const max = Math.max(...serie, 1);
-    const min = Math.min(...serie, 0);
-    const passo = serie.length > 1 ? 120 / (serie.length - 1) : 0;
-    return serie.map((v, i) => `${(i * passo).toFixed(1)},${(22 - ((v - min) / (max - min || 1)) * 20).toFixed(1)}`).join(' ');
   }
 
   private lerData(iso: string): Date {
@@ -353,7 +290,7 @@ export class Dashboard implements OnInit {
         if (situacaoFase(p, i) === 'CONCLUIDA') return;
         const fim = f.dataFim ? this.lerData(f.dataFim) : a ? this.dataDePosicao(a.janelas[i].fim - 1 / 30) : null;
         if (fim && fim >= inicio && fim <= limite) {
-          lista.push({ data: fim, tipo: 'Fase', titulo: f.nome, sub: `${p.sigla} · ${p.nome}`, link: ['/projeto', p.id] });
+          lista.push({ data: fim, marco: f.nome, dono: p.sigla, sub: p.nome, link: ['/projeto', p.id] });
         }
       });
     });
@@ -361,7 +298,7 @@ export class Dashboard implements OnInit {
     this.metas.forEach((m) => {
       const prazo = this.lerData(m.prazo);
       if (prazo >= inicio && prazo <= limite && avaliarMeta(m).estado !== 'CONCLUIDO') {
-        lista.push({ data: prazo, tipo: 'Meta', titulo: m.indicador, sub: m.objetivo, link: ['/objetivos'], query: { abrir: m.objetivo } });
+        lista.push({ data: prazo, marco: m.indicador, dono: 'Meta', sub: m.objetivo, link: ['/objetivos'], query: { abrir: m.objetivo } });
       }
     });
 
@@ -372,17 +309,21 @@ export class Dashboard implements OnInit {
     return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
   }
 
+  diaDoMes(d: Date): string {
+    return String(d.getDate()).padStart(2, '0');
+  }
+
+  mes(d: Date): string {
+    return MESES[d.getMonth()];
+  }
+
   emDias(d: Date): string {
     const inicio = new Date(this.hoje.getFullYear(), this.hoje.getMonth(), this.hoje.getDate());
     const n = Math.round((d.getTime() - inicio.getTime()) / 86400000);
     return n === 0 ? 'hoje' : n === 1 ? 'amanhã' : `em ${n} dias`;
   }
 
-  private rotulo(e: Estado): string {
-    return { ATRASADO: 'atrasado', RISCO: 'em risco', ANDAMENTO: 'em andamento', A_INICIAR: 'a iniciar', CONCLUIDO: 'concluído' }[e];
-  }
-
-  // ---- Contexto ----
+  // ---- Totais ----
 
   get emAndamento(): number {
     return this.projetos.filter((p) => {
@@ -401,15 +342,6 @@ export class Dashboard implements OnInit {
 
   get gasto(): number {
     return this.projetos.reduce((a, p) => a + (p.custoRealizado || 0), 0);
-  }
-
-  get avancoMedio(): number {
-    const comFases = this.projetos.filter((p) => (p.fases ?? []).length > 0);
-    return comFases.length ? Math.round(comFases.reduce((a, p) => a + progressoProjeto(p), 0) / comFases.length) : 0;
-  }
-
-  moeda(v: number): string {
-    return moedaCompacta(v);
   }
 
   iniciais(nome?: string): string {
