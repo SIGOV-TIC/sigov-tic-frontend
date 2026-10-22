@@ -1,5 +1,5 @@
 .login {
-    min-height: 100vh;
+    min-height: calc(100vh / var(--escala, 1));
     display: grid;
     place-items: center;
     padding: 16px;

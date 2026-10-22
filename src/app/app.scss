@@ -1,4 +1,4 @@
 :host {
   display: block;
-  height: 100dvh;
+  height: calc(100dvh / var(--escala, 1));
 }
