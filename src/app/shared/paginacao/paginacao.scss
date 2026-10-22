@@ -1,0 +1,78 @@
+.paginacao {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0 0;
+    font-size: 13px;
+    color: var(--text-faint);
+
+    &.compacta {
+        justify-content: flex-start;
+        padding: 6px 0;
+        font-size: 12px;
+    }
+}
+
+.contagem {
+    font-variant-numeric: tabular-nums;
+}
+
+.controles {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.seta,
+.num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--text-muted);
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+        border-color: var(--border-main);
+        color: var(--text-primary);
+    }
+
+    &:disabled {
+        opacity: 0.35;
+        cursor: default;
+    }
+
+    mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+    }
+}
+
+.num.atual {
+    border-color: var(--border-main);
+    background: var(--nav-active-bg);
+    color: var(--text-primary);
+    font-weight: 600;
+    cursor: default;
+}
+
+.compacta .seta {
+    min-width: 26px;
+    height: 26px;
+    padding: 0 4px;
+}
+
+.reticencias,
+.pagina-de {
+    padding: 0 4px;
+    font-variant-numeric: tabular-nums;
+}

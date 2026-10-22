@@ -17,6 +17,7 @@ import {
 import { Meta, MetaRequest, MetaService } from '../services/meta.service';
 import { avaliarMeta } from '../utils/meta';
 import { AuthService } from '../../../core/auth/auth.service';
+import { fatia, Paginacao } from '../../../shared/paginacao/paginacao';
 
 interface LinhaMeta {
   meta: Meta;
@@ -53,7 +54,7 @@ const SEM_OBJETIVO = 'Sem objetivo estratégico definido';
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-objetivos',
-  imports: [RouterLink, FormsModule, MatIconModule],
+  imports: [RouterLink, FormsModule, MatIconModule, Paginacao],
   templateUrl: './objetivos.html',
   styleUrl: './objetivos.scss',
 })
@@ -93,6 +94,28 @@ export class Objetivos implements OnInit {
         this.erro = true;
       },
     });
+  }
+
+  // ---- Páginas dentro de cada objetivo ----
+
+  readonly tamanhoMetas = 5;
+  readonly tamanhoProjetos = 12;
+  private paginas = new Map<string, number>();
+
+  paginaDe(chave: string): number {
+    return this.paginas.get(chave) ?? 1;
+  }
+
+  irPara(chave: string, pagina: number) {
+    this.paginas.set(chave, pagina);
+  }
+
+  metasDaPagina(o: Objetivo): LinhaMeta[] {
+    return fatia(o.metas, this.paginaDe('metas:' + o.titulo), this.tamanhoMetas);
+  }
+
+  projetosDaPagina(o: Objetivo): LinhaProjeto[] {
+    return fatia(o.projetos, this.paginaDe('projetos:' + o.titulo), this.tamanhoProjetos);
   }
 
   // ---- Montagem ----

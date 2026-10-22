@@ -1,9 +1,11 @@
-import { AfterViewChecked, ChangeDetectionStrategy, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { AfterViewChecked, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { ProjetoResponse, StatusProjeto } from '../../projetos/models/projeto';
 import { ProjetoService } from '../../projetos/services/projeto.service';
+import { AuthService } from '../../../core/auth/auth.service';
+import { Paginacao, paginaNaUrl } from '../../../shared/paginacao/paginacao';
 import { indiceFaseAtual, situacaoFase } from '../../projetos/utils/fase';
 import { analisarProjeto, Estado, estadoProjeto, ICONE_ESTADO, progressoProjeto } from '../../projetos/utils/saude';
 
@@ -57,7 +59,7 @@ const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'o
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-cronograma',
-  imports: [RouterLink, FormsModule, MatIconModule],
+  imports: [RouterLink, FormsModule, MatIconModule, Paginacao],
   templateUrl: './cronograma.html',
   styleUrl: './cronograma.scss',
 })
@@ -84,10 +86,31 @@ export class Cronograma implements OnInit, AfterViewChecked {
 
   readonly icone = ICONE_ESTADO;
 
+  // A tela mostra uma página de projetos; a impressão leva todos.
+  readonly tamanhoPagina = 15;
+  readonly pagina = paginaNaUrl();
+  imprimindo = false;
+
   @ViewChild('rolagem') private rolagem?: ElementRef<HTMLElement>;
   private centralizarHoje = true;
 
-  constructor(private projetoService: ProjetoService) {}
+  constructor(
+    private projetoService: ProjetoService,
+    readonly auth: AuthService,
+    private cdr: ChangeDetectorRef,
+  ) {}
+
+  @HostListener('window:beforeprint')
+  antesDeImprimir() {
+    this.imprimindo = true;
+    this.cdr.detectChanges();
+  }
+
+  @HostListener('window:afterprint')
+  depoisDeImprimir() {
+    this.imprimindo = false;
+    this.cdr.markForCheck();
+  }
 
   ngOnInit() {
     this.projetoService.seedSeNecessario();
@@ -140,12 +163,29 @@ export class Cronograma implements OnInit, AfterViewChecked {
     }
     this.filtros = { ...this.rascunho };
     this.centralizarHoje = true;
+    this.pagina.ir(1);
   }
 
   limpar() {
     this.rascunho = this.filtrosPadrao();
     this.filtros = { ...this.rascunho };
     this.centralizarHoje = true;
+    this.pagina.ir(1);
+  }
+
+  // Projetos com cronograma vêm primeiro e os sem datas no fim, numa só sequência de páginas.
+  paginaDe(linhas: LinhaProjeto[], sem: ProjetoResponse[]) {
+    const total = linhas.length + sem.length;
+    if (this.imprimindo) return { total, atual: 1, linhas, sem };
+    const atual = this.pagina.em(total, this.tamanhoPagina);
+    const ini = (atual - 1) * this.tamanhoPagina;
+    const fim = ini + this.tamanhoPagina;
+    return {
+      total,
+      atual,
+      linhas: linhas.slice(ini, fim),
+      sem: sem.slice(Math.max(0, ini - linhas.length), Math.max(0, fim - linhas.length)),
+    };
   }
 
   alternarEscala(escala: Escala) {

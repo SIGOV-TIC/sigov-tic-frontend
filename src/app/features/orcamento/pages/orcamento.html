@@ -13,7 +13,7 @@
     <div class="barra-filtro">
         <label class="filtro">
             <span>Área</span>
-            <select name="area" [(ngModel)]="area">
+            <select name="area" [(ngModel)]="area" (ngModelChange)="trocarArea()">
                 <option value="">Todas</option>
                 @for (a of areas; track a) {
                     <option [value]="a">{{ a }}</option>
@@ -57,7 +57,8 @@
                 </tr>
             </thead>
             <tbody>
-                @for (a of areasLinhas; track a.area) {
+                @let pagA = areasDaPagina(areasLinhas);
+                @for (a of pagA.itens; track a.area) {
                     @let aberta = abertas.has(a.area);
                     <tr class="linha-area situacao-{{ a.situacao }}">
                         <td>
@@ -86,7 +87,8 @@
                     </tr>
 
                     @if (aberta) {
-                        @for (l of a.linhas; track l.projeto.id) {
+                        @let pagP = projetosDaArea(a);
+                        @for (l of pagP.itens; track l.projeto.id) {
                             <tr class="linha-projeto situacao-{{ l.situacao }}">
                                 <td>
                                     <a [routerLink]="['/projeto', l.projeto.id]" class="proj" [title]="l.motivo">
@@ -113,6 +115,13 @@
                                 </td>
                             </tr>
                         }
+                        @if (a.linhas.length > tamanhoProjetos) {
+                            <tr class="linha-paginacao">
+                                <td colspan="6">
+                                    <app-paginacao compacta [total]="a.linhas.length" [pagina]="pagP.atual" [tamanho]="tamanhoProjetos" (mudar)="irProjetos(a.area, $event)" />
+                                </td>
+                            </tr>
+                        }
                     }
                 }
             </tbody>
@@ -128,6 +137,7 @@
             </tfoot>
         </table>
     </div>
+    <app-paginacao [total]="areasLinhas.length" [pagina]="pagA.atual" [tamanho]="tamanhoAreas" (mudar)="pagina.ir($event)" />
     @if (semOrcamento > 0) {
         <p class="rodape">{{ semOrcamento }} {{ semOrcamento === 1 ? 'projeto sem orçamento informado não aparece' : 'projetos sem orçamento informado não aparecem' }} aqui.</p>
     }

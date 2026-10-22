@@ -66,8 +66,9 @@
         <section class="cartao">
             <h2>Precisa de atenção</h2>
             @if (als.length > 0) {
+                @let pagAl = alertasDaPagina(als);
                 <ul class="alertas">
-                    @for (a of als; track $index) {
+                    @for (a of pagAl.itens; track $index) {
                         <li>
                             <a class="alerta g-{{ a.gravidade }}" [routerLink]="a.link" [queryParams]="a.query">
                                 <mat-icon class="alerta-icone">{{ a.gravidade === 'grave' ? 'error' : 'warning' }}</mat-icon>
@@ -84,6 +85,7 @@
                         </li>
                     }
                 </ul>
+                <app-paginacao [total]="als.length" [pagina]="pagAl.atual" [tamanho]="tamanhoPagina" (mudar)="pagina.ir($event)" />
             } @else {
                 <p class="vazio">Nada fora do previsto.</p>
             }

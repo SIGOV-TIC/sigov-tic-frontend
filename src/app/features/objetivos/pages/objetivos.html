@@ -1,6 +1,6 @@
 <div class="page-header">
     <h1>Objetivos Estratégicos</h1>
-    @if (auth.ehAdmin()) {
+    @if (auth.pode('editarMetas')) {
         <button type="button" class="btn-acao" (click)="novaMeta()"><mat-icon>add</mat-icon>Nova meta</button>
     }
 </div>
@@ -67,7 +67,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @for (m of o.metas; track m.meta.id) {
+                                        @for (m of metasDaPagina(o); track m.meta.id) {
                                             <tr class="estado-{{ m.estado }}" [class.fora]="m.foraDoRitmo">
                                                 <td class="meta-celula">
                                                     <span class="meta-nome">
@@ -91,7 +91,7 @@
                                                 <td>{{ prazoCurto(m.meta.prazo) }}</td>
                                                 <td>{{ m.meta.responsavel || '—' }}</td>
                                                 <td class="acao">
-                                                    @if (auth.ehAdmin()) {
+                                                    @if (auth.pode('editarMetas')) {
                                                         <button type="button" class="editar" (click)="editar(m.meta)" [attr.aria-label]="'Atualizar meta ' + m.meta.indicador">
                                                             <mat-icon>edit</mat-icon>
                                                         </button>
@@ -101,17 +101,19 @@
                                         }
                                     </tbody>
                                 </table>
+                                <app-paginacao compacta [total]="o.metas.length" [pagina]="paginaDe('metas:' + o.titulo)" [tamanho]="tamanhoMetas"
+                                               (mudar)="irPara('metas:' + o.titulo, $event)" />
                             } @else {
                                 <p class="itens-vazio">Nenhuma meta cadastrada para este objetivo.</p>
                             }
-                            @if (auth.ehAdmin()) {
+                            @if (auth.pode('editarMetas')) {
                                 <button type="button" class="link" (click)="novaMeta(o.titulo)"><mat-icon>add</mat-icon>Adicionar meta</button>
                             }
                         }
 
                         <div class="projetos">
                             <span class="projetos-rotulo">Projetos</span>
-                            @for (p of o.projetos; track p.projeto.id) {
+                            @for (p of projetosDaPagina(o); track p.projeto.id) {
                                 <a class="proj estado-{{ p.estado }}" [routerLink]="['/projeto', p.projeto.id]"
                                    [title]="p.projeto.nome + ' · ' + rotulo[p.estado] + ' · avanço ' + p.avanco + '% · ' + (p.projeto.gerenteResponsavel || 'sem gerente')">
                                     <mat-icon>{{ icone[p.estado] }}</mat-icon>
@@ -121,6 +123,8 @@
                                 <span class="itens-vazio">nenhum vinculado</span>
                             }
                         </div>
+                        <app-paginacao compacta [total]="o.projetos.length" [pagina]="paginaDe('projetos:' + o.titulo)" [tamanho]="tamanhoProjetos"
+                                       (mudar)="irPara('projetos:' + o.titulo, $event)" />
                     </div>
                 }
             </section>
