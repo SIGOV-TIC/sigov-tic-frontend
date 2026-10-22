@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -7,7 +7,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { FaseProjeto, ProjetoResponse, SituacaoFase, StatusProjeto } from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { CORES_FASE, indiceFaseAtual, janelaFase, materializarSituacoes, situacaoFase } from '../utils/fase';
+import { indiceFaseAtual, janelaFase, materializarSituacoes, situacaoFase } from '../utils/fase';
+import { MARGEM_RISCO_PONTOS } from '../utils/saude';
 
 type CampoTexto = 'atualizacoes' | 'pontoAtencao' | 'recomendacao';
 
@@ -25,9 +26,12 @@ export class VisualizarProjeto implements OnInit {
   erro = false;
   campoEmEdicao: CampoTexto | null = null;
   textoEdicao = '';
+  // Fase aberta na camada de detalhe; `rascunhoFase` é a cópia em edição, para Cancelar desfazer.
   faseSelecionada: number | null = null;
   editandoFase = false;
-  coresFase = CORES_FASE;
+  rascunhoFase: FaseProjeto | null = null;
+  // Ponto de onde a camada cresce: o centro da bolinha clicada.
+  origemFase = { x: 0, y: 0 };
 
   constructor(
     private route: ActivatedRoute,
@@ -64,22 +68,66 @@ export class VisualizarProjeto implements OnInit {
     return situacaoFase(this.projeto, i);
   }
 
-  corFase(i: number): string {
-    return this.coresFase[i % this.coresFase.length];
-  }
-
   situacaoLabel(situacao?: SituacaoFase): string {
     const map: Record<string, string> = { PENDENTE: 'Pendente', EM_ANDAMENTO: 'Em andamento', CONCLUIDA: 'Concluída' };
     return map[situacao || 'PENDENTE'];
   }
 
-  selecionarFase(i: number) {
-    this.faseSelecionada = this.faseSelecionada === i ? null : i;
+  abrirFase(i: number, evento: MouseEvent) {
+    const r = (evento.currentTarget as HTMLElement).querySelector('.fase-circle')!.getBoundingClientRect();
+    this.origemFase = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    this.mostrarFase(i);
+  }
+
+  private mostrarFase(i: number) {
+    this.faseSelecionada = i;
     this.editandoFase = false;
+    this.rascunhoFase = null;
+    this.erroFase = '';
+  }
+
+  fecharFase() {
+    this.faseSelecionada = null;
+    this.editandoFase = false;
+    this.rascunhoFase = null;
+  }
+
+  irParaFase(passo: number) {
+    const i = (this.faseSelecionada ?? 0) + passo;
+    if (!this.editandoFase && i >= 0 && i < (this.projeto.fases?.length ?? 0)) this.mostrarFase(i);
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  aoTeclar(e: KeyboardEvent) {
+    if (this.faseSelecionada === null) return;
+    if (e.key === 'Escape') this.editandoFase ? this.cancelarEdicaoFase() : this.fecharFase();
+    else if (e.key === 'ArrowLeft') this.irParaFase(-1);
+    else if (e.key === 'ArrowRight') this.irParaFase(1);
   }
 
   get faseAberta(): FaseProjeto | null {
     return this.faseSelecionada === null ? null : this.projeto.fases?.[this.faseSelecionada] ?? null;
+  }
+
+  // Leitura da fase aberta: janela, tempo decorrido e se o concluído ficou para trás.
+  get leituraFase(): { ini: string; fim: string; tempo: number | null; hoje: number | null; atrasada: boolean } | null {
+    const i = this.faseSelecionada;
+    const fase = this.faseAberta;
+    if (i === null || !fase) return null;
+    const janela = janelaFase(this.projeto, i);
+    const andamento = this.situacaoDe(i) === 'EM_ANDAMENTO';
+    let tempo: number | null = null;
+    if (janela && andamento) {
+      const total = janela.fim.getTime() - janela.ini.getTime();
+      tempo = Math.round(Math.min(100, Math.max(0, ((Date.now() - janela.ini.getTime()) / total) * 100)));
+    }
+    return {
+      ini: this.formatarData(fase.dataInicio),
+      fim: this.formatarData(fase.dataFim),
+      tempo,
+      hoje: tempo !== null && tempo > 0 && tempo < 100 ? tempo : null,
+      atrasada: tempo !== null && (fase.percentual ?? 0) < tempo - MARGEM_RISCO_PONTOS,
+    };
   }
 
   ajustarPercentual(fase: FaseProjeto) {
@@ -89,10 +137,19 @@ export class VisualizarProjeto implements OnInit {
 
   erroFase = '';
 
-  alternarEdicaoFase() {
+  editarFase() {
+    const fase = this.faseAberta;
+    if (!fase) return;
     materializarSituacoes(this.projeto);
+    this.rascunhoFase = { ...fase };
     this.erroFase = '';
-    this.editandoFase = !this.editandoFase;
+    this.editandoFase = true;
+  }
+
+  cancelarEdicaoFase() {
+    this.rascunhoFase = null;
+    this.erroFase = '';
+    this.editandoFase = false;
   }
 
   // Fases cadastradas antes da data de fim obrigatória recebem as datas planejadas, que o gestor pode ajustar.
@@ -109,20 +166,24 @@ export class VisualizarProjeto implements OnInit {
 
   salvarFase() {
     const fase = this.faseAberta;
-    if (!fase) return;
-    if (!fase.dataFim) {
+    const rascunho = this.rascunhoFase;
+    if (!fase || !rascunho) return;
+    if (!rascunho.nome?.trim()) {
+      this.erroFase = 'Informe o nome da fase.';
+      return;
+    }
+    if (!rascunho.dataFim) {
       this.erroFase = 'Informe a data de fim da fase.';
       return;
     }
-    if (fase.dataInicio && fase.dataFim < fase.dataInicio) {
+    if (rascunho.dataInicio && rascunho.dataFim < rascunho.dataInicio) {
       this.erroFase = 'A data de fim precisa ser posterior à data de início.';
       return;
     }
-    this.erroFase = '';
-    materializarSituacoes(this.projeto);
-    this.ajustarPercentual(fase);
+    this.ajustarPercentual(rascunho);
+    Object.assign(fase, rascunho, { nome: rascunho.nome.trim() });
     this.persistir();
-    this.editandoFase = false;
+    this.cancelarEdicaoFase();
   }
 
   // Concluir muda o status da fase e libera a próxima.
@@ -133,9 +194,8 @@ export class VisualizarProjeto implements OnInit {
     fases[i].percentual = 100;
     if (fases[i + 1] && fases[i + 1].situacao !== 'CONCLUIDA') {
       fases[i + 1].situacao = 'EM_ANDAMENTO';
-      this.faseSelecionada = i + 1;
     }
-    this.editandoFase = false;
+    this.cancelarEdicaoFase();
     this.persistir();
   }
 
@@ -201,6 +261,11 @@ export class VisualizarProjeto implements OnInit {
       return { classe: 'neutro', icone: 'trending_down', texto: 'Execução abaixo do ritmo do prazo' };
     }
     return { classe: 'ok', icone: 'check_circle', texto: 'Custo dentro do ritmo do prazo' };
+  }
+
+  iniciais(nome: string): string {
+    const partes = nome.trim().split(/\s+/).filter(Boolean);
+    return ((partes[0]?.[0] ?? '') + (partes.length > 1 ? partes[partes.length - 1][0] : '')).toUpperCase();
   }
 
   formatarData(valor?: string): string {

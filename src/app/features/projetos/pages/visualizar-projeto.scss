@@ -245,7 +245,9 @@
     padding: 12px 0 8px;
 }
 
+// Cor só para o estado: atual em azul, concluída e pendente neutras.
 .fase-node {
+    --cor-fase: var(--border-main);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -253,16 +255,25 @@
     min-width: 88px;
     padding: 6px 8px;
     background: none;
-    border: 1px solid transparent;
-    border-radius: 8px;
+    border: 0;
     font-family: inherit;
     cursor: pointer;
-    transition: background-color 0.15s, border-color 0.15s;
 
-    &:hover { background-color: var(--row-hover); }
-    &:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
-    &.fase-selecionada { border-color: var(--border-main); background-color: var(--bg-card-inner); }
-    &.fase-pendente { opacity: 0.6; }
+    &.fase-atual { --cor-fase: var(--accent-blue); }
+    &.fase-concluida { --cor-fase: var(--text-faint); }
+
+    &:hover .fase-circle, &:focus-visible .fase-circle {
+        transform: scale(1.12);
+        border-color: var(--text-faint);
+        box-shadow: 0 0 0 6px color-mix(in srgb, var(--text-faint) 16%, transparent);
+    }
+    &.fase-atual:hover .fase-circle, &.fase-atual:focus-visible .fase-circle {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent-blue) 22%, transparent);
+    }
+    &:hover .fase-nome-label { color: var(--text-primary); }
+    &:hover .fase-dica, &:focus-visible .fase-dica { opacity: 1; transform: translate(-50%, 0); transition-delay: 0.25s; }
+    &:focus { outline: none; }
 }
 
 .fase-duracao-label {
@@ -272,29 +283,46 @@
 }
 
 .fase-circle {
+    position: relative;
     width: 38px;
     height: 38px;
     border-radius: 50%;
     background-color: var(--bg-card-inner);
     border: 2px solid var(--cor-fase);
-    color: var(--text-primary);
+    color: var(--text-secondary);
     font-size: 14px;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: transform 0.2s cubic-bezier(0.3, 1.4, 0.5, 1), box-shadow 0.2s, border-color 0.2s;
 
     mat-icon { font-size: 20px; width: 20px; height: 20px; }
 }
 
-.fase-concluida .fase-circle {
-    background-color: var(--cor-fase);
-    color: var(--bg-card);
+.fase-atual .fase-circle {
+    color: var(--text-primary);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-blue) 16%, transparent);
 }
 
-// Fase atual: anel externo colorido em volta do círculo.
-.fase-atual .fase-circle {
-    box-shadow: 0 0 0 3px var(--bg-card), 0 0 0 5px var(--cor-fase);
+// Dica curta acima da bolinha, depois de um instante de hover.
+.fase-dica {
+    position: absolute;
+    bottom: calc(100% + 30px);
+    left: 50%;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    color: var(--text-primary);
+    background-color: var(--bg-header-bar);
+    border: 1px solid var(--border-main);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 4px);
+    transition: opacity 0.15s, transform 0.15s;
 }
 
 .fase-nome-label {
@@ -303,6 +331,7 @@
     text-align: center;
     max-width: 100px;
     line-height: 1.3;
+    transition: color 0.2s;
 }
 
 .fase-situacao-label {
@@ -313,7 +342,7 @@
 }
 
 .fase-atual .fase-situacao-label {
-    color: var(--cor-fase);
+    color: var(--accent-blue);
     font-weight: 700;
 }
 
@@ -324,123 +353,223 @@
     margin-top: 50px;
     min-width: 24px;
 
-    &.fase-line-feita { background-color: var(--accent-green); }
+    &.fase-line-feita { background-color: var(--text-faint); }
 }
 
-.fase-painel {
-    margin-top: 16px;
-    padding: 16px;
-    background-color: var(--bg-card-inner);
-    border: 1px solid var(--border-subtle);
-    border-radius: 8px;
+// ---- Camada de detalhe da fase: vidro leve sobre a página ----
+
+.camada-fundo {
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    background-color: color-mix(in srgb, var(--bg-body) 45%, transparent);
+    backdrop-filter: blur(3px);
+    animation: surgir 0.2s ease-out;
 }
 
-.fase-painel-header {
-    display: flex;
-    justify-content: space-between;
+.camada-fase {
+    position: fixed;
+    z-index: 901;
+    left: 50%;
+    top: 50%;
+    width: 560px;
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    padding: 24px 26px 22px;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--bg-card) 76%, transparent);
+    backdrop-filter: blur(22px) saturate(140%);
+    border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent), 0 24px 60px rgba(0, 0, 0, 0.4);
+    transform: translate(-50%, -50%);
+    // Cresce a partir da bolinha clicada.
+    transform-origin: calc(var(--ox) - 50vw + 50%) calc(var(--oy) - 50vh + 50%);
+    animation: crescer 0.24s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+@keyframes surgir { from { opacity: 0; } }
+@keyframes crescer { from { opacity: 0; transform: translate(-50%, -50%) scale(0.92); } }
+
+.cf-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.cf-contagem { font-size: 12px; color: var(--text-faint); }
+.cf-titulo { margin: 4px 0 0; font-size: 20px; font-weight: 600; color: var(--text-primary); }
+
+.cf-selo {
+    display: inline-flex;
     align-items: center;
-    margin-bottom: 12px;
-}
-
-.fase-painel-titulo {
-    font-size: 14px;
+    gap: 6px;
+    height: 24px;
+    margin-top: 12px;
+    padding: 0 10px;
+    border-radius: 12px;
+    font-size: 12px;
     font-weight: 600;
-    color: var(--text-primary);
-    margin-right: 10px;
-}
-
-.fase-painel-situacao {
-    font-size: 11px;
     color: var(--text-muted);
+    background-color: color-mix(in srgb, var(--text-faint) 14%, transparent);
+
+    mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    &.selo-EM_ANDAMENTO { color: var(--accent-blue); background-color: color-mix(in srgb, var(--accent-blue) 14%, transparent); }
 }
 
-.fase-lapis {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    border: 1px solid var(--border-main);
+.cf-navegar { display: flex; gap: 2px; }
+
+.cf-icone {
+    display: inline-flex;
+    padding: 6px;
+    border: 0;
+    border-radius: 8px;
     background: none;
-    color: var(--text-muted);
+    color: var(--text-faint);
     cursor: pointer;
 
-    mat-icon { font-size: 18px; width: 18px; height: 18px; }
-    &:hover, &.ativo { color: var(--text-primary); background-color: var(--row-hover); }
+    &:hover:not(:disabled) { color: var(--text-primary); background-color: color-mix(in srgb, var(--text-primary) 7%, transparent); }
+    &:disabled { opacity: 0.3; cursor: default; }
 }
 
-.fase-campos {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
-}
+.cf-tempo { margin-top: 22px; }
 
-.fase-campo {
+.cf-datas {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
 
-    span { font-size: 11px; color: var(--text-muted); }
+    b { display: block; margin-top: 2px; font-size: 14px; font-weight: 500; color: var(--text-primary); }
+    .cf-fim { text-align: right; }
+}
 
-    input, select, textarea {
-        background-color: var(--bg-input);
+.cf-trilho {
+    position: relative;
+    height: 8px;
+    margin: 14px 0 4px;
+    border-radius: 4px;
+    background-color: color-mix(in srgb, var(--text-primary) 8%, transparent);
+}
+
+.cf-feito { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background-color: var(--accent-blue); }
+
+.cf-hoje {
+    position: absolute;
+    top: -6px;
+    bottom: -6px;
+    width: 2px;
+    border-radius: 1px;
+    background-color: var(--text-primary);
+
+    span { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+}
+
+.cf-numeros {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 22px;
+    border-top: 1px solid color-mix(in srgb, var(--text-primary) 8%, transparent);
+
+    > div { padding-top: 14px; }
+    > div + div { padding-left: 18px; border-left: 1px solid color-mix(in srgb, var(--text-primary) 8%, transparent); }
+    small { display: block; font-size: 12px; color: var(--text-faint); }
+    b { display: block; margin-top: 4px; font-size: 22px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+    b span { font-size: 12px; font-weight: 500; color: var(--text-faint); }
+    b.atencao { color: var(--estado-risco-fg); }
+}
+
+.cf-alerta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 16px 0 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    background-color: color-mix(in srgb, var(--estado-risco) 10%, transparent);
+
+    mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--estado-risco-fg); }
+}
+
+.cf-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 20px;
+
+    label { display: flex; flex-direction: column; gap: 6px; }
+    label > span { font-size: 12px; color: var(--text-faint); }
+    .cf-largo { grid-column: 1 / -1; }
+
+    input, select {
+        height: 36px;
+        padding: 0 10px;
+        border-radius: 8px;
+        border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent);
+        background-color: color-mix(in srgb, var(--bg-input) 70%, transparent);
         color: var(--text-primary);
-        border: 1px solid var(--border-main);
-        border-radius: 6px;
-        padding: 8px 10px;
         font-family: inherit;
-        font-size: 13px;
+        font-size: 14px;
         color-scheme: inherit;
 
         &:focus { outline: 2px solid var(--accent-blue); outline-offset: 1px; }
     }
-
-    textarea { resize: vertical; }
 }
 
-.fase-campo-largo { grid-column: 1 / -1; }
+.cf-erro { margin: 12px 0 0; font-size: 13px; color: var(--estado-atrasado-fg); }
 
-.fase-valor {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-primary);
-    font-variant-numeric: tabular-nums;
-}
+.cf-rodape { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 22px; }
 
-.fase-acoes {
+.cf-pessoa {
     display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    margin-top: 14px;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-secondary);
+
+    small { display: block; font-size: 11px; color: var(--text-faint); }
 }
 
-.btn-concluir-fase, .btn-salvar-fase {
+.cf-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-primary);
+    background-color: var(--nav-active-bg);
+}
+
+.cf-acoes { display: flex; gap: 8px; }
+
+.cf-btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 14px;
-    border-radius: 6px;
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--text-primary) 14%, transparent);
+    background-color: color-mix(in srgb, var(--text-primary) 4%, transparent);
+    color: var(--text-primary);
     font-family: inherit;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
 
     mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    &:hover { background-color: color-mix(in srgb, var(--text-primary) 9%, transparent); }
 }
 
-.btn-concluir-fase {
-    background-color: var(--accent-green);
-    color: #fff;
-    border: none;
-    &:hover { background-color: var(--accent-green-hover); }
-}
+.cf-primario {
+    border-color: var(--accent-yellow);
+    background-color: var(--accent-yellow);
+    color: #0A1628;
+    font-weight: 600;
 
-.btn-salvar-fase {
-    background: none;
-    color: var(--text-primary);
-    border: 1px solid var(--border-main);
-    &:hover { background-color: var(--row-hover); }
+    &:hover { background-color: var(--accent-yellow-hover); }
 }
 
 .medidores {
@@ -613,4 +742,3 @@
   gap: var(--spacing-2xs);
 }
 
-.fase-painel .fase-erro { margin: 8px 0 0; font-size: 13px; color: var(--estado-atrasado-fg); }

@@ -85,19 +85,16 @@
                         <button type="button" class="fase-node"
                                 [class.fase-atual]="i === indiceFaseAtual"
                                 [class.fase-concluida]="situacaoDe(i) === 'CONCLUIDA'"
-                                [class.fase-pendente]="situacaoDe(i) === 'PENDENTE' && i !== indiceFaseAtual"
-                                [class.fase-selecionada]="faseSelecionada === i"
-                                [style.--cor-fase]="corFase(i)"
-                                (click)="selecionarFase(i)"
-                                [attr.aria-pressed]="faseSelecionada === i"
-                                [attr.aria-label]="'Fase ' + (i + 1) + ': ' + fase.nome + ', ' + situacaoLabel(situacaoDe(i))">
-                            <span class="fase-duracao-label">{{ fase.duracaoMeses }} {{ fase.duracaoMeses === 1 ? 'Mês' : 'Meses' }}</span>
+                                (click)="abrirFase(i, $event)"
+                                [attr.aria-label]="'Ver detalhes da fase ' + (i + 1) + ': ' + fase.nome + ', ' + situacaoLabel(situacaoDe(i))">
+                            <span class="fase-duracao-label">{{ fase.duracaoMeses }} {{ fase.duracaoMeses === 1 ? 'mês' : 'meses' }}</span>
                             <span class="fase-circle">
                                 @if (situacaoDe(i) === 'CONCLUIDA') {
                                     <mat-icon>check</mat-icon>
                                 } @else {
                                     {{ i + 1 }}
                                 }
+                                <span class="fase-dica" aria-hidden="true">Ver detalhes</span>
                             </span>
                             <span class="fase-nome-label">{{ fase.nome }}</span>
                             <span class="fase-situacao-label">{{ i === indiceFaseAtual ? 'Fase atual' : situacaoLabel(situacaoDe(i)) }}</span>
@@ -107,85 +104,6 @@
                         }
                     }
                 </div>
-
-                @if (faseAberta; as fase) {
-                    <div class="fase-painel" [style.--cor-fase]="corFase(faseSelecionada!)">
-                        <div class="fase-painel-header">
-                            <div>
-                                <span class="fase-painel-titulo">Fase {{ faseSelecionada! + 1 }} · {{ fase.nome }}</span>
-                                <span class="fase-painel-situacao">{{ situacaoLabel(situacaoDe(faseSelecionada!)) }}</span>
-                            </div>
-                            @if (podeEditar) {
-                                <button type="button" class="fase-lapis" (click)="alternarEdicaoFase()"
-                                        [class.ativo]="editandoFase" aria-label="Editar tudo desta fase" title="Editar tudo">
-                                    <mat-icon>edit</mat-icon>
-                                </button>
-                            }
-                        </div>
-
-                        <div class="fase-campos">
-                            @if (editandoFase) {
-                                <label class="fase-campo fase-campo-largo">
-                                    <span>Nome da fase</span>
-                                    <input type="text" [(ngModel)]="fase.nome">
-                                </label>
-                                <label class="fase-campo">
-                                    <span>Duração (meses)</span>
-                                    <input type="number" min="1" [(ngModel)]="fase.duracaoMeses">
-                                </label>
-                                <label class="fase-campo">
-                                    <span>Situação</span>
-                                    <select [(ngModel)]="fase.situacao">
-                                        <option value="PENDENTE">Pendente</option>
-                                        <option value="EM_ANDAMENTO">Em andamento</option>
-                                        <option value="CONCLUIDA">Concluída</option>
-                                    </select>
-                                </label>
-                            }
-                            @if (podeEditar) {
-                                <label class="fase-campo">
-                                    <span>Data de início</span>
-                                    <input type="date" [(ngModel)]="fase.dataInicio">
-                                </label>
-                                <label class="fase-campo">
-                                    <span>Data de fim *</span>
-                                    <input type="date" [(ngModel)]="fase.dataFim" required>
-                                </label>
-                                <label class="fase-campo">
-                                    <span>Percentual concluído (%)</span>
-                                    <input type="number" min="0" max="100" [(ngModel)]="fase.percentual" (blur)="ajustarPercentual(fase)">
-                                </label>
-                            } @else {
-                                <div class="fase-campo">
-                                    <span>Início</span>
-                                    <b class="fase-valor">{{ formatarData(fase.dataInicio) }}</b>
-                                </div>
-                                <div class="fase-campo">
-                                    <span>Fim</span>
-                                    <b class="fase-valor">{{ formatarData(fase.dataFim) }}</b>
-                                </div>
-                                <div class="fase-campo">
-                                    <span>Concluído</span>
-                                    <b class="fase-valor">{{ fase.percentual ?? 0 }}%</b>
-                                </div>
-                            }
-                        </div>
-
-                        @if (erroFase) {
-                            <p class="fase-erro" role="alert">{{ erroFase }}</p>
-                        }
-                        @if (podeEditar) {
-                            <div class="fase-acoes">
-                                @if (situacaoDe(faseSelecionada!) !== 'CONCLUIDA') {
-                                    <button type="button" class="btn-concluir-fase" (click)="concluirFase(faseSelecionada!)">
-                                        <mat-icon>check_circle</mat-icon> Concluir fase
-                                    </button>
-                                }
-                                <button type="button" class="btn-salvar-fase" (click)="salvarFase()">Salvar</button>
-                            </div>
-                        }
-                    </div>
-                }
             </div>
         }
 
@@ -307,6 +225,96 @@
 
 </div>
 
+}
+
+<!-- Detalhe da fase: camada de vidro sobre a página -->
+@if (projeto && faseAberta; as fase) {
+    @let i = faseSelecionada!;
+    @let l = leituraFase!;
+    <div class="camada-fundo" (click)="editandoFase ? null : fecharFase()"></div>
+    <section class="camada-fase" role="dialog" aria-modal="true" aria-labelledby="fase-titulo"
+             [style.--ox.px]="origemFase.x" [style.--oy.px]="origemFase.y">
+        <div class="cf-topo">
+            <div>
+                <span class="cf-contagem">Fase {{ i + 1 }} de {{ projeto.fases!.length }}</span>
+                <h2 class="cf-titulo" id="fase-titulo">{{ fase.nome }}</h2>
+                <span class="cf-selo selo-{{ situacaoDe(i) }}">
+                    <mat-icon>{{ situacaoDe(i) === 'CONCLUIDA' ? 'check_circle' : situacaoDe(i) === 'EM_ANDAMENTO' ? 'play_circle' : 'schedule' }}</mat-icon>
+                    {{ situacaoLabel(situacaoDe(i)) }}
+                </span>
+            </div>
+            <div class="cf-navegar">
+                <button type="button" class="cf-icone" (click)="irParaFase(-1)" [disabled]="i === 0 || editandoFase" aria-label="Fase anterior"><mat-icon>chevron_left</mat-icon></button>
+                <button type="button" class="cf-icone" (click)="irParaFase(1)" [disabled]="i === projeto.fases!.length - 1 || editandoFase" aria-label="Próxima fase"><mat-icon>chevron_right</mat-icon></button>
+                <button type="button" class="cf-icone" (click)="fecharFase()" aria-label="Fechar"><mat-icon>close</mat-icon></button>
+            </div>
+        </div>
+
+        @if (!editandoFase) {
+            <div class="cf-tempo">
+                <div class="cf-datas">
+                    <span>Início<b>{{ l.ini }}</b></span>
+                    <span class="cf-fim">Fim<b>{{ l.fim }}</b></span>
+                </div>
+                <div class="cf-trilho">
+                    <span class="cf-feito" [style.width.%]="fase.percentual ?? 0"></span>
+                    @if (l.hoje !== null) {
+                        <span class="cf-hoje" [style.left.%]="l.hoje"><span>hoje</span></span>
+                    }
+                </div>
+            </div>
+
+            <div class="cf-numeros">
+                <div><small>Concluído</small><b [class.atencao]="l.atrasada">{{ fase.percentual ?? 0 }}%</b></div>
+                <div><small>Tempo decorrido</small><b>{{ l.tempo !== null ? l.tempo + '%' : '—' }}</b></div>
+                <div><small>Duração</small><b>{{ fase.duracaoMeses }}<span> {{ fase.duracaoMeses === 1 ? 'mês' : 'meses' }}</span></b></div>
+            </div>
+
+            @if (l.atrasada) {
+                <p class="cf-alerta"><mat-icon>warning</mat-icon>Pelo tempo decorrido, a fase deveria estar em {{ l.tempo }}%.</p>
+            }
+        } @else if (rascunhoFase; as r) {
+            <div class="cf-form">
+                <label class="cf-largo"><span>Nome da fase</span><input type="text" [(ngModel)]="r.nome"></label>
+                <label><span>Data de início</span><input type="date" [(ngModel)]="r.dataInicio"></label>
+                <label><span>Data de fim</span><input type="date" [(ngModel)]="r.dataFim" required></label>
+                <label><span>Concluído (%)</span><input type="number" min="0" max="100" [(ngModel)]="r.percentual" (blur)="ajustarPercentual(r)"></label>
+                <label><span>Situação</span>
+                    <select [(ngModel)]="r.situacao">
+                        <option value="PENDENTE">Pendente</option>
+                        <option value="EM_ANDAMENTO">Em andamento</option>
+                        <option value="CONCLUIDA">Concluída</option>
+                    </select>
+                </label>
+                <label><span>Duração (meses)</span><input type="number" min="1" [(ngModel)]="r.duracaoMeses"></label>
+            </div>
+            @if (erroFase) {
+                <p class="cf-erro" role="alert">{{ erroFase }}</p>
+            }
+        }
+
+        <div class="cf-rodape">
+            <div class="cf-pessoa">
+                @if (projeto.gerenteResponsavel) {
+                    <span class="cf-avatar">{{ iniciais(projeto.gerenteResponsavel) }}</span>
+                    <span>{{ projeto.gerenteResponsavel }}<small>Gerente do projeto</small></span>
+                }
+            </div>
+            @if (podeEditar) {
+                <div class="cf-acoes">
+                    @if (editandoFase) {
+                        <button type="button" class="cf-btn" (click)="cancelarEdicaoFase()">Cancelar</button>
+                        <button type="button" class="cf-btn cf-primario" (click)="salvarFase()">Salvar</button>
+                    } @else {
+                        @if (situacaoDe(i) !== 'CONCLUIDA') {
+                            <button type="button" class="cf-btn" (click)="concluirFase(i)"><mat-icon>check_circle</mat-icon>Concluir fase</button>
+                        }
+                        <button type="button" class="cf-btn" (click)="editarFase()"><mat-icon>edit</mat-icon>Editar</button>
+                    }
+                </div>
+            }
+        </div>
+    </section>
 }
 
 <!-- Campo de texto do projeto, editável no próprio card -->
