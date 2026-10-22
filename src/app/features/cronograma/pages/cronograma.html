@@ -34,7 +34,7 @@
     <label class="filtro">
         <span>Área</span>
         <select name="area" [(ngModel)]="rascunho.area">
-            <option value="">Todas</option>
+            <option value="">Todas as áreas</option>
             @for (a of areasDisponiveis; track a) {
                 <option [value]="a">{{ a }}</option>
             }
@@ -43,7 +43,7 @@
     <label class="filtro">
         <span>Status</span>
         <select name="status" [(ngModel)]="rascunho.status">
-            <option value="">Todos</option>
+            <option value="">Todos os status</option>
             @for (s of statusOpcoes; track s.valor) {
                 <option [value]="s.valor">{{ s.label }}</option>
             }

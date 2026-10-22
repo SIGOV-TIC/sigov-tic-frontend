@@ -119,6 +119,21 @@
 
 .filtros-acoes { margin-left: auto; display: flex; gap: 8px; }
 
+// Em telas menores os rótulos saem de vista (seguem para leitores de tela) e os selects encolhem,
+// para filtros e ações caberem numa linha só.
+@media (max-width: 1500px) {
+    .filtros { gap: 10px 14px; }
+    .filtro > span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+    .filtro select[name='status'] { width: 170px; }
+}
+
 // Cor = estado, sempre a mesma em toda a tela.
 .estado-CONCLUIDO { --cor-estado: var(--estado-concluido); --cor-texto: var(--estado-concluido-fg); }
 .estado-ANDAMENTO { --cor-estado: var(--estado-andamento); --cor-texto: var(--estado-andamento-fg); }
@@ -163,8 +178,8 @@
     --tl-altura: 40px;
     overflow-x: auto;
     background-color: var(--bg-card);
-    border: 1px solid var(--border-main);
-    border-radius: 6px;
+    border: 1px solid var(--fio-forte);
+    border-radius: var(--raio-cartao);
 }
 
 .tl-conteudo {
@@ -189,7 +204,7 @@
     align-items: center;
     padding: 0 12px 0 8px;
     background-color: var(--bg-card);
-    border-right: 1px solid var(--border-main);
+    border-right: 1px solid var(--fio-forte);
     font-size: 13px;
     color: var(--text-secondary);
 }
@@ -224,7 +239,7 @@
 .tl-cab {
     position: relative;
     z-index: 4;
-    border-bottom: 1px solid var(--border-main);
+    border-bottom: 1px solid var(--fio-forte);
     min-height: 52px;
 
     .tl-tabela { align-items: flex-end; padding-bottom: 8px; font-size: 12px; color: var(--text-muted); }
@@ -237,7 +252,7 @@
     font-size: 12px;
     font-weight: 600;
     color: var(--text-secondary);
-    border-left: 1px solid var(--border-subtle);
+    border-left: 1px solid var(--fio);
 }
 
 .tl-periodos span {
@@ -285,7 +300,7 @@
     background-color: var(--accent-red);
 }
 
-.tl-projeto { border-top: 1px solid var(--border-subtle); }
+.tl-projeto { border-top: 1px solid var(--fio); }
 .tl-corpo > .tl-projeto:first-of-type { border-top: none; }
 
 .tl-abrir, .tl-abrir-vazio {
@@ -429,13 +444,13 @@
     text-align: center;
     color: var(--text-muted);
     background-color: var(--bg-card);
-    border: 1px solid var(--border-main);
-    border-radius: 6px;
+    border: 1px solid var(--fio-forte);
+    border-radius: var(--raio-cartao);
 }
 
 
 // Painel de detalhe
-.painel-fundo { position: fixed; inset: 0; z-index: 40; background-color: rgba(0, 0, 0, 0.25); }
+.painel-fundo { position: fixed; inset: 0; z-index: 40; background-color: var(--veu); backdrop-filter: blur(3px); animation: veu-surgir 0.2s ease-out; }
 
 .painel {
     position: fixed;
@@ -446,9 +461,11 @@
     width: min(380px, 100vw);
     padding: var(--spacing-lg);
     overflow-y: auto;
-    background-color: var(--bg-card);
-    border-left: 1px solid var(--border-main);
-    box-shadow: -8px 0 24px rgba(0, 0, 0, 0.3);
+    background-color: var(--vidro);
+    backdrop-filter: blur(22px) saturate(140%);
+    border-left: 1px solid var(--vidro-borda);
+    box-shadow: var(--vidro-brilho), -16px 0 40px rgba(0, 0, 0, 0.3);
+    animation: painel-entrar 0.22s cubic-bezier(0.2, 0.9, 0.3, 1);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
@@ -490,7 +507,7 @@
     gap: var(--spacing-xs) var(--spacing-md);
     margin: var(--spacing-sm) 0;
     padding-top: var(--spacing-sm);
-    border-top: 1px solid var(--border-subtle);
+    border-top: 1px solid var(--fio);
     font-size: 13px;
 
     dt { color: var(--text-muted); }
@@ -556,3 +573,6 @@
     .tl-tabela { position: static; background: none; }
     .tl-linha { break-inside: avoid; }
 }
+
+@keyframes veu-surgir { from { opacity: 0; } }
+@keyframes painel-entrar { from { transform: translateX(24px); opacity: 0; } }

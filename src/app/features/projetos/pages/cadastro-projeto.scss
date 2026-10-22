@@ -39,13 +39,13 @@
 
 .form-section {
     background-color: var(--bg-card);
-    border: 1px solid var(--border-main);
-    border-radius: var(--border-radius-md);
+    border: 1px solid var(--fio-forte);
+    border-radius: var(--raio-cartao);
     padding: var(--spacing-lg);
     transition: border-color 0.3s;
 
     &.concluded {
-        border-color: var(--accent-green);
+        border-color: var(--fio-forte);
     }
 }
 
@@ -81,7 +81,7 @@
 .section-subtitle {
     margin: var(--spacing-3xs) 0 0;
     padding-bottom: var(--spacing-md);
-    border-bottom: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--fio);
     font-size: var(--typescale-paragraph-small-size);
     line-height: var(--typescale-paragraph-small-line-height);
     color: var(--text-muted);
@@ -154,15 +154,15 @@
 }
 
 .step.active .step-number {
-    background-color: var(--accent-yellow);
-    border-color: var(--accent-yellow);
-    color: #0A1628;
+    background-color: var(--accent-blue);
+    border-color: var(--accent-blue);
+    color: #FFFFFF;
 }
 
 .step.done .step-number {
-    background-color: var(--accent-green);
-    border-color: var(--accent-green);
-    color: #FFFFFF;
+    background-color: transparent;
+    border-color: var(--text-faint);
+    color: var(--text-secondary);
 }
 
 .step-texto {
@@ -237,7 +237,7 @@ label {
 }
 
 .required {
-    color: var(--accent-yellow);
+    color: var(--text-faint);
 }
 
 input.invalid,
@@ -436,7 +436,7 @@ input[type="number"] {
     gap: 12px;
     margin-top: var(--spacing-xs);
     padding-top: var(--spacing-md);
-    border-top: 1px solid var(--border-subtle);
+    border-top: 1px solid var(--fio);
 }
 
 .nav-grupo button {
@@ -513,7 +513,7 @@ input[type="number"] {
 .card-footer {
     margin-top: 8px;
     padding-top: 16px;
-    border-top: 1px solid var(--border-main);
+    border-top: 1px solid var(--fio);
 }
 
 .progress-bar-track {
@@ -579,16 +579,16 @@ input[type="number"] {
 .btn-secondary {
     padding: 10px 20px;
     background-color: transparent;
-    color: var(--accent-yellow);
-    border: 1px solid var(--accent-yellow);
-    border-radius: 6px;
+    color: var(--text-primary);
+    border: 1px solid var(--fio-forte);
+    border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     font-family: 'Inter', sans-serif;
 
     &:hover {
-        background-color: rgba(250, 204, 21, 0.1);
+        background-color: var(--fio);
     }
 }
 
@@ -600,7 +600,8 @@ input[type="number"] {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--overlay-bg);
+    background-color: var(--veu);
+    backdrop-filter: blur(3px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -608,9 +609,11 @@ input[type="number"] {
 }
 
 .resumo-card {
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-main);
-    border-radius: 10px;
+    background-color: var(--vidro);
+    backdrop-filter: blur(22px) saturate(140%);
+    border: 1px solid var(--vidro-borda);
+    border-radius: 14px;
+    box-shadow: var(--vidro-brilho), 0 24px 60px rgba(0, 0, 0, 0.4);
     width: 700px;
     max-height: 80vh;
     display: flex;
@@ -630,7 +633,7 @@ input[type="number"] {
         color: var(--text-muted);
         margin-bottom: 0;
         padding: 0 32px 20px;
-        border-bottom: 1px solid var(--border-main);
+        border-bottom: 1px solid var(--fio);
     }
 }
 
@@ -659,18 +662,15 @@ input[type="number"] {
 
 .resumo-secao {
     margin-bottom: 20px;
-    background-color: var(--bg-card-inner);
-    border: 1px solid var(--border-subtle);
-    border-radius: 6px;
-    padding: 16px;
+    padding: 4px 0;
 
     h3 {
         font-size: 15px;
         font-weight: 600;
-        color: var(--accent-yellow);
+        color: var(--text-secondary);
         margin-bottom: 12px;
         padding-bottom: 8px;
-        border-bottom: 1px solid var(--border-main);
+        border-bottom: 1px solid var(--fio);
     }
 }
 
@@ -706,7 +706,7 @@ input[type="number"] {
     justify-content: flex-end;
     gap: 12px;
     padding: 16px 32px;
-    border-top: 1px solid var(--border-main);
+    border-top: 1px solid var(--fio);
     flex-shrink: 0;
 }
 
@@ -766,7 +766,7 @@ input[type="checkbox"]:checked + .toggle-switch {
 .fases-section {
     margin-top: 8px;
     padding-top: 16px;
-    border-top: 1px solid var(--border-main);
+    border-top: 1px solid var(--fio);
 }
 
 .fases-label {
@@ -789,8 +789,8 @@ input[type="checkbox"]:checked + .toggle-switch {
     align-items: center;
     gap: 10px;
     background-color: var(--bg-card-inner);
-    border: 1px solid var(--border-subtle);
-    border-radius: 6px;
+    border: 1px solid var(--fio-forte);
+    border-radius: 8px;
     padding: 8px 12px;
 }
 
@@ -920,9 +920,9 @@ input[type="checkbox"]:checked + .toggle-switch {
     flex-direction: column;
     gap: var(--spacing-md);
     padding: var(--spacing-lg);
-    background-color: var(--bg-card-inner);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--border-radius-md);
+    background-color: var(--bg-card);
+    border: 1px solid var(--fio-forte);
+    border-radius: var(--raio-cartao);
 }
 
 .painel-titulo {
@@ -971,7 +971,7 @@ input[type="checkbox"]:checked + .toggle-switch {
         align-items: baseline;
         gap: var(--spacing-sm);
         padding: var(--spacing-xs) 0;
-        border-top: 1px solid var(--border-subtle);
+        border-top: 1px solid var(--fio);
     }
 
     dt {
@@ -1004,7 +1004,7 @@ input[type="checkbox"]:checked + .toggle-switch {
 
 .painel-pendentes {
     padding: var(--spacing-sm);
-    border: 1px dashed var(--border-main);
+    border: 1px dashed var(--fio-forte);
     border-radius: var(--border-radius-sm);
 
     ul {
@@ -1045,7 +1045,7 @@ input[type="checkbox"]:checked + .toggle-switch {
         position: static;
         flex-direction: row;
         overflow-x: auto;
-        border-bottom: 1px solid var(--border-main);
+        border-bottom: 1px solid var(--fio);
     }
 
     .step-item { flex: 0 0 auto; &::after { display: none; } }

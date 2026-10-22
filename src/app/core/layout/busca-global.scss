@@ -63,10 +63,11 @@ kbd {
     width: 420px;
     max-height: 70vh;
     overflow-y: auto;
-    background-color: var(--bg-card, var(--bg-input));
-    border: 1px solid var(--border-main);
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    background-color: var(--vidro);
+    backdrop-filter: blur(22px) saturate(140%);
+    border: 1px solid var(--vidro-borda);
+    border-radius: var(--raio-cartao);
+    box-shadow: var(--vidro-brilho), 0 16px 40px rgba(0, 0, 0, 0.35);
     padding: 6px;
     z-index: 50;
 }
@@ -151,7 +152,7 @@ kbd {
     gap: 14px;
     margin-top: 6px;
     padding: 8px 8px 4px;
-    border-top: 1px solid var(--border-main);
+    border-top: 1px solid var(--fio);
     font-size: 11px;
     color: var(--text-dim);
 

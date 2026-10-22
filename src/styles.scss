@@ -356,3 +356,15 @@ html {
 html {
   zoom: 1.1;
 }
+
+// Superfícies: fios fracos no lugar de bordas cheias, e vidro para camadas sobre a página.
+// Definidos no html, que é onde o tema troca, então valem nos dois temas.
+html {
+  --fio: color-mix(in srgb, var(--text-primary) 7%, transparent);
+  --fio-forte: color-mix(in srgb, var(--text-primary) 10%, transparent);
+  --raio-cartao: 12px;
+  --vidro: color-mix(in srgb, var(--bg-card) 78%, transparent);
+  --vidro-borda: color-mix(in srgb, var(--text-primary) 10%, transparent);
+  --vidro-brilho: inset 0 1px 0 color-mix(in srgb, var(--text-primary) 7%, transparent);
+  --veu: color-mix(in srgb, var(--bg-body) 45%, transparent);
+}

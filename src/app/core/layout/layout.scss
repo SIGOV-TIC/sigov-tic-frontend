@@ -115,8 +115,8 @@
     align-items: center;
     padding: 10px 20px;
     background-color: var(--bg-header-bar);
-    border: 1px solid var(--border-main);
-    border-radius: 6px;
+    border: 1px solid var(--fio-forte);
+    border-radius: var(--raio-cartao);
     margin-top: 12px;
 }
 
@@ -213,7 +213,7 @@
     padding: 12px 24px;
     color: var(--text-dim);
     font-size: 12px;
-    border-top: 1px solid var(--border-main);
+    border-top: 1px solid var(--fio);
     display: flex;
     justify-content: space-between;
 }

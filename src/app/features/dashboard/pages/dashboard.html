@@ -29,7 +29,7 @@
             @if (als.length > 0) {
                 @let pagAl = alertasDaPagina(als);
                 <div class="tab tab-cab" aria-hidden="true">
-                    <span></span><span>Projeto / meta</span><span>Tipo</span><span>Situação</span><span>Responsável</span><span></span>
+                    <span></span><span>Projeto / meta</span><span>Tipo</span><span>Situação</span><span class="cab-resp">Responsável</span><span></span>
                 </div>
                 <ul class="alertas">
                     @for (a of pagAl.itens; track $index) {
@@ -46,7 +46,7 @@
                                     <span class="b">{{ a.referencia }}</span>
                                 </span>
                                 <span class="pessoa">
-                                    @if (a.responsavel) { <span class="avatar">{{ iniciais(a.responsavel) }}</span><span class="pessoa-nome">{{ a.responsavel }}</span> } @else { <span class="sem">—</span> }
+                                    @if (a.responsavel) { <span class="avatar" [title]="a.responsavel">{{ iniciais(a.responsavel) }}</span><span class="pessoa-nome">{{ a.responsavel }}</span> } @else { <span class="sem">—</span> }
                                 </span>
                                 <mat-icon class="ir">chevron_right</mat-icon>
                             </a>

@@ -85,8 +85,8 @@
 
 .tabela-container {
     background-color: var(--bg-card);
-    border: 1px solid var(--border-main);
-    border-radius: 6px;
+    border: 1px solid var(--fio-forte);
+    border-radius: var(--raio-cartao);
     overflow-x: auto;
 }
 
@@ -108,11 +108,11 @@ thead th {
     font-weight: 500;
     color: var(--text-muted);
     background-color: var(--bg-card);
-    border-bottom: 1px solid var(--border-main);
+    border-bottom: 1px solid var(--fio-forte);
 }
 
 tbody tr {
-    border-bottom: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--fio);
     transition: background-color 0.15s;
 
     &:hover { cursor: pointer; }
@@ -167,7 +167,7 @@ tfoot .row-total td {
     font-size: 13px;
     font-weight: 600;
     color: var(--text-primary);
-    border-top: 1px solid var(--border-main);
+    border-top: 1px solid var(--fio-forte);
     background-color: var(--bg-card-inner);
 
     .de { font-weight: 400; }
@@ -209,8 +209,8 @@ tfoot .row-total td {
     justify-content: center;
     padding: 60px 24px;
     background-color: var(--bg-card);
-    border: 1px solid var(--border-main);
-    border-radius: 6px;
+    border: 1px solid var(--fio-forte);
+    border-radius: var(--raio-cartao);
 
     .estado-icon {
         font-size: 48px;
