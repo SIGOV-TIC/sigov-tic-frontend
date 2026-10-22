@@ -37,23 +37,18 @@
 
         <!-- Responsáveis -->
         <div class="card">
-            <div class="responsaveis-grid">
-                <div class="responsavel-item">
-                    <span class="responsavel-label">PO</span>
-                    <span class="responsavel-valor">{{ projeto.po?.nome || '—' }}</span>
-                </div>
-                <div class="responsavel-item">
-                    <span class="responsavel-label">Scrum Master</span>
-                    <span class="responsavel-valor">{{ projeto.scrumMaster?.nome || '—' }}</span>
-                </div>
-                <div class="responsavel-item">
-                    <span class="responsavel-label">Patrocinador</span>
-                    <span class="responsavel-valor">{{ projeto.patrocinador || '—' }}</span>
-                </div>
-                <div class="responsavel-item">
-                    <span class="responsavel-label">Gerente</span>
-                    <span class="responsavel-valor">{{ projeto.gerenteResponsavel || '—' }}</span>
-                </div>
+            <div class="papeis">
+                @for (p of papeis; track p.papel) {
+                    <div class="papel">
+                        @if (p.nome) {
+                            <span class="papel-avatar" [style.--tom]="corAvatar(p.nome)">{{ iniciais(p.nome) }}</span>
+                            <span class="papel-texto"><b>{{ p.nome }}</b><small>{{ p.papel }}</small></span>
+                        } @else {
+                            <span class="papel-avatar papel-vazio"><mat-icon>person</mat-icon></span>
+                            <span class="papel-texto"><b class="nao-definido">Não definido</b><small>{{ p.papel }}</small></span>
+                        }
+                    </div>
+                }
             </div>
         </div>
 
@@ -80,28 +75,21 @@
         @if (projeto.fases && projeto.fases.length > 0) {
             <div class="card">
                 <h3>Fases</h3>
-                <div class="fases-timeline">
+                <div class="fases-colunas" [style.--n]="projeto.fases.length">
                     @for (fase of projeto.fases; track $index; let i = $index) {
-                        <button type="button" class="fase-node"
+                        @let sit = situacaoDe(i);
+                        <button type="button" class="fase-col"
                                 [class.fase-atual]="i === indiceFaseAtual"
-                                [class.fase-concluida]="situacaoDe(i) === 'CONCLUIDA'"
+                                [class.fase-concluida]="sit === 'CONCLUIDA'"
                                 (click)="abrirFase(i, $event)"
-                                [attr.aria-label]="'Ver detalhes da fase ' + (i + 1) + ': ' + fase.nome + ', ' + situacaoLabel(situacaoDe(i))">
-                            <span class="fase-duracao-label">{{ fase.duracaoMeses }} {{ fase.duracaoMeses === 1 ? 'mês' : 'meses' }}</span>
+                                [attr.aria-label]="'Ver detalhes da fase ' + (i + 1) + ': ' + fase.nome + ', ' + situacaoLabel(sit)">
                             <span class="fase-circle">
-                                @if (situacaoDe(i) === 'CONCLUIDA') {
-                                    <mat-icon>check</mat-icon>
-                                } @else {
-                                    {{ i + 1 }}
-                                }
+                                @if (sit === 'CONCLUIDA') { <mat-icon>check</mat-icon> } @else { {{ i + 1 }} }
                                 <span class="fase-dica" aria-hidden="true">Ver detalhes</span>
                             </span>
                             <span class="fase-nome-label">{{ fase.nome }}</span>
-                            <span class="fase-situacao-label">{{ i === indiceFaseAtual ? 'Fase atual' : situacaoLabel(situacaoDe(i)) }}</span>
+                            <span class="fase-situacao-label">{{ i === indiceFaseAtual ? 'Fase atual' : situacaoLabel(sit) }}<span class="fase-duracao"> · {{ fase.duracaoMeses }} {{ fase.duracaoMeses === 1 ? 'mês' : 'meses' }}</span></span>
                         </button>
-                        @if (i < projeto.fases!.length - 1) {
-                            <div class="fase-line" [class.fase-line-feita]="situacaoDe(i) === 'CONCLUIDA'"></div>
-                        }
                     }
                 </div>
             </div>
@@ -177,36 +165,27 @@
         <!-- Orçamento e Squad -->
         <div class="card">
             <h3>Orçamento</h3>
-            <div class="orcamento-grid">
-                <div class="orcamento-item">
-                    <mat-icon class="orcamento-icon">groups</mat-icon>
-                    <div>
-                        <span class="orcamento-label">Squad</span>
-                        @if (totalSquad > 0) {
-                            <span class="orcamento-valor destaque">{{ totalSquad }} pessoas</span>
-                            <span class="orcamento-detalhe">{{ projeto.qtdProprios || 0 }} próprios · {{ projeto.qtdTerceiros || 0 }} terceiros</span>
-                        } @else {
-                            <span class="orcamento-valor">—</span>
-                        }
-                    </div>
+            <div class="colunas">
+                <div class="coluna">
+                    <span class="coluna-rotulo">Squad</span>
+                    <b class="coluna-valor">{{ totalSquad > 0 ? totalSquad + ' pessoas' : '—' }}</b>
+                    @if (totalSquad > 0) {
+                        <span class="coluna-detalhe">{{ projeto.qtdProprios || 0 }} próprios · {{ projeto.qtdTerceiros || 0 }} terceiros</span>
+                    }
                 </div>
-                <div class="orcamento-item">
-                    <mat-icon class="orcamento-icon">payments</mat-icon>
-                    <div>
-                        <span class="orcamento-label">Custo Previsto</span>
-                        <span class="orcamento-valor">{{ formatarMoeda(projeto.orcamentoEstimado) }}</span>
-                    </div>
+                <div class="coluna">
+                    <span class="coluna-rotulo">Custo previsto</span>
+                    <b class="coluna-valor">{{ formatarCompacto(projeto.orcamentoEstimado) }}</b>
+                    @if (projeto.orcamentoEstimado) {
+                        <span class="coluna-detalhe">{{ formatarMoeda(projeto.orcamentoEstimado) }}</span>
+                    }
                 </div>
-                <div class="orcamento-item">
-                    <mat-icon class="orcamento-icon">account_balance</mat-icon>
-                    <div>
-                        <span class="orcamento-label">Realizado</span>
-                        @if (projeto.custoRealizado) {
-                            <span class="orcamento-valor">{{ formatarMoeda(projeto.custoRealizado) }}</span>
-                        } @else {
-                            <span class="orcamento-valor vazio">—</span>
-                        }
-                    </div>
+                <div class="coluna">
+                    <span class="coluna-rotulo">Realizado</span>
+                    <b class="coluna-valor">{{ projeto.custoRealizado ? formatarCompacto(projeto.custoRealizado) : '—' }}</b>
+                    @if (projeto.custoRealizado && projeto.orcamentoEstimado) {
+                        <span class="coluna-detalhe">{{ percentualCusto }}% do previsto</span>
+                    }
                 </div>
             </div>
         </div>

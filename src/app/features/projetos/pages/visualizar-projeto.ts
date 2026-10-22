@@ -75,7 +75,9 @@ export class VisualizarProjeto implements OnInit {
 
   abrirFase(i: number, evento: MouseEvent) {
     const r = (evento.currentTarget as HTMLElement).querySelector('.fase-circle')!.getBoundingClientRect();
-    this.origemFase = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    // getBoundingClientRect já vem na escala da página; a camada é posicionada em pixels de CSS.
+    const escala = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+    this.origemFase = { x: (r.left + r.width / 2) / escala, y: (r.top + r.height / 2) / escala };
     this.mostrarFase(i);
   }
 
@@ -261,6 +263,24 @@ export class VisualizarProjeto implements OnInit {
       return { classe: 'neutro', icone: 'trending_down', texto: 'Execução abaixo do ritmo do prazo' };
     }
     return { classe: 'ok', icone: 'check_circle', texto: 'Custo dentro do ritmo do prazo' };
+  }
+
+  // Papéis do projeto, de quem responde por ele até quem executa.
+  get papeis(): { papel: string; nome?: string }[] {
+    return [
+      { papel: 'Patrocinador', nome: this.projeto.patrocinador },
+      { papel: 'Gerente', nome: this.projeto.gerenteResponsavel },
+      { papel: 'Product Owner', nome: this.projeto.po?.nome },
+      { papel: 'Scrum Master', nome: this.projeto.scrumMaster?.nome },
+    ];
+  }
+
+  // Tom fixo por pessoa, para o mesmo nome ter sempre a mesma cor.
+  corAvatar(nome: string): string {
+    const tons = ['#5B8DEF', '#3FB6A8', '#C58AF9', '#E8A15C', '#E07A9A', '#7FB069'];
+    let h = 0;
+    for (const c of nome) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+    return tons[h % tons.length];
   }
 
   iniciais(nome: string): string {

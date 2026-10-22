@@ -1,12 +1,15 @@
+:host {
+    display: block;
+    --fio: color-mix(in srgb, var(--text-primary) 7%, transparent);
+    --fio-forte: color-mix(in srgb, var(--text-primary) 10%, transparent);
+}
+
+// Cabeçalho da página, sem moldura.
 .projeto-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 24px;
-    background-color: var(--bg-card-inner);
-    padding: 20px 24px;
-    border-radius: 6px;
-    border: 1px solid var(--border-subtle);
+    margin: 4px 0 24px;
 }
 
 .projeto-header-left {
@@ -29,13 +32,13 @@
 }
 
 .sigla-badge {
-    background-color: var(--border-main);
-    color: var(--accent-yellow);
+    background-color: var(--fio);
+    color: var(--text-secondary);
     font-size: 12px;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 4px;
-    letter-spacing: 0.5px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 6px;
+    letter-spacing: 0.4px;
 }
 
 .status-badge {
@@ -75,14 +78,15 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     text-decoration: none;
     font-size: 13px;
     font-family: 'Inter', sans-serif;
-    padding: 6px 12px;
-    border-radius: 6px;
-    border: 1px solid var(--border-main);
-    transition: border-color 0.2s, color 0.2s;
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 8px;
+    border: 1px solid var(--fio-forte);
+    transition: background-color 0.15s, color 0.15s;
     white-space: nowrap;
 
     mat-icon {
@@ -92,12 +96,13 @@
     }
 
     &:hover {
-        border-color: var(--accent-blue);
+        background-color: var(--fio);
         color: var(--text-primary);
     }
 }
 
 .projeto-grid {
+    // Fios fracos no lugar das bordas cheias: marcam o limite sem disputar com o conteúdo.
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
@@ -113,19 +118,15 @@
 
 .card {
     background-color: var(--bg-card);
-    border: 1px solid var(--border-main);
-    border-radius: 6px;
-    padding: 20px;
+    border: 1px solid var(--fio-forte);
+    border-radius: 12px;
+    padding: 22px 24px;
 
     h3 {
         font-size: 14px;
         font-weight: 600;
-        color: var(--accent-yellow);
+        color: var(--text-secondary);
         margin: 0 0 12px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid var(--border-main);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
 
     p {
@@ -146,14 +147,9 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--spacing-xs);
-    margin-bottom: var(--spacing-xs);
-    border-bottom: 1px solid var(--border-main);
+    margin-bottom: 12px;
 
-    h3 {
-        margin: 0;
-        padding-bottom: var(--spacing-2xs);
-        border-bottom: none;
-    }
+    h3 { margin: 0; }
 }
 
 .btn-icone {
@@ -208,96 +204,85 @@
     &:hover { color: var(--text-primary); }
 }
 
-.responsaveis-grid {
+.fases-colunas {
+    --vao: 28px;
+    position: relative;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+    gap: var(--vao);
+    margin-top: 8px;
+
+    // A linha corre por trás dos cartões, do centro da primeira bolinha ao da última,
+    // e aparece só nos vãos entre eles.
+    &::before {
+        --meia-coluna: calc((100% - (var(--n) - 1) * var(--vao)) / (2 * var(--n)));
+        content: '';
+        position: absolute;
+        top: 41px;
+        left: var(--meia-coluna);
+        right: var(--meia-coluna);
+        height: 2px;
+        border-radius: 1px;
+        background-color: var(--fio-forte);
+    }
 }
 
-.responsavel-item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    background-color: var(--bg-card-inner);
-    padding: 10px 14px;
-    border-radius: 6px;
-    border: 1px solid var(--border-subtle);
-}
-
-.responsavel-label {
-    font-size: 11px;
-    color: var(--text-faint);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.responsavel-valor {
-    font-size: 14px;
-    color: var(--text-primary);
-    font-weight: 500;
-}
-
-.fases-timeline {
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 12px 0 8px;
-}
-
-// Cor só para o estado: atual em azul, concluída e pendente neutras.
-.fase-node {
+// Cada fase é um cartão opaco sobre a linha.
+.fase-col {
     --cor-fase: var(--border-main);
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 6px;
-    min-width: 88px;
-    padding: 6px 8px;
-    background: none;
-    border: 0;
+    min-width: 0;
+    padding: 16px 10px 14px;
+    background-color: var(--bg-card-inner);
+    border: 1px solid var(--fio);
+    border-radius: 12px;
     font-family: inherit;
+    text-align: center;
     cursor: pointer;
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
 
-    &.fase-atual { --cor-fase: var(--accent-blue); }
+    &.fase-atual {
+        --cor-fase: var(--accent-blue);
+        border-color: color-mix(in srgb, var(--accent-blue) 35%, transparent);
+    }
     &.fase-concluida { --cor-fase: var(--text-faint); }
 
-    &:hover .fase-circle, &:focus-visible .fase-circle {
-        transform: scale(1.12);
-        border-color: var(--text-faint);
-        box-shadow: 0 0 0 6px color-mix(in srgb, var(--text-faint) 16%, transparent);
+    &:hover, &:focus-visible {
+        transform: translateY(-2px);
+        border-color: color-mix(in srgb, var(--text-primary) 22%, transparent);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
     }
-    &.fase-atual:hover .fase-circle, &.fase-atual:focus-visible .fase-circle {
-        border-color: var(--accent-blue);
-        box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent-blue) 22%, transparent);
-    }
+    &.fase-atual:hover, &.fase-atual:focus-visible { border-color: color-mix(in srgb, var(--accent-blue) 60%, transparent); }
+    &:hover .fase-circle, &:focus-visible .fase-circle { transform: scale(1.08); }
     &:hover .fase-nome-label { color: var(--text-primary); }
     &:hover .fase-dica, &:focus-visible .fase-dica { opacity: 1; transform: translate(-50%, 0); transition-delay: 0.25s; }
     &:focus { outline: none; }
 }
 
-.fase-duracao-label {
-    font-size: 11px;
-    color: var(--text-muted);
-    white-space: nowrap;
-}
-
 .fase-circle {
     position: relative;
-    width: 38px;
-    height: 38px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 4px;
     border-radius: 50%;
     background-color: var(--bg-card-inner);
     border: 2px solid var(--cor-fase);
     color: var(--text-secondary);
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: transform 0.2s cubic-bezier(0.3, 1.4, 0.5, 1), box-shadow 0.2s, border-color 0.2s;
 
-    mat-icon { font-size: 20px; width: 20px; height: 20px; }
+    mat-icon { font-size: 22px; width: 22px; height: 22px; }
 }
 
 .fase-atual .fase-circle {
@@ -305,10 +290,33 @@
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-blue) 16%, transparent);
 }
 
+.fase-nome-label {
+    max-width: 100%;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.2s;
+}
+
+.fase-situacao-label {
+    max-width: 100%;
+    font-size: 12px;
+    color: var(--text-faint);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fase-atual .fase-situacao-label { color: var(--accent-blue); }
+.fase-duracao { color: var(--text-faint); }
+
 // Dica curta acima da bolinha, depois de um instante de hover.
 .fase-dica {
     position: absolute;
-    bottom: calc(100% + 30px);
+    bottom: calc(100% + 10px);
     left: 50%;
     padding: 4px 8px;
     border-radius: 6px;
@@ -323,37 +331,6 @@
     pointer-events: none;
     transform: translate(-50%, 4px);
     transition: opacity 0.15s, transform 0.15s;
-}
-
-.fase-nome-label {
-    font-size: 12px;
-    color: var(--text-secondary);
-    text-align: center;
-    max-width: 100px;
-    line-height: 1.3;
-    transition: color 0.2s;
-}
-
-.fase-situacao-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    color: var(--text-faint);
-}
-
-.fase-atual .fase-situacao-label {
-    color: var(--accent-blue);
-    font-weight: 700;
-}
-
-.fase-line {
-    flex: 1;
-    height: 2px;
-    background-color: var(--border-main);
-    margin-top: 50px;
-    min-width: 24px;
-
-    &.fase-line-feita { background-color: var(--text-faint); }
 }
 
 // ---- Camada de detalhe da fase: vidro leve sobre a página ----
@@ -373,8 +350,8 @@
     left: 50%;
     top: 50%;
     width: 560px;
-    max-width: calc(100vw - 32px);
-    max-height: calc(100vh - 48px);
+    max-width: calc(100vw / var(--escala, 1) - 32px);
+    max-height: calc(100vh / var(--escala, 1) - 48px);
     overflow-y: auto;
     padding: 24px 26px 22px;
     border-radius: 14px;
@@ -572,6 +549,86 @@
     &:hover { background-color: var(--accent-yellow-hover); }
 }
 
+.papeis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: -4px -8px;
+}
+
+// Um papel por coluna: avatar no alto, nome e papel embaixo, centralizados.
+.papel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 6px 8px;
+    text-align: center;
+
+    & + & { border-left: 1px solid var(--fio); }
+}
+
+// Avatar com o tom da pessoa em fundo suave e iniciais na mesma cor.
+.papel-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: color-mix(in srgb, var(--tom) 80%, var(--text-primary));
+    background-color: color-mix(in srgb, var(--tom) 20%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tom) 30%, transparent);
+
+    &.papel-vazio {
+        color: var(--text-faint);
+        background: none;
+        box-shadow: none;
+        border: 1px dashed var(--fio-forte);
+
+        mat-icon { font-size: 20px; width: 20px; height: 20px; }
+    }
+}
+
+.papel-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+
+    b { font-size: 14px; font-weight: 500; line-height: 1.3; color: var(--text-primary); overflow-wrap: anywhere; }
+    b.nao-definido { font-weight: 400; color: var(--text-faint); }
+    small { font-size: 12px; color: var(--text-faint); }
+}
+
+// Colunas iguais separadas por fio: rótulo, valor e detalhe.
+.colunas {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 4px -8px 0;
+}
+
+.coluna {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 4px 8px;
+    text-align: center;
+
+    & + & { border-left: 1px solid var(--fio); }
+}
+
+.coluna-rotulo { font-size: 12px; color: var(--text-faint); }
+.coluna-valor { font-size: 22px; font-weight: 600; line-height: 1.2; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.coluna-detalhe { font-size: 12px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+
 .medidores {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -606,9 +663,9 @@
     stroke-linecap: butt;
     transition: stroke-dasharray 0.6s ease;
 
-    &.anel-prazo { stroke: var(--accent-blue); }
-    &.anel-ok { stroke: var(--accent-green); }
-    &.anel-atencao { stroke: var(--accent-red); }
+    // Normal fica no azul da interface; só o fora do ritmo ganha cor de alerta.
+    &.anel-prazo, &.anel-ok { stroke: var(--accent-blue); }
+    &.anel-atencao { stroke: var(--estado-atrasado); }
     &.anel-neutro { stroke: var(--text-muted); }
 }
 
@@ -639,9 +696,7 @@
 }
 
 .medidor-rotulo {
-    font-size: var(--typescale-label-x-small-size);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-size: 12px;
     color: var(--text-faint);
 }
 
@@ -664,70 +719,12 @@
     gap: var(--spacing-2xs);
     margin: var(--spacing-md) 0 0;
     padding-top: var(--spacing-sm);
-    border-top: 1px solid var(--border-subtle);
+    border-top: 1px solid var(--fio);
     font-size: var(--typescale-paragraph-small-size);
     color: var(--text-secondary);
 
-    mat-icon { font-size: 18px; width: 18px; height: 18px; }
-    &.ritmo-ok mat-icon { color: var(--accent-green); }
-    &.ritmo-atencao mat-icon { color: var(--accent-red); }
-    &.ritmo-neutro mat-icon { color: var(--text-muted); }
-}
-
-.orcamento-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.orcamento-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    background-color: var(--bg-card-inner);
-    padding: 12px 14px;
-    border-radius: 6px;
-    border: 1px solid var(--border-subtle);
-}
-
-.orcamento-icon {
-    color: var(--accent-blue);
-    font-size: 20px;
-    margin-top: 2px;
-}
-
-.orcamento-label {
-    display: block;
-    font-size: 11px;
-    color: var(--text-faint);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 2px;
-}
-
-.orcamento-valor {
-    display: block;
-    font-size: 15px;
-    color: var(--text-primary);
-    font-weight: 600;
-
-    &.destaque {
-        color: var(--accent-yellow);
-    }
-
-    &.vazio {
-        color: var(--text-faint);
-        font-style: italic;
-        font-weight: 400;
-    }
-}
-
-.orcamento-detalhe {
-    display: block;
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 2px;
+    mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--text-faint); }
+    &.ritmo-atencao mat-icon { color: var(--estado-atrasado-fg); }
 }
 
 .estado-vazio {
