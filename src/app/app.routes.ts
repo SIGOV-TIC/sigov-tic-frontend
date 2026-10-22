@@ -8,7 +8,7 @@ import { Orcamento } from './features/orcamento/pages/orcamento';
 import { Objetivos } from './features/objetivos/pages/objetivos';
 import { Login } from './features/login/login';
 import { Usuarios } from './features/usuarios/pages/usuarios';
-import { adminGuard, authGuard } from './core/auth/auth.guard';
+import { adminGuard, authGuard, edicaoProjetoGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -24,7 +24,7 @@ export const routes: Routes = [
       { path: 'orcamento', component: Orcamento },
       { path: 'objetivos', component: Objetivos },
       { path: 'projeto/:id', component: VisualizarProjeto },
-      { path: 'projeto/:id/editar', component: CadastroProjeto },
+      { path: 'projeto/:id/editar', component: CadastroProjeto, canActivate: [edicaoProjetoGuard] },
       { path: 'usuarios', component: Usuarios, canActivate: [adminGuard] },
     ],
   },

@@ -7,12 +7,13 @@ import { ProjetoService } from '../services/projeto.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { moedaCompacta } from '../utils/moeda';
 import { calcularDesvio, Desvio, TOLERANCIA_DESVIO } from '../utils/desvio';
+import { fatia, Paginacao, paginaNaUrl } from '../../../shared/paginacao/paginacao';
 
 @Component({
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-portfolio',
-  imports: [FormsModule, RouterLink, MatIconModule],
+  imports: [FormsModule, RouterLink, MatIconModule, Paginacao],
   templateUrl: './portfolio.html',
   styleUrl: './portfolio.scss',
 })
@@ -23,10 +24,9 @@ export class Portfolio implements OnInit {
   carregando = false;
   erro = '';
 
-  paginaAtual = 0;
-  tamanhoPagina = 10;
-  totalElementos = 0;
-  totalPaginas = 0;
+  // Todos os projetos vêm de uma vez; a página só recorta a tabela, e os totais valem para a lista inteira.
+  readonly tamanhoPagina = 10;
+  readonly pagina = paginaNaUrl();
 
   constructor(
     private projetoService: ProjetoService,
@@ -41,12 +41,10 @@ export class Portfolio implements OnInit {
   carregar() {
     this.carregando = true;
     this.erro = '';
-    this.projetoService.listar(this.paginaAtual, this.tamanhoPagina).subscribe({
+    this.projetoService.listar(0, 100).subscribe({
       next: (res) => {
         this.projetos = res.content;
-        this.totalElementos = res.totalElements;
-        this.totalPaginas = res.totalPages;
-        this.filtrar();
+        this.aplicarBusca();
         this.carregando = false;
       },
       error: () => {
@@ -57,6 +55,11 @@ export class Portfolio implements OnInit {
   }
 
   filtrar() {
+    this.aplicarBusca();
+    this.pagina.ir(1);
+  }
+
+  private aplicarBusca() {
     if (!this.busca.trim()) {
       this.projetosFiltrados = this.projetos;
       return;
@@ -70,18 +73,12 @@ export class Portfolio implements OnInit {
     );
   }
 
-  paginaAnterior() {
-    if (this.paginaAtual > 0) {
-      this.paginaAtual--;
-      this.carregar();
-    }
+  get paginaAtual(): number {
+    return this.pagina.em(this.projetosFiltrados.length, this.tamanhoPagina);
   }
 
-  proximaPagina() {
-    if (this.paginaAtual < this.totalPaginas - 1) {
-      this.paginaAtual++;
-      this.carregar();
-    }
+  get projetosDaPagina(): ProjetoResponse[] {
+    return fatia(this.projetosFiltrados, this.paginaAtual, this.tamanhoPagina);
   }
 
   formatarData(iso?: string): string {

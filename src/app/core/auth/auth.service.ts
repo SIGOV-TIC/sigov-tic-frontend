@@ -1,10 +1,29 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, finalize, tap } from 'rxjs';
+import { rotuloPerfil } from './perfis';
 
 export interface Sessao {
   username: string;
   roles: string[];
+  // Conta logada; o id é o que liga a pessoa ao projeto como PO ou Scrum Master.
+  id?: string;
+  nome?: string;
+  perfil?: string;
+}
+
+interface RespostaLogin {
+  username: string;
+  roles: string[];
+  usuario?: { id: string; nome: string; perfil: string };
+}
+
+export type Acao = 'criarProjeto' | 'editarProjeto' | 'editarMetas' | 'gerenciarUsuarios';
+
+// O que a regra precisa saber do projeto: quem é PO e Scrum Master.
+export interface VinculoProjeto {
+  po?: { id: string } | null;
+  scrumMaster?: { id: string } | null;
 }
 
 const CHAVE = 'sigov_sessao';
@@ -14,19 +33,32 @@ const CHAVE = 'sigov_sessao';
 export class AuthService {
   readonly sessao = signal<Sessao | null>(this.lerSessao());
   readonly ehAdmin = computed(() => this.sessao()?.roles.includes('ROLE_ADMIN') ?? false);
+  readonly rotuloPerfil = computed(() => {
+    const s = this.sessao();
+    const perfil = s?.perfil ?? s?.roles[0]?.replace(/^ROLE_/, '');
+    return perfil ? rotuloPerfil(perfil) : '';
+  });
 
   constructor(private http: HttpClient) {}
 
-  login(username: string, password: string): Observable<Sessao> {
-    return this.http
-      .post<Sessao>('/api/auth/login', { username, password })
-      .pipe(tap((s) => this.guardar({ username: s.username, roles: s.roles })));
+  // Mesma regra da API: admin faz tudo; PO e Scrum Master editam só o próprio projeto.
+  pode(acao: Acao, projeto?: VinculoProjeto | null): boolean {
+    if (this.ehAdmin()) return true;
+    if (acao !== 'editarProjeto' || !projeto) return false;
+    const id = this.sessao()?.id;
+    return !!id && (projeto.po?.id === id || projeto.scrumMaster?.id === id);
   }
 
-  registrar(nome: string, login: string, senha: string): Observable<Sessao> {
+  login(username: string, password: string): Observable<RespostaLogin> {
     return this.http
-      .post<Sessao>('/api/auth/registro', { nome, login, senha })
-      .pipe(tap((s) => this.guardar({ username: s.username, roles: s.roles })));
+      .post<RespostaLogin>('/api/auth/login', { username, password })
+      .pipe(tap((r) => this.guardar(this.sessaoDe(r))));
+  }
+
+  registrar(nome: string, login: string, senha: string): Observable<RespostaLogin> {
+    return this.http
+      .post<RespostaLogin>('/api/auth/registro', { nome, login, senha })
+      .pipe(tap((r) => this.guardar(this.sessaoDe(r))));
   }
 
   logout(): Observable<void> {
@@ -41,6 +73,10 @@ export class AuthService {
     this.sessao.set(null);
   }
 
+  private sessaoDe(r: RespostaLogin): Sessao {
+    return { username: r.username, roles: r.roles, id: r.usuario?.id, nome: r.usuario?.nome, perfil: r.usuario?.perfil };
+  }
+
   private guardar(s: Sessao) {
     try {
       localStorage.setItem(CHAVE, JSON.stringify(s));
@@ -51,7 +87,9 @@ export class AuthService {
   private lerSessao(): Sessao | null {
     try {
       const raw = localStorage.getItem(CHAVE);
-      return raw ? JSON.parse(raw) : null;
+      const s: Sessao | null = raw ? JSON.parse(raw) : null;
+      // Sessões gravadas antes de guardarmos o id da conta pedem um novo login.
+      return s?.id ? s : null;
     } catch {
       return null;
     }

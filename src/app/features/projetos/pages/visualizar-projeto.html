@@ -19,9 +19,11 @@
         <p class="projeto-area">{{ projeto.areaSolicitante || '—' }} · {{ projeto.areaExecutora || '—' }}</p>
     </div>
     <div class="projeto-header-acoes">
-        <a [routerLink]="['/projeto', projeto.id, 'editar']" class="btn-voltar">
-            <mat-icon>edit</mat-icon> Editar
-        </a>
+        @if (podeEditar) {
+            <a [routerLink]="['/projeto', projeto.id, 'editar']" class="btn-voltar">
+                <mat-icon>edit</mat-icon> Editar
+            </a>
+        }
         <a routerLink="/portfolio" class="btn-voltar">
             <mat-icon>arrow_back</mat-icon> Portfólio
         </a>
@@ -113,10 +115,12 @@
                                 <span class="fase-painel-titulo">Fase {{ faseSelecionada! + 1 }} · {{ fase.nome }}</span>
                                 <span class="fase-painel-situacao">{{ situacaoLabel(situacaoDe(faseSelecionada!)) }}</span>
                             </div>
-                            <button type="button" class="fase-lapis" (click)="alternarEdicaoFase()"
-                                    [class.ativo]="editandoFase" aria-label="Editar tudo desta fase" title="Editar tudo">
-                                <mat-icon>edit</mat-icon>
-                            </button>
+                            @if (podeEditar) {
+                                <button type="button" class="fase-lapis" (click)="alternarEdicaoFase()"
+                                        [class.ativo]="editandoFase" aria-label="Editar tudo desta fase" title="Editar tudo">
+                                    <mat-icon>edit</mat-icon>
+                                </button>
+                            }
                         </div>
 
                         <div class="fase-campos">
@@ -138,31 +142,48 @@
                                     </select>
                                 </label>
                             }
-                            <label class="fase-campo">
-                                <span>Data de início</span>
-                                <input type="date" [(ngModel)]="fase.dataInicio">
-                            </label>
-                            <label class="fase-campo">
-                                <span>Data de fim *</span>
-                                <input type="date" [(ngModel)]="fase.dataFim" required>
-                            </label>
-                            <label class="fase-campo">
-                                <span>Percentual concluído (%)</span>
-                                <input type="number" min="0" max="100" [(ngModel)]="fase.percentual" (blur)="ajustarPercentual(fase)">
-                            </label>
+                            @if (podeEditar) {
+                                <label class="fase-campo">
+                                    <span>Data de início</span>
+                                    <input type="date" [(ngModel)]="fase.dataInicio">
+                                </label>
+                                <label class="fase-campo">
+                                    <span>Data de fim *</span>
+                                    <input type="date" [(ngModel)]="fase.dataFim" required>
+                                </label>
+                                <label class="fase-campo">
+                                    <span>Percentual concluído (%)</span>
+                                    <input type="number" min="0" max="100" [(ngModel)]="fase.percentual" (blur)="ajustarPercentual(fase)">
+                                </label>
+                            } @else {
+                                <div class="fase-campo">
+                                    <span>Início</span>
+                                    <b class="fase-valor">{{ formatarData(fase.dataInicio) }}</b>
+                                </div>
+                                <div class="fase-campo">
+                                    <span>Fim</span>
+                                    <b class="fase-valor">{{ formatarData(fase.dataFim) }}</b>
+                                </div>
+                                <div class="fase-campo">
+                                    <span>Concluído</span>
+                                    <b class="fase-valor">{{ fase.percentual ?? 0 }}%</b>
+                                </div>
+                            }
                         </div>
 
                         @if (erroFase) {
                             <p class="fase-erro" role="alert">{{ erroFase }}</p>
                         }
-                        <div class="fase-acoes">
-                            @if (situacaoDe(faseSelecionada!) !== 'CONCLUIDA') {
-                                <button type="button" class="btn-concluir-fase" (click)="concluirFase(faseSelecionada!)">
-                                    <mat-icon>check_circle</mat-icon> Concluir fase
-                                </button>
-                            }
-                            <button type="button" class="btn-salvar-fase" (click)="salvarFase()">Salvar</button>
-                        </div>
+                        @if (podeEditar) {
+                            <div class="fase-acoes">
+                                @if (situacaoDe(faseSelecionada!) !== 'CONCLUIDA') {
+                                    <button type="button" class="btn-concluir-fase" (click)="concluirFase(faseSelecionada!)">
+                                        <mat-icon>check_circle</mat-icon> Concluir fase
+                                    </button>
+                                }
+                                <button type="button" class="btn-salvar-fase" (click)="salvarFase()">Salvar</button>
+                            </div>
+                        }
                     </div>
                 }
             </div>
@@ -292,7 +313,7 @@
 <ng-template #campoEditavel let-chave="chave" let-titulo="titulo" let-vazio="vazio">
     <div class="card-titulo">
         <h3>{{ titulo }}</h3>
-        @if (campoEmEdicao !== chave) {
+        @if (podeEditar && campoEmEdicao !== chave) {
             <button type="button" class="btn-icone" (click)="editarCampo(chave)" [attr.aria-label]="'Editar ' + titulo" title="Editar">
                 <mat-icon>edit</mat-icon>
             </button>

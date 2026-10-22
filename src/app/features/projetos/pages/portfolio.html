@@ -1,6 +1,6 @@
 <div class="page-header">
     <h1>Portfólio de Projetos</h1>
-    @if (auth.ehAdmin()) {
+    @if (auth.pode('criarProjeto')) {
         <a routerLink="/cadastro" class="btn-novo">
             <mat-icon class="btn-novo-icon">add</mat-icon>
             Novo Projeto
@@ -16,7 +16,7 @@
                (input)="filtrar()"
                placeholder="Buscar por nome, sigla ou área...">
     </div>
-    <span class="total-count">{{ totalElementos }} projeto{{ totalElementos !== 1 ? 's' : '' }}</span>
+    <span class="total-count">{{ projetosFiltrados.length }} projeto{{ projetosFiltrados.length !== 1 ? 's' : '' }}</span>
 </div>
 
 @if (carregando) {
@@ -36,7 +36,7 @@
             <p>Nenhum projeto encontrado para "{{ busca }}"</p>
         } @else {
             <p>Nenhum projeto cadastrado ainda</p>
-            @if (auth.ehAdmin()) {
+            @if (auth.pode('criarProjeto')) {
                 <a routerLink="/cadastro" class="btn-novo-inline">Cadastrar primeiro projeto</a>
             }
         }
@@ -54,7 +54,7 @@
                 </tr>
             </thead>
             <tbody>
-                @for (projeto of projetosFiltrados; track projeto.id) {
+                @for (projeto of projetosDaPagina; track projeto.id) {
                     @let d = desvio(projeto);
                     @let decorrido = percentualDecorrido(projeto);
                     @let gasto = percentualGasto(projeto);
@@ -109,11 +109,5 @@
         </table>
     </div>
 
-    @if (totalPaginas > 1) {
-        <div class="paginacao">
-            <button class="btn-pag" [disabled]="paginaAtual === 0" (click)="paginaAnterior()">← Anterior</button>
-            <span class="pag-info">Página {{ paginaAtual + 1 }} de {{ totalPaginas }}</span>
-            <button class="btn-pag" [disabled]="paginaAtual >= totalPaginas - 1" (click)="proximaPagina()">Próxima →</button>
-        </div>
-    }
+    <app-paginacao [total]="projetosFiltrados.length" [pagina]="paginaAtual" [tamanho]="tamanhoPagina" (mudar)="pagina.ir($event)" />
 }

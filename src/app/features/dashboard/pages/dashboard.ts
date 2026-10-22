@@ -11,6 +11,7 @@ import { Meta, MetaService } from '../../objetivos/services/meta.service';
 import { avaliarMeta } from '../../objetivos/utils/meta';
 import { situacaoFase } from '../../projetos/utils/fase';
 import { Retrato, RetratoService } from '../services/retrato.service';
+import { fatia, Paginacao, paginaNaUrl } from '../../../shared/paginacao/paginacao';
 
 type Gravidade = 'grave' | 'atencao';
 
@@ -71,7 +72,7 @@ const DIAS_PROXIMOS = 30;
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-dashboard',
-  imports: [RouterLink, MatIconModule],
+  imports: [RouterLink, MatIconModule, Paginacao],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -118,6 +119,15 @@ export class Dashboard implements OnInit {
   }
 
   // ---- O que precisa de atenção ----
+
+  // A manchete e os cartões contam a lista inteira; a página só recorta o que aparece.
+  readonly tamanhoPagina = 8;
+  readonly pagina = paginaNaUrl();
+
+  alertasDaPagina(als: Alerta[]): { itens: Alerta[]; atual: number } {
+    const atual = this.pagina.em(als.length, this.tamanhoPagina);
+    return { itens: fatia(als, atual, this.tamanhoPagina), atual };
+  }
 
   get alertas(): Alerta[] {
     const lista: Alerta[] = [];

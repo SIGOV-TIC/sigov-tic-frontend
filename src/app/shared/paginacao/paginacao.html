@@ -1,0 +1,25 @@
+@if (total() > tamanho()) {
+    <nav class="paginacao no-print" [class.compacta]="compacta()" aria-label="Paginação">
+        <span class="contagem">{{ de() }}–{{ ate() }} de {{ total() }}</span>
+        <div class="controles">
+            <button type="button" class="seta" [disabled]="atual() === 1" (click)="ir(atual() - 1)" aria-label="Página anterior">
+                <mat-icon>chevron_left</mat-icon>
+            </button>
+            @if (!compacta()) {
+                @for (b of botoes(); track ehPagina(b) ? b.pagina : b.reticencias) {
+                    @if (ehPagina(b)) {
+                        <button type="button" class="num" [class.atual]="b.pagina === atual()"
+                                [attr.aria-current]="b.pagina === atual() ? 'page' : null" (click)="ir(b.pagina)">{{ b.pagina }}</button>
+                    } @else {
+                        <span class="reticencias" aria-hidden="true">…</span>
+                    }
+                }
+            } @else {
+                <span class="pagina-de">{{ atual() }} / {{ paginas() }}</span>
+            }
+            <button type="button" class="seta" [disabled]="atual() === paginas()" (click)="ir(atual() + 1)" aria-label="Próxima página">
+                <mat-icon>chevron_right</mat-icon>
+            </button>
+        </div>
+    </nav>
+}

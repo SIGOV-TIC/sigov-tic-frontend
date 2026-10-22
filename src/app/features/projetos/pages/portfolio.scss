@@ -202,42 +202,6 @@ tfoot .row-total td {
     color: var(--badge-rejeitado-text);
 }
 
-.paginacao {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 16px;
-    margin-top: 16px;
-    padding: 12px;
-}
-
-.btn-pag {
-    background: none;
-    border: 1px solid var(--border-main);
-    color: var(--text-muted);
-    font-size: 13px;
-    padding: 6px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    transition: border-color 0.2s, color 0.2s;
-
-    &:hover:not(:disabled) {
-        border-color: var(--accent-blue);
-        color: var(--text-primary);
-    }
-
-    &:disabled {
-        opacity: 0.3;
-        cursor: not-allowed;
-    }
-}
-
-.pag-info {
-    font-size: 13px;
-    color: var(--text-faint);
-}
-
 .estado-vazio {
     display: flex;
     flex-direction: column;

@@ -116,11 +116,14 @@
 .linha-area td { border-top: 1px solid var(--border-subtle); color: var(--text-primary); }
 .linha-area:first-child td { border-top: none; }
 
-.linha-projeto {
+.linha-projeto,
+.linha-paginacao {
     background-color: color-mix(in srgb, var(--bg-card-inner) 55%, transparent);
 
     td:first-child { padding-left: 48px; }
 }
+
+.linha-paginacao td { padding-top: 0; padding-bottom: 0; }
 
 .abrir {
     display: inline-flex;

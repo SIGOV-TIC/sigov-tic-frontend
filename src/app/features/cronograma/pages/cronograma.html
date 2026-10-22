@@ -89,6 +89,7 @@
     </div>
 } @else {
     @let ls = linhas;
+    @let pag = paginaDe(ls, semCronograma);
     <div class="resumo-estados">
         @for (r of resumoEstados; track r.estado) {
             <span class="resumo-estado estado-{{ r.estado }}">
@@ -140,7 +141,7 @@
                     }
                 </div>
 
-                @for (l of ls; track l.projeto.id) {
+                @for (l of pag.linhas; track l.projeto.id) {
                     @let aberto = abertos.has(l.projeto.id);
                     <div class="tl-linha tl-projeto">
                         <div class="tl-tabela">
@@ -204,7 +205,7 @@
                     <div class="tl-vazio">Nenhum projeto com cronograma para os filtros selecionados.</div>
                 }
 
-                @for (p of semCronograma; track p.id) {
+                @for (p of pag.sem; track p.id) {
                     <div class="tl-linha tl-projeto tl-sem">
                         <div class="tl-tabela">
                             <span class="tl-col-nome">
@@ -220,7 +221,9 @@
                         <div class="tl-grade">
                             <span class="tl-fora">
                                 Sem datas de início e conclusão.
-                                <a class="no-print" [routerLink]="['/projeto', p.id, 'editar']">Definir datas</a>
+                                @if (auth.pode('editarProjeto', p)) {
+                                    <a class="no-print" [routerLink]="['/projeto', p.id, 'editar']">Definir datas</a>
+                                }
                             </span>
                         </div>
                     </div>
@@ -228,6 +231,8 @@
             </div>
         </div>
     </div>
+
+    <app-paginacao [total]="pag.total" [pagina]="pag.atual" [tamanho]="tamanhoPagina" (mudar)="pagina.ir($event)" />
 }
 
 @if (selecionado; as sel) {

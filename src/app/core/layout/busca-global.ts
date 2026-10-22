@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AuthService } from '../auth/auth.service';
 import { MatIconModule } from '@angular/material/icon';
 import { catchError, forkJoin, of } from 'rxjs';
 import { ProjetoResponse } from '../../features/projetos/models/projeto';
@@ -87,6 +88,7 @@ export class BuscaGlobal {
     private metaService: MetaService,
     private router: Router,
     private host: ElementRef<HTMLElement>,
+    private auth: AuthService,
   ) {}
 
   @HostListener('document:keydown', ['$event'])
@@ -257,7 +259,7 @@ export class BuscaGlobal {
       const recentes = this.lerRecentes();
       grupos = [
         ...(recentes.length ? [{ rotulo: 'Recentes', itens: recentes }] : []),
-        { rotulo: ROTULO_TIPO.atalho, itens: ATALHOS },
+        { rotulo: ROTULO_TIPO.atalho, itens: ATALHOS.filter((a) => a.rota[0] !== '/cadastro' || this.auth.pode('criarProjeto')) },
       ];
     } else {
       const achados = this.indice

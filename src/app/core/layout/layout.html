@@ -28,7 +28,7 @@
                 <mat-icon class="nav-icon">flag</mat-icon>
                 Objetivos
             </a>
-            @if (auth.ehAdmin()) {
+            @if (auth.pode('criarProjeto')) {
                 <a class="nav-item" routerLink="/cadastro" routerLinkActive="active">
                     <mat-icon class="nav-icon">add_circle_outline</mat-icon>
                     Novo Projeto
@@ -36,7 +36,7 @@
             }
         </nav>
 
-        @if (auth.ehAdmin()) {
+        @if (auth.pode('gerenciarUsuarios')) {
             <nav class="nav-section">
                 <span class="nav-label">Administração</span>
                 <a class="nav-item" routerLink="/usuarios" routerLinkActive="active">

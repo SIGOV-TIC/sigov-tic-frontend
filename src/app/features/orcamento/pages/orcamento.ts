@@ -7,6 +7,7 @@ import { ProjetoService } from '../../projetos/services/projeto.service';
 import { MARGEM_RISCO_PONTOS } from '../../projetos/utils/saude';
 import { moedaCompacta } from '../../projetos/utils/moeda';
 import { analisarCusto, ORDEM_CUSTO, SituacaoCusto, situacaoCusto } from '../../projetos/utils/custo';
+import { fatia, Paginacao, paginaNaUrl } from '../../../shared/paginacao/paginacao';
 
 interface LinhaOrcamento {
   projeto: ProjetoResponse;
@@ -33,7 +34,7 @@ interface LinhaArea {
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-orcamento',
-  imports: [RouterLink, FormsModule, MatIconModule],
+  imports: [RouterLink, FormsModule, MatIconModule, Paginacao],
   templateUrl: './orcamento.html',
   styleUrl: './orcamento.scss',
 })
@@ -152,6 +153,31 @@ export class Orcamento implements OnInit {
         return { area, orcado, gasto, pctGasto, avanco, situacao, linhas: ls };
       })
       .sort((a, b) => ORDEM_CUSTO.indexOf(a.situacao) - ORDEM_CUSTO.indexOf(b.situacao) || b.orcado - a.orcado);
+  }
+
+  // Áreas paginam pela URL; os projetos de cada área têm a própria página, guardada só enquanto a tela está aberta.
+  readonly tamanhoAreas = 8;
+  readonly tamanhoProjetos = 5;
+  readonly pagina = paginaNaUrl();
+  private paginaProjetos = new Map<string, number>();
+
+  areasDaPagina(areas: LinhaArea[]): { itens: LinhaArea[]; atual: number } {
+    const atual = this.pagina.em(areas.length, this.tamanhoAreas);
+    return { itens: fatia(areas, atual, this.tamanhoAreas), atual };
+  }
+
+  projetosDaArea(a: LinhaArea): { itens: LinhaOrcamento[]; atual: number } {
+    const atual = this.paginaProjetos.get(a.area) ?? 1;
+    return { itens: fatia(a.linhas, atual, this.tamanhoProjetos), atual };
+  }
+
+  irProjetos(area: string, pagina: number) {
+    this.paginaProjetos.set(area, pagina);
+  }
+
+  trocarArea() {
+    this.paginaProjetos.clear();
+    this.pagina.ir(1);
   }
 
   alternar(area: string) {
