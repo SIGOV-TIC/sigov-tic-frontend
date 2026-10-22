@@ -70,6 +70,10 @@ export class Layout implements OnInit {
     return this.router.url.startsWith('/dashboard');
   }
 
+  get estaNosUsuarios(): boolean {
+    return this.router.url.startsWith('/usuarios');
+  }
+
   get estaNoPortfolio(): boolean {
     return this.router.url.startsWith('/portfolio');
   }

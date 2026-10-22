@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, finalize, tap } from 'rxjs';
 
@@ -13,6 +13,7 @@ const CHAVE = 'sigov_sessao';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   readonly sessao = signal<Sessao | null>(this.lerSessao());
+  readonly ehAdmin = computed(() => this.sessao()?.roles.includes('ROLE_ADMIN') ?? false);
 
   constructor(private http: HttpClient) {}
 

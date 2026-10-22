@@ -34,6 +34,16 @@
             </a>
         </nav>
 
+        @if (auth.ehAdmin()) {
+            <nav class="nav-section">
+                <span class="nav-label">Administração</span>
+                <a class="nav-item" routerLink="/usuarios" routerLinkActive="active">
+                    <mat-icon class="nav-icon">group</mat-icon>
+                    Usuários
+                </a>
+            </nav>
+        }
+
 
 
     </aside>
@@ -72,6 +82,8 @@
                     <span class="breadcrumb-current">Objetivos Estratégicos</span>
                 } @else if (estaNoDashboard) {
                     <span class="breadcrumb-current">Dashboard</span>
+                } @else if (estaNosUsuarios) {
+                    <span class="breadcrumb-current">Usuários</span>
                 } @else if (estaNoPortfolio) {
                     <span class="breadcrumb-current">Portfólio</span>
                 } @else {

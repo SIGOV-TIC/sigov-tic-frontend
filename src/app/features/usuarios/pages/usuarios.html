@@ -1,0 +1,98 @@
+<div class="page-header">
+    <h1>Usuários</h1>
+    <button type="button" class="btn-acao" (click)="novaConta()"><mat-icon>person_add</mat-icon>Nova conta</button>
+</div>
+
+@if (carregando) {
+    <div class="estado-vazio"><p>Carregando contas...</p></div>
+} @else if (erro) {
+    <div class="estado-vazio">
+        <p class="falha-api">Não foi possível carregar as contas. Verifique a conexão e tente de novo.</p>
+        <button class="falha-tentar" (click)="recarregar()">Tentar novamente</button>
+    </div>
+} @else {
+    <div class="resumo">
+        <span><b>{{ usuarios.length }}</b> {{ usuarios.length === 1 ? 'conta' : 'contas' }}</span>
+        <span><b>{{ totalAtivas }}</b> {{ totalAtivas === 1 ? 'ativa' : 'ativas' }}</span>
+        <span><b>{{ gestoresAtivos }}</b> {{ gestoresAtivos === 1 ? 'gestor disponível como PO/SM' : 'gestores disponíveis como PO/SM' }}</span>
+    </div>
+
+    <table class="contas">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Perfil</th>
+                <th>Situação</th>
+                <th class="acao"><span class="sr-only">Editar</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (u of lista; track u.id) {
+                <tr [class.inativa]="!u.ativo">
+                    <td class="conta">
+                        <span class="conta-nome">{{ u.nome }}@if (ehVoce(u)) { <span class="voce">você</span> }</span>
+                        <span class="conta-login">{{ u.login }}</span>
+                    </td>
+                    <td>{{ rotuloPerfil(u.perfil) }}</td>
+                    <td>{{ u.ativo ? 'Ativa' : 'Inativa' }}</td>
+                    <td class="acao">
+                        <button type="button" class="editar" (click)="editar(u)" [attr.aria-label]="'Editar ' + u.nome"><mat-icon>edit</mat-icon></button>
+                    </td>
+                </tr>
+            } @empty {
+                <tr><td colspan="4" class="vazio">Nenhuma conta cadastrada.</td></tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (edicao; as e) {
+    @let propria = ehVoce(e);
+    <div class="painel-fundo" (click)="fecharEdicao()"></div>
+    <aside class="painel" role="dialog" [attr.aria-label]="e.id ? 'Editar conta' : 'Nova conta'">
+        <button type="button" class="painel-fechar" (click)="fecharEdicao()" aria-label="Fechar"><mat-icon>close</mat-icon></button>
+        <h3>{{ e.id ? 'Editar conta' : 'Nova conta' }}</h3>
+
+        <form class="form" (ngSubmit)="salvar()">
+            <label>Nome
+                <input name="nome" [(ngModel)]="e.nome" required>
+            </label>
+            <label>Login
+                <input name="login" [(ngModel)]="e.login" autocomplete="off" required [readonly]="propria">
+            </label>
+            <label>{{ e.id ? 'Nova senha' : 'Senha inicial' }}
+                <input name="senha" type="password" [(ngModel)]="e.senha" autocomplete="new-password"
+                       [placeholder]="e.id ? 'Em branco mantém a atual' : 'Mínimo de 6 caracteres'">
+            </label>
+
+            <fieldset class="perfis" [disabled]="propria">
+                <legend>Perfil</legend>
+                @for (p of perfis; track p.valor) {
+                    <label class="perfil">
+                        <input type="radio" name="perfil" [value]="p.valor" [(ngModel)]="e.perfil">
+                        <span>
+                            <span class="perfil-nome">{{ p.rotulo }}</span>
+                            <span class="perfil-desc">{{ p.descricao }}</span>
+                        </span>
+                    </label>
+                }
+            </fieldset>
+
+            <label class="ativa">
+                <input type="checkbox" name="ativo" [(ngModel)]="e.ativo" [disabled]="propria">
+                Conta ativa
+            </label>
+            @if (propria) {
+                <p class="form-nota">Outro administrador precisa alterar o login, o perfil ou a situação da sua conta.</p>
+            }
+
+            @if (erroEdicao) {
+                <p class="form-erro" role="alert">{{ erroEdicao }}</p>
+            }
+
+            <div class="form-acoes">
+                <button type="submit" class="btn-acao" [disabled]="salvando">{{ salvando ? 'Salvando…' : 'Salvar' }}</button>
+            </div>
+        </form>
+    </aside>
+}
