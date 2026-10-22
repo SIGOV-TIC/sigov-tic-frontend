@@ -139,33 +139,26 @@
             <div class="field-row">
                 <div class="field">
                     <label for="po">PO</label>
-                    <input id="po" type="text" [(ngModel)]="projeto.po" name="po"
-                           [class.filled]="projeto.po"
-                           placeholder="Digite ou selecione..."
-                           (input)="filtrarPessoas($any($event.target).value)"
-                           (focus)="filtrarPessoas($any($event.target).value)"
-                           [matAutocomplete]="autoPo">
-                    <mat-autocomplete #autoPo="matAutocomplete">
-                        @for (p of pessoasFiltradas; track p) {
-                            <mat-option [value]="p">{{ p }}</mat-option>
+                    <select id="po" name="po" [(ngModel)]="projeto.poId" [class.filled]="projeto.poId">
+                        <option [ngValue]="null">Sem PO definido</option>
+                        @for (g of opcoesGestor; track g.id) {
+                            <option [ngValue]="g.id">{{ g.nome }}</option>
                         }
-                    </mat-autocomplete>
+                    </select>
                 </div>
                 <div class="field">
                     <label for="scrumMaster">Scrum Master</label>
-                    <input id="scrumMaster" type="text" [(ngModel)]="projeto.scrumMaster" name="scrumMaster"
-                           [class.filled]="projeto.scrumMaster"
-                           placeholder="Digite ou selecione..."
-                           (input)="filtrarPessoas($any($event.target).value)"
-                           (focus)="filtrarPessoas($any($event.target).value)"
-                           [matAutocomplete]="autoSm">
-                    <mat-autocomplete #autoSm="matAutocomplete">
-                        @for (p of pessoasFiltradas; track p) {
-                            <mat-option [value]="p">{{ p }}</mat-option>
+                    <select id="scrumMaster" name="scrumMaster" [(ngModel)]="projeto.scrumMasterId" [class.filled]="projeto.scrumMasterId">
+                        <option [ngValue]="null">Sem Scrum Master definido</option>
+                        @for (g of opcoesGestor; track g.id) {
+                            <option [ngValue]="g.id">{{ g.nome }}</option>
                         }
-                    </mat-autocomplete>
+                    </select>
                 </div>
             </div>
+            @if (opcoesGestor.length === 0) {
+                <p class="fase-dica">Nenhum gestor de projeto ativo. O administrador cadastra e ativa os gestores em Usuários.</p>
+            }
             <div class="field-row">
                 <div class="field">
                     <label for="patrocinador">Patrocinador</label>
@@ -335,7 +328,9 @@
                             <div class="fase-item">
                                 <span class="fase-numero">{{ i + 1 }}</span>
                                 <span class="fase-nome">{{ fase.nome }}</span>
-                                <span class="fase-duracao">{{ fase.duracaoMeses }} {{ fase.duracaoMeses === 1 ? 'mês' : 'meses' }}</span>
+                                <span class="fase-duracao" [class.fase-sem-fim]="!fase.dataFim">
+                                    {{ fase.dataFim ? 'até ' + formatarData(fase.dataFim) : 'sem data de fim' }}
+                                </span>
                                 <button type="button" class="fase-remover" (click)="removerFase(i)">
                                     <mat-icon>close</mat-icon>
                                 </button>
@@ -348,14 +343,20 @@
                     <input type="text" [(ngModel)]="novaFase.nome" name="novaFaseNome"
                            placeholder="Nome da fase (ex.: MVP, Produção)"
                            class="fase-input-nome">
-                    <input type="number" [(ngModel)]="novaFase.duracaoMeses" name="novaFaseDuracao"
-                           min="1" max="6"
-                           class="fase-input-duracao">
-                    <span class="fase-duracao-label">meses</span>
-                    <button type="button" class="btn-add-fase" (click)="adicionarFase()" [disabled]="!novaFase.nome.trim()">
+                    <span class="fase-duracao-label">Fim *</span>
+                    <input type="date" [(ngModel)]="novaFase.dataFim" name="novaFaseFim"
+                           [min]="inicioDaProximaFase || ''" required
+                           class="fase-input-data" aria-label="Data de fim da fase">
+                    <button type="button" class="btn-add-fase" (click)="adicionarFase()" [disabled]="!novaFase.nome.trim() || !novaFase.dataFim">
                         <mat-icon>add</mat-icon> Incluir Fase
                     </button>
                 </div>
+                @if (inicioDaProximaFase) {
+                    <p class="fase-dica">A próxima fase começa em {{ formatarData(inicioDaProximaFase) }}.</p>
+                }
+                @if (erroFase) {
+                    <p class="fase-erro" role="alert">{{ erroFase }}</p>
+                }
             </div>
         }
 
@@ -574,11 +575,11 @@
                 <div class="resumo-grid">
                     <div class="resumo-item">
                         <span class="resumo-label">PO</span>
-                        <span class="resumo-valor">{{ projeto.po || '—' }}</span>
+                        <span class="resumo-valor">{{ nomeGestor(projeto.poId) || '—' }}</span>
                     </div>
                     <div class="resumo-item">
                         <span class="resumo-label">Scrum Master</span>
-                        <span class="resumo-valor">{{ projeto.scrumMaster || '—' }}</span>
+                        <span class="resumo-valor">{{ nomeGestor(projeto.scrumMasterId) || '—' }}</span>
                     </div>
                     <div class="resumo-item">
                         <span class="resumo-label">Patrocinador</span>
@@ -657,7 +658,7 @@
                         @for (fase of projeto.fases; track fase.nome; let i = $index) {
                             <div class="resumo-fase-item">
                                 <span class="fase-numero">{{ i + 1 }}</span>
-                                {{ fase.nome }} — {{ fase.duracaoMeses }} {{ fase.duracaoMeses === 1 ? 'mês' : 'meses' }}
+                                {{ fase.nome }}: até {{ formatarData(fase.dataFim) }}
                             </div>
                         }
                     </div>

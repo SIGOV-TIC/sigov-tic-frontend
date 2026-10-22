@@ -1,14 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ProjetoRequest, FaseProjeto, TipoProjeto, FaseCiclo, QuadrantePrazo, QuadranteCusto } from '../models/projeto';
+import { PessoaResumo, ProjetoRequest, FaseProjeto, TipoProjeto, FaseCiclo, QuadrantePrazo, QuadranteCusto } from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
+import { UsuarioService } from '../../usuarios/services/usuario.service';
+import { janelaFase } from '../utils/fase';
 
 @Component({
+  // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-cadastro-projeto',
   imports: [FormsModule, MatAutocompleteModule, MatIconModule, MatInputModule],
   templateUrl: './cadastro-projeto.html',
@@ -26,9 +30,16 @@ export class CadastroProjeto implements OnInit {
     fases: [],
     priorizadoPdtic: false,
     inovador: false,
+    poId: null,
+    scrumMasterId: null,
   };
 
-  novaFase: FaseProjeto = { nome: '', duracaoMeses: 1 };
+  // Gestores ativos; o PO/SM atual entra mesmo que a conta tenha sido desativada depois.
+  gestores: PessoaResumo[] = [];
+  vinculados: PessoaResumo[] = [];
+
+  novaFase: FaseProjeto = { nome: '', duracaoMeses: 1, dataFim: '' };
+  erroFase = '';
 
   nomes = [
     'Sistema de Governança de TIC',
@@ -146,6 +157,7 @@ export class CadastroProjeto implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private snackBar: MatSnackBar,
+    private usuarioService: UsuarioService,
   ) {
     this.nomesFiltrados = this.nomes;
     this.siglasFiltradas = this.siglas;
@@ -158,6 +170,10 @@ export class CadastroProjeto implements OnInit {
   }
 
   ngOnInit() {
+    this.usuarioService.gestores().subscribe({
+      next: (gs) => (this.gestores = gs.map(({ id, nome }) => ({ id, nome }))),
+      error: () => (this.gestores = []),
+    });
     this.projetoId = this.route.snapshot.paramMap.get('id');
     if (!this.projetoId) return;
     this.projetoService.obter(this.projetoId).subscribe((p) => {
@@ -165,9 +181,25 @@ export class CadastroProjeto implements OnInit {
         this.router.navigate(['/portfolio']);
         return;
       }
-      const { id, createdAt, updatedAt, ...dados } = p;
-      this.projeto = { ...dados, fases: (dados.fases ?? []).map((f) => ({ ...f })) };
+      const { id, createdAt, updatedAt, po, scrumMaster, ...dados } = p;
+      this.vinculados = [po, scrumMaster].filter((g): g is PessoaResumo => !!g);
+      this.projeto = {
+        ...dados,
+        poId: po?.id ?? null,
+        scrumMasterId: scrumMaster?.id ?? null,
+        fases: (dados.fases ?? []).map((f) => ({ ...f })),
+      };
+      this.preencherDatasPlanejadas();
     });
+  }
+
+  get opcoesGestor(): PessoaResumo[] {
+    const porId = new Map([...this.vinculados, ...this.gestores].map((g) => [g.id, g]));
+    return [...porId.values()].sort((a, b) => a.nome.localeCompare(b.nome));
+  }
+
+  nomeGestor(id?: string | null): string {
+    return this.opcoesGestor.find((g) => g.id === id)?.nome ?? '';
   }
 
   get modoEdicao(): boolean {
@@ -219,11 +251,54 @@ export class CadastroProjeto implements OnInit {
     this.projeto.orcamentoEstimado = Math.max(0, atual + variacao);
   }
 
+  // A fase começa onde a anterior termina (ou no início do projeto) e precisa de data de fim.
+  get inicioDaProximaFase(): string | undefined {
+    const anterior = this.projeto.fases?.[this.projeto.fases.length - 1];
+    if (anterior?.dataFim) return this.somarDias(anterior.dataFim, 1);
+    return this.projeto.dataInicioPrevista || undefined;
+  }
+
   adicionarFase() {
-    if (!this.novaFase.nome.trim()) return;
+    this.erroFase = '';
+    const nome = this.novaFase.nome.trim();
+    const fim = this.novaFase.dataFim;
+    if (!nome || !fim) {
+      this.erroFase = 'Informe o nome e a data de fim da fase.';
+      return;
+    }
+    const inicio = this.inicioDaProximaFase;
+    if (inicio && fim < inicio) {
+      this.erroFase = `A data de fim precisa ser a partir de ${this.formatarData(inicio)}.`;
+      return;
+    }
+    const meses = inicio ? Math.max(1, Math.round(this.diasEntre(inicio, fim) / 30)) : 1;
     this.projeto.fases = this.projeto.fases || [];
-    this.projeto.fases.push({ ...this.novaFase });
-    this.novaFase = { nome: '', duracaoMeses: 1 };
+    this.projeto.fases.push({ nome, duracaoMeses: meses, dataInicio: inicio, dataFim: fim });
+    this.novaFase = { nome: '', duracaoMeses: 1, dataFim: '' };
+  }
+
+  // Projetos cadastrados antes da data de fim obrigatória: as fases recebem as datas planejadas.
+  private preencherDatasPlanejadas() {
+    const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    (this.projeto.fases ?? []).forEach((f, i) => {
+      if (f.dataFim) return;
+      const janela = janelaFase(this.projeto, i);
+      if (!janela) return;
+      f.dataInicio = f.dataInicio || iso(janela.ini);
+      f.dataFim = iso(new Date(janela.fim.getTime() - 86400000));
+    });
+  }
+
+  private somarDias(iso: string, dias: number): string {
+    const [a, m, d] = iso.split('-').map(Number);
+    const data = new Date(a, m - 1, d + dias);
+    return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
+  }
+
+  private diasEntre(de: string, ate: string): number {
+    const [a1, m1, d1] = de.split('-').map(Number);
+    const [a2, m2, d2] = ate.split('-').map(Number);
+    return (new Date(a2, m2 - 1, d2).getTime() - new Date(a1, m1 - 1, d1).getTime()) / 86400000;
   }
 
   removerFase(index: number) {
@@ -254,6 +329,7 @@ export class CadastroProjeto implements OnInit {
     if (!this.projeto.sigla?.trim()) erros.push('Sigla');
     if (!this.projeto.areaSolicitante?.trim()) erros.push('Área Solicitante');
     if (!this.projeto.descricao?.trim()) erros.push('Descrição');
+    if ((this.projeto.fases ?? []).some((f) => !f.dataFim)) erros.push('Data de fim das fases');
     return erros;
   }
 
@@ -312,7 +388,7 @@ export class CadastroProjeto implements OnInit {
 
   // Leva o usuário à primeira etapa que tem campo obrigatório vazio.
   private irParaPrimeiraPendencia() {
-    const etapaDe: Record<string, number> = { 'Nome do Projeto': 0, 'Sigla': 0, 'Área Solicitante': 0, 'Descrição': 2 };
+    const etapaDe: Record<string, number> = { 'Nome do Projeto': 0, 'Sigla': 0, 'Área Solicitante': 0, 'Descrição': 2, 'Data de fim das fases': 4 };
     const etapa = Math.min(...this.errosValidacao.map((e) => etapaDe[e] ?? this.etapaAtual));
     this.etapaAtual = etapa;
     this.etapasConcluidas = false;
@@ -365,7 +441,7 @@ export class CadastroProjeto implements OnInit {
   }
 
   limpar() {
-    this.projeto = { nome: '', sigla: '', fases: [], priorizadoPdtic: false, inovador: false };
+    this.projeto = { nome: '', sigla: '', fases: [], priorizadoPdtic: false, inovador: false, poId: null, scrumMasterId: null };
     this.etapaAtual = 0;
     this.mostrarResumo = false;
     this.etapasConcluidas = false;

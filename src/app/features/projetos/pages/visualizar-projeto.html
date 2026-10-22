@@ -2,6 +2,11 @@
     <div class="estado-vazio">
         <p>Carregando projeto...</p>
     </div>
+} @else if (erro) {
+    <div class="estado-vazio">
+        <p class="falha-api">Não foi possível carregar os dados. Verifique a conexão e tente de novo.</p>
+        <button class="falha-tentar" (click)="recarregar()">Tentar novamente</button>
+    </div>
 } @else {
 
 <div class="projeto-header">
@@ -33,11 +38,11 @@
             <div class="responsaveis-grid">
                 <div class="responsavel-item">
                     <span class="responsavel-label">PO</span>
-                    <span class="responsavel-valor">{{ projeto.po || '—' }}</span>
+                    <span class="responsavel-valor">{{ projeto.po?.nome || '—' }}</span>
                 </div>
                 <div class="responsavel-item">
                     <span class="responsavel-label">Scrum Master</span>
-                    <span class="responsavel-valor">{{ projeto.scrumMaster || '—' }}</span>
+                    <span class="responsavel-valor">{{ projeto.scrumMaster?.nome || '—' }}</span>
                 </div>
                 <div class="responsavel-item">
                     <span class="responsavel-label">Patrocinador</span>
@@ -138,8 +143,8 @@
                                 <input type="date" [(ngModel)]="fase.dataInicio">
                             </label>
                             <label class="fase-campo">
-                                <span>Data de fim</span>
-                                <input type="date" [(ngModel)]="fase.dataFim">
+                                <span>Data de fim *</span>
+                                <input type="date" [(ngModel)]="fase.dataFim" required>
                             </label>
                             <label class="fase-campo">
                                 <span>Percentual concluído (%)</span>
@@ -147,6 +152,9 @@
                             </label>
                         </div>
 
+                        @if (erroFase) {
+                            <p class="fase-erro" role="alert">{{ erroFase }}</p>
+                        }
                         <div class="fase-acoes">
                             @if (situacaoDe(faseSelecionada!) !== 'CONCLUIDA') {
                                 <button type="button" class="btn-concluir-fase" (click)="concluirFase(faseSelecionada!)">

@@ -1,0 +1,232 @@
+:host { display: block; }
+
+.page-header {
+    margin: 8px 0 20px;
+
+    h1 { margin: 0; font-size: 22px; font-weight: 700; color: var(--text-primary); }
+}
+
+.barra-filtro { margin-bottom: 16px; }
+
+.filtro {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2xs);
+
+    > span { font-size: var(--typescale-paragraph-x-small-size); color: var(--text-muted); }
+
+    select {
+        min-width: 200px;
+        min-height: 36px;
+        padding: 0 var(--spacing-sm);
+        font: inherit;
+        font-size: var(--typescale-paragraph-small-size);
+        color: var(--text-primary);
+        background-color: var(--bg-input);
+        border: 1px solid var(--border-main);
+        border-radius: var(--border-radius-md);
+        color-scheme: inherit;
+
+        &:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 1px; }
+    }
+}
+
+// Resumo em texto corrido, como no Cronograma
+.resumo {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 24px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+
+    b { font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+    mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+.resumo-atencao, .resumo-ok { display: inline-flex; align-items: center; gap: 5px; }
+.resumo-atencao mat-icon { color: var(--estado-risco); }
+.resumo-ok mat-icon { color: var(--estado-concluido); }
+
+.resumo-abrir {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &:hover { color: var(--text-primary); background-color: var(--border-subtle); }
+    mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+// Cor só onde há problema; o que está dentro do previsto fica neutro.
+.situacao-OK { --cor: var(--estado-andamento); }
+.situacao-ALERTA { --cor: var(--estado-risco); }
+.situacao-ESTOURADO { --cor: var(--estado-atrasado); }
+
+.tabela-rolagem {
+    overflow-x: auto;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-main);
+    border-radius: 6px;
+}
+
+.tabela {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th {
+        padding: 12px 12px 10px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-main);
+        white-space: nowrap;
+    }
+
+    td {
+        padding: 0 12px;
+        height: 40px;
+        color: var(--text-secondary);
+        white-space: nowrap;
+    }
+
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .negativo { color: var(--estado-atrasado-fg); font-weight: 600; }
+
+    tfoot td {
+        height: 44px;
+        font-weight: 600;
+        color: var(--text-primary);
+        border-top: 1px solid var(--border-main);
+    }
+}
+
+.linha-area td { border-top: 1px solid var(--border-subtle); color: var(--text-primary); }
+.linha-area:first-child td { border-top: none; }
+
+.linha-projeto {
+    background-color: color-mix(in srgb, var(--bg-card-inner) 55%, transparent);
+
+    td:first-child { padding-left: 48px; }
+}
+
+.abrir {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    gap: 4px;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    mat-icon { font-size: 20px; width: 20px; height: 20px; color: var(--text-muted); }
+    &:hover .area-nome { text-decoration: underline; }
+}
+
+.area-nome { font-weight: 600; }
+.area-qtd { margin-left: 4px; font-size: 12px; color: var(--text-faint); }
+
+.proj {
+    color: var(--text-secondary);
+    text-decoration: none;
+
+    b { font-weight: 600; color: var(--text-primary); }
+    span { margin-left: 6px; color: var(--text-muted); }
+    &:hover b { text-decoration: underline; }
+}
+
+.motivo {
+    display: block;
+    margin-top: -2px;
+    padding-bottom: 6px;
+    font-size: 12px;
+    color: var(--cor);
+}
+
+.col-trilho { width: 28%; min-width: 200px; }
+.col-situacao { width: 1%; }
+
+.trilho {
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+    width: calc(100% - 84px);
+    height: 8px;
+    border-radius: 4px;
+    background-color: color-mix(in srgb, var(--cor) 22%, transparent);
+}
+
+.trilho-gasto {
+    position: absolute;
+    inset: 0 auto 0 0;
+    border-radius: 4px;
+    background-color: var(--cor);
+}
+
+.trilho-marca {
+    position: absolute;
+    top: -4px;
+    width: 2px;
+    height: 16px;
+    margin-left: -1px;
+    border-radius: 1px;
+    background-color: var(--text-primary);
+}
+
+.par {
+    display: inline-block;
+    width: 76px;
+    margin-left: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.situacao {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--cor);
+
+    mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+.legenda {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 400;
+}
+
+.legenda-gasto { width: 16px; height: 8px; border-radius: 4px; background-color: var(--estado-andamento); }
+.legenda-marca { width: 2px; height: 14px; margin-left: 10px; border-radius: 1px; background-color: var(--text-primary); }
+
+.rodape { margin: 10px 0 0; font-size: 12px; color: var(--text-muted); }
+
+.estado-vazio {
+    padding: var(--spacing-4xl) var(--spacing-md);
+    text-align: center;
+    color: var(--text-muted);
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-main);
+    border-radius: var(--border-radius-md);
+}
+
+@media print { .barra-filtro { display: none; } }

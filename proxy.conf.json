@@ -1,0 +1,8 @@
+{
+  "/api": {
+    "target": "https://sigov-api.ashymeadow-7686a936.brazilsouth.azurecontainerapps.io",
+    "secure": true,
+    "changeOrigin": true,
+    "headers": { "Origin": "https://sigov-tic-frontend.vercel.app" }
+  }
+}

@@ -1,0 +1,175 @@
+<div class="page-header">
+    <h1>Objetivos Estratégicos</h1>
+    @if (auth.ehAdmin()) {
+        <button type="button" class="btn-acao" (click)="novaMeta()"><mat-icon>add</mat-icon>Nova meta</button>
+    }
+</div>
+
+@if (carregando) {
+    <div class="estado-vazio"><p>Carregando objetivos...</p></div>
+} @else if (erro) {
+    <div class="estado-vazio">
+        <p class="falha-api">Não foi possível carregar os dados. Verifique a conexão e tente de novo.</p>
+        <button class="falha-tentar" (click)="recarregar()">Tentar novamente</button>
+    </div>
+} @else {
+    @let os = objetivos;
+    <div class="resumo">
+        <span><b>{{ os.length }}</b> {{ os.length === 1 ? 'objetivo' : 'objetivos' }}</span>
+        <span><b>{{ totalMetas }}</b> {{ totalMetas === 1 ? 'meta' : 'metas' }}</span>
+        <span><b>{{ totalProjetos }}</b> {{ totalProjetos === 1 ? 'projeto vinculado' : 'projetos vinculados' }}</span>
+        @if (metasForaDoPrevisto > 0) {
+            <span class="resumo-atencao"><mat-icon>warning</mat-icon><b>{{ metasForaDoPrevisto }}</b> {{ metasForaDoPrevisto === 1 ? 'meta fora do previsto' : 'metas fora do previsto' }}</span>
+        }
+        <button type="button" class="resumo-abrir" (click)="alternarTodos()">
+            <mat-icon>{{ todosAbertos ? 'unfold_less' : 'unfold_more' }}</mat-icon>
+            {{ todosAbertos ? 'Recolher tudo' : 'Abrir tudo' }}
+        </button>
+    </div>
+
+    @if (os.length === 0) {
+        <div class="estado-vazio"><p>Nenhum objetivo com meta ou projeto vinculado.</p></div>
+    }
+
+    <div class="lista">
+        @for (o of os; track o.titulo) {
+            @let aberto = abertos.has(o.titulo);
+            <section class="objetivo estado-{{ o.estado }}" [class.objetivo-sem]="o.semDefinicao">
+                <button type="button" class="objetivo-topo" (click)="alternar(o.titulo)" [attr.aria-expanded]="aberto">
+                    <mat-icon class="seta">{{ aberto ? 'expand_more' : 'chevron_right' }}</mat-icon>
+                    <mat-icon class="bandeira">flag</mat-icon>
+                    <span class="objetivo-titulo">{{ o.titulo }}</span>
+                    <span class="objetivo-situacao">
+                        @if (o.metas.length === 0) {
+                            sem meta cadastrada
+                        } @else if (foraDoRitmo(o) > 0) {
+                            <b>{{ foraDoRitmo(o) }} de {{ o.metas.length }}</b> {{ o.metas.length === 1 ? 'meta' : 'metas' }} abaixo do ritmo
+                        } @else {
+                            {{ o.metas.length === 1 ? 'meta no ritmo' : 'todas as ' + o.metas.length + ' metas no ritmo' }}
+                        }
+                    </span>
+                </button>
+
+                @if (aberto) {
+                    <div class="itens">
+                        @if (!o.semDefinicao) {
+                            @if (o.metas.length > 0) {
+                                <table class="metas">
+                                    <thead>
+                                        <tr>
+                                            <th>Meta</th>
+                                            <th class="num">Atual</th>
+                                            <th class="num"><span class="dica" title="Onde a meta deveria estar hoje, pelo tempo decorrido até o prazo">Hoje</span></th>
+                                            <th class="num">Alvo</th>
+                                            <th>Prazo</th>
+                                            <th>Responsável</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (m of o.metas; track m.meta.id) {
+                                            <tr class="estado-{{ m.estado }}" [class.fora]="m.foraDoRitmo">
+                                                <td class="meta-celula">
+                                                    <span class="meta-nome">
+                                                        {{ m.meta.indicador }}
+                                                        @if (m.meta.unidade) { <span class="unidade">({{ m.meta.unidade }})</span> }
+                                                        @if (m.foraDoRitmo) { <span class="aviso">▲ {{ m.motivo }}</span> }
+                                                    </span>
+                                                    <span class="bullet" role="img"
+                                                          [attr.aria-label]="'De ' + numero(m.meta.valorInicial) + ' a ' + numero(m.meta.valorAlvo) + ': atual ' + numero(m.meta.valorAtual) + ', deveria estar em ' + numero(m.valorEsperado)">
+                                                        <span class="bullet-ponta">{{ numero(m.meta.valorInicial) }}</span>
+                                                        <span class="bullet-escala">
+                                                            <span class="bullet-feito" [style.width.%]="m.atingido ?? 0"></span>
+                                                            <span class="bullet-hoje" [style.left.%]="m.esperado"></span>
+                                                        </span>
+                                                        <span class="bullet-ponta">{{ numero(m.meta.valorAlvo) }}</span>
+                                                    </span>
+                                                </td>
+                                                <td class="num atual">{{ numero(m.meta.valorAtual) }}</td>
+                                                <td class="num">{{ numero(m.valorEsperado) }}</td>
+                                                <td class="num">{{ numero(m.meta.valorAlvo) }}</td>
+                                                <td>{{ prazoCurto(m.meta.prazo) }}</td>
+                                                <td>{{ m.meta.responsavel || '—' }}</td>
+                                                <td class="acao">
+                                                    @if (auth.ehAdmin()) {
+                                                        <button type="button" class="editar" (click)="editar(m.meta)" [attr.aria-label]="'Atualizar meta ' + m.meta.indicador">
+                                                            <mat-icon>edit</mat-icon>
+                                                        </button>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            } @else {
+                                <p class="itens-vazio">Nenhuma meta cadastrada para este objetivo.</p>
+                            }
+                            @if (auth.ehAdmin()) {
+                                <button type="button" class="link" (click)="novaMeta(o.titulo)"><mat-icon>add</mat-icon>Adicionar meta</button>
+                            }
+                        }
+
+                        <div class="projetos">
+                            <span class="projetos-rotulo">Projetos</span>
+                            @for (p of o.projetos; track p.projeto.id) {
+                                <a class="proj estado-{{ p.estado }}" [routerLink]="['/projeto', p.projeto.id]"
+                                   [title]="p.projeto.nome + ' · ' + rotulo[p.estado] + ' · avanço ' + p.avanco + '% · ' + (p.projeto.gerenteResponsavel || 'sem gerente')">
+                                    <mat-icon>{{ icone[p.estado] }}</mat-icon>
+                                    <b>{{ p.projeto.sigla }}</b> {{ p.avanco }}%
+                                </a>
+                            } @empty {
+                                <span class="itens-vazio">nenhum vinculado</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </section>
+        }
+    </div>
+}
+
+@if (edicao; as e) {
+    <div class="painel-fundo" (click)="fecharEdicao()"></div>
+    <aside class="painel" role="dialog" [attr.aria-label]="e.id ? 'Atualizar meta' : 'Nova meta'">
+        <button type="button" class="painel-fechar" (click)="fecharEdicao()" aria-label="Fechar"><mat-icon>close</mat-icon></button>
+        <h3>{{ e.id ? 'Atualizar meta' : 'Nova meta' }}</h3>
+
+        <form class="form" (ngSubmit)="salvar()">
+            <label>Objetivo
+                <input name="objetivo" [(ngModel)]="e.objetivo" list="lista-objetivos" required>
+                <datalist id="lista-objetivos">
+                    @for (t of titulosObjetivos; track t) { <option [value]="t"></option> }
+                </datalist>
+            </label>
+            <label>Indicador
+                <input name="indicador" [(ngModel)]="e.indicador" required>
+            </label>
+            <div class="form-linha">
+                <label>Valor inicial <input name="valorInicial" type="number" step="any" [(ngModel)]="e.valorInicial" required></label>
+                <label>Alvo <input name="valorAlvo" type="number" step="any" [(ngModel)]="e.valorAlvo" required></label>
+                <label>Unidade <input name="unidade" [(ngModel)]="e.unidade" placeholder="%"></label>
+            </div>
+            <label>Valor atual
+                <input name="valorAtual" type="number" step="any" [(ngModel)]="e.valorAtual" placeholder="Última medição">
+            </label>
+            <div class="form-linha">
+                <label>Início <input name="dataInicio" type="date" [(ngModel)]="e.dataInicio"></label>
+                <label>Prazo <input name="prazo" type="date" [(ngModel)]="e.prazo" required></label>
+            </div>
+            <label>Responsável
+                <input name="responsavel" [(ngModel)]="e.responsavel">
+            </label>
+
+            @if (erroEdicao) {
+                <p class="form-erro" role="alert">{{ erroEdicao }}</p>
+            }
+
+            <div class="form-acoes">
+                @if (e.id) {
+                    <button type="button" class="btn-texto btn-perigo" (click)="excluir()" [disabled]="salvando">Excluir</button>
+                }
+                <button type="submit" class="btn-acao" [disabled]="salvando">{{ salvando ? 'Salvando…' : 'Salvar' }}</button>
+            </div>
+        </form>
+    </aside>
+}

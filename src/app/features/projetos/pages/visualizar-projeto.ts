@@ -1,16 +1,18 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FaseProjeto, ProjetoResponse, SituacaoFase, StatusProjeto } from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
-import { CORES_FASE, indiceFaseAtual, materializarSituacoes, situacaoFase } from '../utils/fase';
+import { CORES_FASE, indiceFaseAtual, janelaFase, materializarSituacoes, situacaoFase } from '../utils/fase';
 
 type CampoTexto = 'atualizacoes' | 'pontoAtencao' | 'recomendacao';
 
 @Component({
+  // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-visualizar-projeto',
   imports: [RouterLink, FormsModule, MatIconModule, NgTemplateOutlet],
   templateUrl: './visualizar-projeto.html',
@@ -19,6 +21,7 @@ type CampoTexto = 'atualizacoes' | 'pontoAtencao' | 'recomendacao';
 export class VisualizarProjeto implements OnInit {
   projeto!: ProjetoResponse;
   carregando = true;
+  erro = false;
   campoEmEdicao: CampoTexto | null = null;
   textoEdicao = '';
   faseSelecionada: number | null = null;
@@ -33,9 +36,16 @@ export class VisualizarProjeto implements OnInit {
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id')!;
-    this.projetoService.obter(id).subscribe((p) => {
-      this.projeto = p;
-      this.carregando = false;
+    this.projetoService.obter(id).subscribe({
+      next: (p) => {
+        this.projeto = p;
+        this.preencherDatasPlanejadas();
+        this.carregando = false;
+      },
+      error: () => {
+        this.carregando = false;
+        this.erro = true;
+      },
     });
   }
 
@@ -70,14 +80,38 @@ export class VisualizarProjeto implements OnInit {
     fase.percentual = Number.isFinite(valor) ? Math.min(100, Math.max(0, Math.round(valor))) : 0;
   }
 
+  erroFase = '';
+
   alternarEdicaoFase() {
     materializarSituacoes(this.projeto);
+    this.erroFase = '';
     this.editandoFase = !this.editandoFase;
+  }
+
+  // Fases cadastradas antes da data de fim obrigatória recebem as datas planejadas, que o gestor pode ajustar.
+  private preencherDatasPlanejadas() {
+    const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    (this.projeto.fases ?? []).forEach((f, i) => {
+      if (f.dataInicio && f.dataFim) return;
+      const janela = janelaFase(this.projeto, i);
+      if (!janela) return;
+      f.dataInicio = f.dataInicio || iso(janela.ini);
+      f.dataFim = f.dataFim || iso(new Date(janela.fim.getTime() - 86400000));
+    });
   }
 
   salvarFase() {
     const fase = this.faseAberta;
     if (!fase) return;
+    if (!fase.dataFim) {
+      this.erroFase = 'Informe a data de fim da fase.';
+      return;
+    }
+    if (fase.dataInicio && fase.dataFim < fase.dataInicio) {
+      this.erroFase = 'A data de fim precisa ser posterior à data de início.';
+      return;
+    }
+    this.erroFase = '';
     materializarSituacoes(this.projeto);
     this.ajustarPercentual(fase);
     this.persistir();
@@ -218,5 +252,9 @@ export class VisualizarProjeto implements OnInit {
       REJEITADO: 'status-rejeitado',
     };
     return map[status || ''] || 'status-rascunho';
+  }
+
+  recarregar() {
+    location.reload();
   }
 }

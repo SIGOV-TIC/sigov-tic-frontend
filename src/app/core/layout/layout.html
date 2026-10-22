@@ -20,34 +20,33 @@
                 <mat-icon class="nav-icon">calendar_view_month</mat-icon>
                 Cronograma
             </a>
-            <a class="nav-item" routerLink="/cadastro" routerLinkActive="active">
-                <mat-icon class="nav-icon">add_circle_outline</mat-icon>
-                Novo Projeto
+            <a class="nav-item" routerLink="/orcamento" routerLinkActive="active">
+                <mat-icon class="nav-icon">payments</mat-icon>
+                Orçamento
             </a>
+            <a class="nav-item" routerLink="/objetivos" routerLinkActive="active">
+                <mat-icon class="nav-icon">flag</mat-icon>
+                Objetivos
+            </a>
+            @if (auth.ehAdmin()) {
+                <a class="nav-item" routerLink="/cadastro" routerLinkActive="active">
+                    <mat-icon class="nav-icon">add_circle_outline</mat-icon>
+                    Novo Projeto
+                </a>
+            }
         </nav>
 
-        <nav class="nav-section">
-            <span class="nav-label">Gestão</span>
-            <a class="nav-item">
-                <mat-icon class="nav-icon">description</mat-icon>
-                Rascunhos
-            </a>
-            <a class="nav-item">
-                <mat-icon class="nav-icon">assessment</mat-icon>
-                Relatórios
-            </a>
-        </nav>
+        @if (auth.ehAdmin()) {
+            <nav class="nav-section">
+                <span class="nav-label">Administração</span>
+                <a class="nav-item" routerLink="/usuarios" routerLinkActive="active">
+                    <mat-icon class="nav-icon">group</mat-icon>
+                    Usuários
+                </a>
+            </nav>
+        }
 
-        <div class="sidebar-footer">
-            <a class="nav-item">
-                <mat-icon class="nav-icon">settings</mat-icon>
-                Configurações
-            </a>
-            <a class="nav-item">
-                <mat-icon class="nav-icon">help_outline</mat-icon>
-                Ajuda
-            </a>
-        </div>
+
 
     </aside>
 
@@ -59,25 +58,15 @@
                     <span class="header-brand">Gestão do Portfólio de TIC</span>
                 </div>
                 <div class="header-right">
-                    <div class="header-search">
-                        <mat-icon class="search-icon">search</mat-icon>
-                        <input type="text" placeholder="Buscar no sistema..." readonly>
-                    </div>
+                    <app-busca-global />
                     <button class="theme-toggle" (click)="alternarTema()" [title]="temaClaro ? 'Modo escuro' : 'Modo claro'">
                         <mat-icon>{{ temaClaro ? 'dark_mode' : 'light_mode' }}</mat-icon>
                     </button>
-                    <button class="header-notification">
-                        <mat-icon>notifications_none</mat-icon>
-                    </button>
-                    <div class="header-user">
-                        <div class="header-avatar">GT</div>
-                        <span>Gestor TIC</span>
-                        <mat-icon class="header-chevron">expand_more</mat-icon>
-                    </div>
+                    <app-menu-usuario (sair)="sair()" />
                 </div>
             </div>
             <div class="breadcrumb">
-                <mat-icon class="breadcrumb-home" routerLink="/portfolio">home</mat-icon>
+                <mat-icon class="breadcrumb-home" routerLink="/dashboard">home</mat-icon>
                 <span class="breadcrumb-separator">›</span>
                 @if (estaNoCadastro) {
                     <a class="breadcrumb-link" routerLink="/portfolio">Portfólio</a>
@@ -89,8 +78,14 @@
                     <span class="breadcrumb-current">Projeto</span>
                 } @else if (estaNoCronograma) {
                     <span class="breadcrumb-current">Cronograma Geral</span>
+                } @else if (estaNoOrcamento) {
+                    <span class="breadcrumb-current">Orçamento</span>
+                } @else if (estaNosObjetivos) {
+                    <span class="breadcrumb-current">Objetivos Estratégicos</span>
                 } @else if (estaNoDashboard) {
                     <span class="breadcrumb-current">Dashboard</span>
+                } @else if (estaNosUsuarios) {
+                    <span class="breadcrumb-current">Usuários</span>
                 } @else if (estaNoPortfolio) {
                     <span class="breadcrumb-current">Portfólio</span>
                 } @else {
@@ -105,9 +100,10 @@
 
         <footer class="footer">
             SIGOV-TIC | Gestão do Portfólio de TIC
-            <span class="footer-version">Versão 1.0</span>
         </footer>
 
     </div>
+
+    <app-feedback-botao />
 
 </div>

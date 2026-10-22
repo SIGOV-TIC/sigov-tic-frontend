@@ -1,3 +1,9 @@
-<app-layout>
+<!-- Lido aqui para que cada resposta da API atualize a tela. -->
+<span hidden>{{ respostasApi() }}</span>
+@if (naTelaDeLogin()) {
   <router-outlet />
-</app-layout>
+} @else {
+  <app-layout>
+    <router-outlet />
+  </app-layout>
+}

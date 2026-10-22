@@ -1,14 +1,11 @@
 <div class="page-header">
-    <div class="page-header-top">
-        <div>
-            <h1>Portfólio de Projetos</h1>
-            <p>Visualize e gerencie os projetos de TIC cadastrados</p>
-        </div>
+    <h1>Portfólio de Projetos</h1>
+    @if (auth.ehAdmin()) {
         <a routerLink="/cadastro" class="btn-novo">
             <mat-icon class="btn-novo-icon">add</mat-icon>
             Novo Projeto
         </a>
-    </div>
+    }
 </div>
 
 <div class="toolbar">
@@ -39,66 +36,74 @@
             <p>Nenhum projeto encontrado para "{{ busca }}"</p>
         } @else {
             <p>Nenhum projeto cadastrado ainda</p>
-            <a routerLink="/cadastro" class="btn-novo-inline">Cadastrar primeiro projeto</a>
+            @if (auth.ehAdmin()) {
+                <a routerLink="/cadastro" class="btn-novo-inline">Cadastrar primeiro projeto</a>
+            }
         }
     </div>
 } @else {
     <div class="tabela-container">
         <table>
             <thead>
-                <tr class="header-group">
-                    <th colspan="3" class="group-descricao">Descrição</th>
-                    <th colspan="3" class="group-prazo">Prazo</th>
-                    <th colspan="4" class="group-custo">Custo</th>
-                </tr>
-                <tr class="header-columns">
-                    <th>Projeto</th>
-                    <th>Área</th>
-                    <th>PO</th>
-                    <th>Início</th>
-                    <th>Término</th>
-                    <th>% Decorrido</th>
-                    <th>Planejado (R$) mil</th>
-                    <th>Realizado (R$) mil</th>
-                    <th>Alocação Próprios</th>
-                    <th>Alocação Terceirizados</th>
+                <tr>
+                    <th class="col-nome">Projeto</th>
+                    <th>Prazo</th>
+                    <th>Custo</th>
+                    <th class="col-num" title="Servidores próprios + terceirizados">Equipe</th>
+                    <th class="col-num" title="IDP × IDC − 1. Faixa aceitável: ±{{ tolerancia }}%">Desvio real</th>
                 </tr>
             </thead>
             <tbody>
                 @for (projeto of projetosFiltrados; track projeto.id) {
+                    @let d = desvio(projeto);
+                    @let decorrido = percentualDecorrido(projeto);
+                    @let gasto = percentualGasto(projeto);
                     <tr class="row-link" [routerLink]="['/projeto', projeto.id]">
-                        <td class="col-nome">{{ projeto.nome }}</td>
-                        <td>{{ projeto.areaSolicitante || '—' }}</td>
-                        <td>{{ projeto.po || '—' }}</td>
-                        <td>{{ formatarData(projeto.dataInicioPrevista) }}</td>
-                        <td>{{ formatarData(projeto.dataConclusaoPrevista) }}</td>
-                        <td>
-                            @if (percentualDecorrido(projeto) !== null) {
-                                <div class="progress-cell">
-                                    <div class="progress-mini-track">
-                                        <div class="progress-mini-fill" [style.width.%]="percentualDecorrido(projeto)"></div>
-                                    </div>
-                                    <span class="progress-mini-label">{{ percentualDecorrido(projeto) }}%</span>
-                                </div>
-                            } @else {
-                                <span class="valor-vazio">—</span>
+                        <td class="col-nome">
+                            <span class="linha1">{{ projeto.nome }}</span>
+                            <span class="linha2">{{ projeto.sigla }} · {{ projeto.areaSolicitante || 'sem área' }} · {{ projeto.po?.nome || 'sem PO' }}</span>
+                        </td>
+                        <td [title]="formatarData(projeto.dataInicioPrevista) + ' a ' + formatarData(projeto.dataConclusaoPrevista)">
+                            <span class="linha1">{{ mesAno(projeto.dataInicioPrevista) }} → {{ mesAno(projeto.dataConclusaoPrevista) }}</span>
+                            @if (decorrido !== null) {
+                                <span class="barra"><span class="barra-fill" [style.width.%]="decorrido"></span></span>
+                                <span class="linha2">{{ decorrido }}% do tempo</span>
                             }
                         </td>
-                        <td>{{ formatarMoeda(projeto.orcamentoEstimado) }}</td>
-                        <td>{{ formatarMoeda(projeto.custoRealizado) }}</td>
-                        <td class="col-center">{{ projeto.qtdProprios || '—' }}</td>
-                        <td class="col-center">{{ projeto.qtdTerceiros || '—' }}</td>
+                        <td [title]="formatarMoeda(projeto.custoRealizado) + ' de ' + formatarMoeda(projeto.orcamentoEstimado)">
+                            <span class="linha1">{{ projeto.custoRealizado ? moeda(projeto.custoRealizado) : 'R$ 0' }} <span class="de">de {{ projeto.orcamentoEstimado ? moeda(projeto.orcamentoEstimado) : '—' }}</span></span>
+                            @if (gasto !== null) {
+                                <span class="barra"><span class="barra-fill" [class.barra-acima]="gasto > 100" [style.width.%]="gasto > 100 ? 100 : gasto"></span></span>
+                                <span class="linha2">{{ gasto }}% gasto</span>
+                            }
+                        </td>
+                        <td class="col-num" [title]="(projeto.qtdProprios || 0) + ' próprios, ' + (projeto.qtdTerceiros || 0) + ' terceirizados'">
+                            <span class="linha1">{{ projeto.qtdProprios || 0 }} + {{ projeto.qtdTerceiros || 0 }}</span>
+                        </td>
+                        <td class="col-num">
+                            @if (d.desvioReal != null) {
+                                <span class="linha1 desvio" [class.desvio-fora]="!d.dentro">
+                                    <mat-icon class="desvio-icon">{{ d.dentro ? 'check_circle' : 'error' }}</mat-icon>
+                                    {{ formatarDesvio(d.desvioReal) }}
+                                </span>
+                            } @else {
+                                <span class="linha1 valor-vazio">—</span>
+                            }
+                            <span class="linha2">
+                                IDP <span [class.indice-fora]="d.noPrazo === false">{{ formatarIndice(d.idp) }}</span> ·
+                                IDC <span [class.indice-fora]="d.idc != null && d.idc < 1 - tolerancia / 100">{{ formatarIndice(d.idc) }}</span>
+                            </span>
+                        </td>
                     </tr>
                 }
             </tbody>
             <tfoot>
                 <tr class="row-total">
-                    <td colspan="3"><strong>TOTAL</strong></td>
-                    <td colspan="3" class="col-center"><strong>—</strong></td>
-                    <td><strong>{{ formatarMoeda(totalOrcamento) }}</strong></td>
-                    <td><strong>{{ formatarMoeda(totalRealizado) }}</strong></td>
-                    <td class="col-center"><strong>{{ totalProprios || '—' }}</strong></td>
-                    <td class="col-center"><strong>{{ totalTerceiros || '—' }}</strong></td>
+                    <td class="col-nome">Total</td>
+                    <td></td>
+                    <td>{{ moeda(totalRealizado) }} <span class="de">de {{ moeda(totalOrcamento) }}</span></td>
+                    <td class="col-num">{{ totalProprios }} + {{ totalTerceiros }}</td>
+                    <td class="col-num">{{ foraDaFaixa }} fora da faixa</td>
                 </tr>
             </tfoot>
         </table>

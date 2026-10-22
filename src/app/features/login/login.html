@@ -1,0 +1,38 @@
+<main class="login">
+    <form class="login-form" (ngSubmit)="enviar()">
+        <span class="login-marca">SIGOV-TIC</span>
+        <h1>{{ modo === 'entrar' ? 'Entrar' : 'Criar conta' }}</h1>
+        <p class="login-sub">Governança do PDTIC</p>
+
+        @if (modo === 'cadastrar') {
+            <label for="nome">Nome</label>
+            <input id="nome" name="nome" autocomplete="name" [(ngModel)]="nome">
+        }
+
+        <label for="usuario">Usuário</label>
+        <input id="usuario" name="usuario" autocomplete="username" [(ngModel)]="usuario">
+
+        <label for="senha">Senha</label>
+        <input id="senha" name="senha" type="password"
+               [attr.autocomplete]="modo === 'entrar' ? 'current-password' : 'new-password'"
+               [(ngModel)]="senha">
+        @if (modo === 'cadastrar') {
+            <span class="login-dica">Mínimo de 8 caracteres.</span>
+        }
+
+        @if (erro()) {
+            <p class="login-erro" role="alert">{{ erro() }}</p>
+        }
+
+        <button type="submit" [disabled]="entrando()">
+            {{ entrando() ? 'Aguarde…' : modo === 'entrar' ? 'Entrar' : 'Criar conta' }}
+        </button>
+
+        <p class="login-troca">
+            {{ modo === 'entrar' ? 'Ainda não tem conta?' : 'Já tem conta?' }}
+            <button type="button" class="login-link" (click)="alternarModo()">
+                {{ modo === 'entrar' ? 'Criar conta' : 'Entrar' }}
+            </button>
+        </p>
+    </form>
+</main>

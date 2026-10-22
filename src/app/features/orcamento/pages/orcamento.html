@@ -1,0 +1,134 @@
+<div class="page-header">
+    <h1>Orçamento</h1>
+</div>
+
+@if (carregando) {
+    <div class="estado-vazio"><p>Carregando orçamento...</p></div>
+} @else if (erro) {
+    <div class="estado-vazio">
+        <p class="falha-api">Não foi possível carregar os dados. Verifique a conexão e tente de novo.</p>
+        <button class="falha-tentar" (click)="recarregar()">Tentar novamente</button>
+    </div>
+} @else {
+    <div class="barra-filtro">
+        <label class="filtro">
+            <span>Área</span>
+            <select name="area" [(ngModel)]="area">
+                <option value="">Todas</option>
+                @for (a of areas; track a) {
+                    <option [value]="a">{{ a }}</option>
+                }
+            </select>
+        </label>
+    </div>
+
+    @let areasLinhas = porArea;
+    <div class="resumo">
+        <span><b>{{ moeda(totalOrcado) }}</b> orçado</span>
+        <span><b>{{ moeda(totalGasto) }}</b> gasto</span>
+        <span><b>{{ moeda(saldo) }}</b> de saldo</span>
+        <span><b>{{ execucao }}%</b> executado</span>
+        @if (atencao.length > 0) {
+            <span class="resumo-atencao"><mat-icon>warning</mat-icon><b>{{ atencao.length }}</b> {{ atencao.length === 1 ? 'projeto fora do previsto' : 'projetos fora do previsto' }}</span>
+        } @else {
+            <span class="resumo-ok"><mat-icon>check_circle</mat-icon>Todos dentro do previsto</span>
+        }
+        <button type="button" class="resumo-abrir" (click)="alternarTodas()">
+            <mat-icon>{{ todasAbertas ? 'unfold_less' : 'unfold_more' }}</mat-icon>
+            {{ todasAbertas ? 'Recolher áreas' : 'Abrir áreas' }}
+        </button>
+    </div>
+
+    <div class="tabela-rolagem">
+        <table class="tabela">
+            <thead>
+                <tr>
+                    <th>Área / projeto</th>
+                    <th class="num">Orçado</th>
+                    <th class="num">Gasto</th>
+                    <th class="num">Saldo</th>
+                    <th class="col-trilho">
+                        <span class="legenda">
+                            <span class="legenda-gasto"></span> gasto do orçado
+                            <span class="legenda-marca"></span> avanço
+                        </span>
+                    </th>
+                    <th class="col-situacao" [title]="'Fora do previsto: gasto acima do orçado, ou mais de ' + margem + ' pontos à frente do avanço.'">Situação</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (a of areasLinhas; track a.area) {
+                    @let aberta = abertas.has(a.area);
+                    <tr class="linha-area situacao-{{ a.situacao }}">
+                        <td>
+                            <button type="button" class="abrir" (click)="alternar(a.area)" [attr.aria-expanded]="aberta"
+                                    [attr.aria-label]="(aberta ? 'Recolher ' : 'Abrir ') + a.area">
+                                <mat-icon>{{ aberta ? 'expand_more' : 'chevron_right' }}</mat-icon>
+                                <span class="area-nome">{{ a.area }}</span>
+                                <span class="area-qtd">{{ a.linhas.length }}</span>
+                            </button>
+                        </td>
+                        <td class="num">{{ moeda(a.orcado) }}</td>
+                        <td class="num">{{ moeda(a.gasto) }}</td>
+                        <td class="num" [class.negativo]="a.orcado - a.gasto < 0">{{ moeda(a.orcado - a.gasto) }}</td>
+                        <td class="col-trilho">
+                            <span class="trilho" role="img" [attr.aria-label]="a.area + ': gasto ' + a.pctGasto + '% do orçado, avanço ' + a.avanco + '%'">
+                                <span class="trilho-gasto" [style.width.%]="largura(a.pctGasto)"></span>
+                                <span class="trilho-marca" [style.left.%]="largura(a.avanco)"></span>
+                            </span>
+                            <span class="par">{{ a.pctGasto }}% / {{ a.avanco }}%</span>
+                        </td>
+                        <td class="col-situacao">
+                            @if (a.situacao !== 'OK') {
+                                <span class="situacao"><mat-icon>{{ icones[a.situacao] }}</mat-icon>{{ rotulos[a.situacao] }}</span>
+                            }
+                        </td>
+                    </tr>
+
+                    @if (aberta) {
+                        @for (l of a.linhas; track l.projeto.id) {
+                            <tr class="linha-projeto situacao-{{ l.situacao }}">
+                                <td>
+                                    <a [routerLink]="['/projeto', l.projeto.id]" class="proj" [title]="l.motivo">
+                                        <b>{{ l.projeto.sigla }}</b> <span>{{ l.projeto.nome }}</span>
+                                    </a>
+                                    @if (l.situacao !== 'OK') {
+                                        <span class="motivo">{{ l.motivo }}</span>
+                                    }
+                                </td>
+                                <td class="num">{{ moeda(l.orcado) }}</td>
+                                <td class="num">{{ moeda(l.gasto) }}</td>
+                                <td class="num" [class.negativo]="l.saldo < 0">{{ moeda(l.saldo) }}</td>
+                                <td class="col-trilho">
+                                    <span class="trilho" role="img" [attr.aria-label]="'Gasto ' + l.pctGasto + '%, avanço ' + l.avanco + '%'">
+                                        <span class="trilho-gasto" [style.width.%]="largura(l.pctGasto)"></span>
+                                        <span class="trilho-marca" [style.left.%]="largura(l.avanco)"></span>
+                                    </span>
+                                    <span class="par">{{ l.pctGasto }}% / {{ l.avanco }}%</span>
+                                </td>
+                                <td class="col-situacao">
+                                    @if (l.situacao !== 'OK') {
+                                        <span class="situacao"><mat-icon>{{ icones[l.situacao] }}</mat-icon>{{ rotulos[l.situacao] }}</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td>Total</td>
+                    <td class="num">{{ moeda(totalOrcado) }}</td>
+                    <td class="num">{{ moeda(totalGasto) }}</td>
+                    <td class="num" [class.negativo]="saldo < 0">{{ moeda(saldo) }}</td>
+                    <td class="col-trilho"><span class="par">{{ execucao }}% executado</span></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    @if (semOrcamento > 0) {
+        <p class="rodape">{{ semOrcamento }} {{ semOrcamento === 1 ? 'projeto sem orçamento informado não aparece' : 'projetos sem orçamento informado não aparecem' }} aqui.</p>
+    }
+}

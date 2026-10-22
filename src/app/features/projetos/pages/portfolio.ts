@@ -1,11 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ProjetoResponse, StatusProjeto } from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
+import { AuthService } from '../../../core/auth/auth.service';
+import { moedaCompacta } from '../utils/moeda';
+import { calcularDesvio, Desvio, TOLERANCIA_DESVIO } from '../utils/desvio';
 
 @Component({
+  // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-portfolio',
   imports: [FormsModule, RouterLink, MatIconModule],
   templateUrl: './portfolio.html',
@@ -23,9 +28,13 @@ export class Portfolio implements OnInit {
   totalElementos = 0;
   totalPaginas = 0;
 
-  constructor(private projetoService: ProjetoService) {}
+  constructor(
+    private projetoService: ProjetoService,
+    readonly auth: AuthService,
+  ) {}
 
   ngOnInit() {
+    this.projetoService.seedSeNecessario();
     this.carregar();
   }
 
@@ -110,6 +119,20 @@ export class Portfolio implements OnInit {
     return Math.round(Math.min(100, Math.max(0, pct)));
   }
 
+  moeda(valor: number): string {
+    return moedaCompacta(valor);
+  }
+
+  mesAno(iso?: string): string {
+    if (!iso) return '—';
+    return new Date(iso.slice(0, 10) + 'T00:00').toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }).replace('.', '').replace(' de ', '/');
+  }
+
+  percentualGasto(projeto: ProjetoResponse): number | null {
+    if (!projeto.orcamentoEstimado) return null;
+    return Math.round(((projeto.custoRealizado || 0) / projeto.orcamentoEstimado) * 100);
+  }
+
   formatarMoeda(valor?: number): string {
     if (!valor) return '—';
     return 'R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -125,6 +148,25 @@ export class Portfolio implements OnInit {
 
   get totalProprios(): number {
     return this.projetosFiltrados.reduce((acc, p) => acc + (p.qtdProprios || 0), 0);
+  }
+
+  readonly tolerancia = TOLERANCIA_DESVIO;
+
+  desvio(projeto: ProjetoResponse): Desvio {
+    return calcularDesvio(projeto);
+  }
+
+  formatarIndice(valor: number | null): string {
+    return valor == null ? '—' : valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  formatarDesvio(valor: number): string {
+    const arred = Math.round(valor);
+    return (arred > 0 ? '+' : '') + arred + '%';
+  }
+
+  get foraDaFaixa(): number {
+    return this.projetosFiltrados.filter((p) => calcularDesvio(p).dentro === false).length;
   }
 
   get totalTerceiros(): number {
