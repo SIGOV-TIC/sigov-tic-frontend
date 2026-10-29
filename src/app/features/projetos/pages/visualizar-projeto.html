@@ -68,7 +68,44 @@
 
         <!-- Atualizações -->
         <div class="card">
-            <ng-container *ngTemplateOutlet="campoEditavel; context: { chave: 'atualizacoes', titulo: 'Atualizações', vazio: 'Nenhuma atualização registrada.' }"></ng-container>
+            <div class="card-titulo">
+                <h3>Atualizações</h3>
+                @if (podeAcompanhar && !novaAtualizacao) {
+                    <button type="button" class="btn-icone" (click)="abrirNovaAtualizacao()" aria-label="Registrar atualização" title="Registrar atualização">
+                        <mat-icon>add</mat-icon>
+                    </button>
+                }
+            </div>
+            @if (novaAtualizacao; as nova) {
+                <div class="atu-nova">
+                    <textarea class="campo-edicao" rows="3" [(ngModel)]="nova.texto" aria-label="Texto da atualização"></textarea>
+                    <div class="campo-acoes">
+                        <input type="date" class="atu-data-campo" [(ngModel)]="nova.data" aria-label="Data da atualização">
+                        <button type="button" class="btn-texto" (click)="novaAtualizacao = null">Cancelar</button>
+                        <button type="button" class="cf-btn cf-primario" (click)="registrarAtualizacao()" [disabled]="!nova.texto.trim()">Registrar</button>
+                    </div>
+                </div>
+            }
+            @if (projeto.atualizacoes?.length) {
+                <ol class="atu-lista">
+                    @for (a of projeto.atualizacoes; track a.id) {
+                        <li>
+                            <time class="atu-data" [attr.datetime]="a.data">{{ formatarData(a.data) }}</time>
+                            <div class="atu-corpo">
+                                <p>{{ a.texto }}</p>
+                                @if (a.autor) { <small>{{ a.autor }}</small> }
+                            </div>
+                            @if (podeAcompanhar) {
+                                <button type="button" class="btn-icone atu-remover" (click)="removerAtualizacao(a.id)" aria-label="Remover atualização" title="Remover">
+                                    <mat-icon>delete</mat-icon>
+                                </button>
+                            }
+                        </li>
+                    }
+                </ol>
+            } @else if (!novaAtualizacao) {
+                <p class="vazio">Nenhuma atualização registrada.</p>
+            }
         </div>
 
         <!-- Fases -->
@@ -252,9 +289,53 @@
             @if (l.atrasada) {
                 <p class="cf-alerta"><mat-icon>warning</mat-icon>Pelo tempo decorrido, a fase deveria estar em {{ l.tempo }}%.</p>
             }
+
+            <div class="cf-atividades">
+                <div class="cf-atv-topo">
+                    <h3>Atividades</h3>
+                    @if (podeAcompanhar && fase.id && !rascunhoAtividade) {
+                        <button type="button" class="cf-btn cf-btn-leve" (click)="novaAtividade()"><mat-icon>add</mat-icon>Nova atividade</button>
+                    }
+                </div>
+                @if (fase.atividades?.length) {
+                    <ul class="cf-atv-lista">
+                        @for (a of fase.atividades; track a.id) {
+                            @if (rascunhoAtividade?.id === a.id) {
+                                <li><ng-container *ngTemplateOutlet="formAtividade"></ng-container></li>
+                            } @else {
+                                <li class="cf-atv" [class.feita]="a.situacao === 'CONCLUIDA'">
+                                    <button type="button" class="cf-atv-marca" (click)="alternarConclusao(a)" [disabled]="!podeAcompanhar"
+                                            [attr.aria-label]="(a.situacao === 'CONCLUIDA' ? 'Reabrir ' : 'Concluir ') + a.titulo">
+                                        <mat-icon>{{ a.situacao === 'CONCLUIDA' ? 'check_circle' : a.situacao === 'EM_ANDAMENTO' ? 'radio_button_partial' : 'radio_button_unchecked' }}</mat-icon>
+                                    </button>
+                                    <span class="cf-atv-texto">
+                                        <b>{{ a.titulo }}</b>
+                                        <small>
+                                            {{ a.responsavel || 'Sem responsável' }}
+                                            @if (a.prazo) { · <span [class.atencao]="atividadeAtrasada(a)">até {{ formatarData(a.prazo) }}</span> }
+                                            @if (a.situacao === 'EM_ANDAMENTO' && a.percentual != null) { · {{ a.percentual }}% }
+                                        </small>
+                                    </span>
+                                    @if (podeAcompanhar) {
+                                        <span class="cf-atv-acoes">
+                                            <button type="button" class="btn-icone" (click)="editarAtividade(a)" [attr.aria-label]="'Editar ' + a.titulo" title="Editar"><mat-icon>edit</mat-icon></button>
+                                            <button type="button" class="btn-icone" (click)="removerAtividade(a)" [attr.aria-label]="'Remover ' + a.titulo" title="Remover"><mat-icon>delete</mat-icon></button>
+                                        </span>
+                                    }
+                                </li>
+                            }
+                        }
+                    </ul>
+                } @else if (!rascunhoAtividade) {
+                    <p class="cf-atv-vazio">Nenhuma atividade nesta fase.</p>
+                }
+                @if (rascunhoAtividade && !rascunhoAtividade.id) {
+                    <ng-container *ngTemplateOutlet="formAtividade"></ng-container>
+                }
+            </div>
         } @else if (rascunhoFase; as r) {
             <div class="cf-form">
-                <label class="cf-largo"><span>Nome da fase</span><input type="text" [(ngModel)]="r.nome"></label>
+                <label class="cf-largo"><span>Nome da fase</span><input type="text" [(ngModel)]="r.nome" [disabled]="!podeEditar"></label>
                 <label><span>Data de início</span><input type="date" [(ngModel)]="r.dataInicio"></label>
                 <label><span>Data de fim</span><input type="date" [(ngModel)]="r.dataFim" required></label>
                 <label><span>Concluído (%)</span><input type="number" min="0" max="100" [(ngModel)]="r.percentual" (blur)="ajustarPercentual(r)"></label>
@@ -265,7 +346,7 @@
                         <option value="CONCLUIDA">Concluída</option>
                     </select>
                 </label>
-                <label><span>Duração (meses)</span><input type="number" min="1" [(ngModel)]="r.duracaoMeses"></label>
+                <label><span>Duração (meses)</span><input type="number" min="1" [(ngModel)]="r.duracaoMeses" [disabled]="!podeEditar"></label>
             </div>
             @if (erroFase) {
                 <p class="cf-erro" role="alert">{{ erroFase }}</p>
@@ -279,7 +360,7 @@
                     <span>{{ projeto.gerenteResponsavel }}<small>Gerente do projeto</small></span>
                 }
             </div>
-            @if (podeEditar) {
+            @if (podeAcompanhar && !rascunhoAtividade) {
                 <div class="cf-acoes">
                     @if (editandoFase) {
                         <button type="button" class="cf-btn" (click)="cancelarEdicaoFase()">Cancelar</button>
@@ -296,11 +377,36 @@
     </section>
 }
 
+<!-- Formulário de atividade, dentro da fase aberta -->
+<ng-template #formAtividade>
+    @if (rascunhoAtividade; as r) {
+        <div class="cf-form cf-atv-form">
+            <label class="cf-largo"><span>Atividade</span><input type="text" [(ngModel)]="r.titulo" maxlength="200"></label>
+            <label><span>Responsável</span><input type="text" [(ngModel)]="r.responsavel" maxlength="120"></label>
+            <label><span>Prazo</span><input type="date" [(ngModel)]="r.prazo"></label>
+            <label><span>Situação</span>
+                <select [(ngModel)]="r.situacao">
+                    <option value="PENDENTE">Pendente</option>
+                    <option value="EM_ANDAMENTO">Em andamento</option>
+                    <option value="CONCLUIDA">Concluída</option>
+                </select>
+            </label>
+            @if (r.situacao === 'EM_ANDAMENTO') {
+                <label><span>Concluído (%)</span><input type="number" min="0" max="99" [(ngModel)]="r.percentual"></label>
+            }
+            <div class="cf-largo cf-atv-form-acoes">
+                <button type="button" class="cf-btn" (click)="rascunhoAtividade = null">Cancelar</button>
+                <button type="button" class="cf-btn cf-primario" (click)="salvarAtividade()" [disabled]="!r.titulo.trim()">Salvar</button>
+            </div>
+        </div>
+    }
+</ng-template>
+
 <!-- Campo de texto do projeto, editável no próprio card -->
 <ng-template #campoEditavel let-chave="chave" let-titulo="titulo" let-vazio="vazio">
     <div class="card-titulo">
         <h3>{{ titulo }}</h3>
-        @if (podeEditar && campoEmEdicao !== chave) {
+        @if (podeEditarCampo(chave) && campoEmEdicao !== chave) {
             <button type="button" class="btn-icone" (click)="editarCampo(chave)" [attr.aria-label]="'Editar ' + titulo" title="Editar">
                 <mat-icon>edit</mat-icon>
             </button>

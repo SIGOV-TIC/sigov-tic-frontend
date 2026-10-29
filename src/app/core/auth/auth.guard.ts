@@ -1,8 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { catchError, map, of } from 'rxjs';
 import { AuthService } from './auth.service';
-import { ProjetoService } from '../../features/projetos/services/projeto.service';
 
 export const authGuard: CanActivateFn = (_route, state) => {
   if (inject(AuthService).sessao()) return true;
@@ -21,17 +19,8 @@ export const criacaoProjetoGuard: CanActivateFn = () => {
   return inject(Router).createUrlTree(['/portfolio']);
 };
 
-// Edição de projeto: Escritório de Projetos, ou PO e Scrum Master do próprio projeto. Os demais voltam à tela do projeto.
+// Edição de todos os campos do projeto: só o Escritório de Projetos. Os demais voltam à tela do projeto.
 export const edicaoProjetoGuard: CanActivateFn = (route) => {
-  const auth = inject(AuthService);
-  const router = inject(Router);
-  if (auth.ehEscritorio()) return true;
-  const id = route.paramMap.get('id')!;
-  const telaDoProjeto = router.createUrlTree(['/projeto', id]);
-  return inject(ProjetoService)
-    .obter(id)
-    .pipe(
-      map((p) => (auth.pode('editarProjeto', p) ? true : telaDoProjeto)),
-      catchError(() => of(telaDoProjeto)),
-    );
+  if (inject(AuthService).pode('editarProjeto')) return true;
+  return inject(Router).createUrlTree(['/projeto', route.paramMap.get('id')]);
 };

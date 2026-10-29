@@ -18,7 +18,8 @@ interface RespostaLogin {
   usuario?: { id: string; nome: string; perfil: string };
 }
 
-export type Acao = 'criarProjeto' | 'editarProjeto' | 'editarMetas' | 'gerenciarUsuarios';
+// editarProjeto: todos os campos. acompanharProjeto: pontos de atenção, andamento das fases, atualizações e atividades.
+export type Acao = 'criarProjeto' | 'editarProjeto' | 'acompanharProjeto' | 'editarMetas' | 'gerenciarUsuarios';
 
 // O que a regra precisa saber do projeto: quem é PO e Scrum Master.
 export interface VinculoProjeto {
@@ -43,11 +44,11 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   // Mesma regra da API: admin cuida das contas; o Escritório de Projetos cria e edita projetos e metas;
-  // PO e Scrum Master editam só o próprio projeto.
+  // PO e Scrum Master acompanham só o próprio projeto.
   pode(acao: Acao, projeto?: VinculoProjeto | null): boolean {
     if (acao === 'gerenciarUsuarios') return this.ehAdmin();
     if (this.ehEscritorio()) return true;
-    if (acao !== 'editarProjeto' || !projeto) return false;
+    if (acao !== 'acompanharProjeto' || !projeto) return false;
     const id = this.sessao()?.id;
     return !!id && (projeto.po?.id === id || projeto.scrumMaster?.id === id);
   }

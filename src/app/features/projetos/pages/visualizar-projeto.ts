@@ -4,13 +4,13 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { FaseProjeto, ProjetoResponse, SituacaoFase, StatusProjeto } from '../models/projeto';
+import { Atividade, AtividadeRequest, FaseProjeto, ProjetoResponse, SituacaoFase, StatusProjeto } from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { indiceFaseAtual, janelaFase, materializarSituacoes, situacaoFase } from '../utils/fase';
 import { MARGEM_RISCO_PONTOS } from '../utils/saude';
 
-type CampoTexto = 'atualizacoes' | 'pontoAtencao' | 'recomendacao';
+type CampoTexto = 'pontoAtencao' | 'recomendacao';
 
 @Component({
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
@@ -32,6 +32,10 @@ export class VisualizarProjeto implements OnInit {
   rascunhoFase: FaseProjeto | null = null;
   // Ponto de onde a camada cresce: o centro da bolinha clicada.
   origemFase = { x: 0, y: 0 };
+  // Nova atualização em escrita; null quando o formulário está fechado.
+  novaAtualizacao: { texto: string; data: string } | null = null;
+  // Atividade em edição na fase aberta; sem id, é uma atividade nova.
+  rascunhoAtividade: (AtividadeRequest & { id?: string }) | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -40,9 +44,19 @@ export class VisualizarProjeto implements OnInit {
     private auth: AuthService,
   ) {}
 
-  // Quem não pode editar vê o projeto e as fases só para leitura.
+  // Escritório de Projetos: todos os campos, inclusive nome e duração das fases e a recomendação.
   get podeEditar(): boolean {
     return this.auth.pode('editarProjeto', this.projeto);
+  }
+
+  // Escritório, PO e Scrum Master do projeto: pontos de atenção, andamento das fases, atualizações e atividades.
+  // Os demais veem tudo só para leitura.
+  get podeAcompanhar(): boolean {
+    return this.auth.pode('acompanharProjeto', this.projeto);
+  }
+
+  podeEditarCampo(campo: CampoTexto): boolean {
+    return campo === 'recomendacao' ? this.podeEditar : this.podeAcompanhar;
   }
 
   ngOnInit() {
@@ -85,6 +99,7 @@ export class VisualizarProjeto implements OnInit {
     this.faseSelecionada = i;
     this.editandoFase = false;
     this.rascunhoFase = null;
+    this.rascunhoAtividade = null;
     this.erroFase = '';
   }
 
@@ -92,17 +107,22 @@ export class VisualizarProjeto implements OnInit {
     this.faseSelecionada = null;
     this.editandoFase = false;
     this.rascunhoFase = null;
+    this.rascunhoAtividade = null;
   }
 
   irParaFase(passo: number) {
     const i = (this.faseSelecionada ?? 0) + passo;
-    if (!this.editandoFase && i >= 0 && i < (this.projeto.fases?.length ?? 0)) this.mostrarFase(i);
+    if (!this.editandoFase && !this.rascunhoAtividade && i >= 0 && i < (this.projeto.fases?.length ?? 0)) this.mostrarFase(i);
   }
 
   @HostListener('document:keydown', ['$event'])
   aoTeclar(e: KeyboardEvent) {
     if (this.faseSelecionada === null) return;
-    if (e.key === 'Escape') this.editandoFase ? this.cancelarEdicaoFase() : this.fecharFase();
+    if (e.key === 'Escape') {
+      if (this.rascunhoAtividade) this.rascunhoAtividade = null;
+      else if (this.editandoFase) this.cancelarEdicaoFase();
+      else this.fecharFase();
+    } else if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
     else if (e.key === 'ArrowLeft') this.irParaFase(-1);
     else if (e.key === 'ArrowRight') this.irParaFase(1);
   }
@@ -222,8 +242,112 @@ export class VisualizarProjeto implements OnInit {
     this.snackBar.open('Alterações salvas', 'Fechar', { duration: 4000 });
   }
 
+  // O Escritório grava o projeto inteiro; PO e Scrum Master, só o acompanhamento.
   private persistir() {
-    this.projetoService.atualizar(this.projeto.id, this.projeto).subscribe();
+    const gravacao = this.podeEditar
+      ? this.projetoService.atualizar(this.projeto.id, this.projeto)
+      : this.projetoService.atualizarAcompanhamento(this.projeto.id, {
+          pontoAtencao: this.projeto.pontoAtencao,
+          fases: (this.projeto.fases ?? [])
+            .filter((f) => f.id)
+            .map((f) => ({ id: f.id!, situacao: f.situacao, percentual: f.percentual, dataInicio: f.dataInicio, dataFim: f.dataFim })),
+        });
+    gravacao.subscribe({ error: () => this.avisarFalha() });
+  }
+
+  private avisarFalha() {
+    this.snackBar.open('Não foi possível salvar. Recarregue a página e tente de novo.', 'Fechar', { duration: 6000 });
+  }
+
+  // Atualizações: registros datados, mais recentes primeiro.
+
+  abrirNovaAtualizacao() {
+    this.novaAtualizacao = { texto: '', data: this.hojeIso() };
+  }
+
+  registrarAtualizacao() {
+    const nova = this.novaAtualizacao;
+    if (!nova?.texto.trim()) return;
+    this.projetoService.registrarAtualizacao(this.projeto.id, nova.texto.trim(), nova.data).subscribe({
+      next: (a) => {
+        this.projeto.atualizacoes = [a, ...(this.projeto.atualizacoes ?? [])].sort((x, y) => y.data.localeCompare(x.data));
+        this.novaAtualizacao = null;
+      },
+      error: () => this.avisarFalha(),
+    });
+  }
+
+  removerAtualizacao(id: string) {
+    this.projetoService.removerAtualizacao(this.projeto.id, id).subscribe({
+      next: () => (this.projeto.atualizacoes = (this.projeto.atualizacoes ?? []).filter((a) => a.id !== id)),
+      error: () => this.avisarFalha(),
+    });
+  }
+
+  // Atividades da fase aberta.
+
+  novaAtividade() {
+    this.rascunhoAtividade = { titulo: '', responsavel: '', prazo: '', situacao: 'PENDENTE' };
+  }
+
+  editarAtividade(a: Atividade) {
+    this.rascunhoAtividade = { ...a };
+  }
+
+  salvarAtividade() {
+    const fase = this.faseAberta;
+    const r = this.rascunhoAtividade;
+    if (!fase?.id || !r?.titulo.trim()) return;
+    const corpo: AtividadeRequest = {
+      titulo: r.titulo.trim(),
+      responsavel: r.responsavel?.trim() || null,
+      prazo: r.prazo || null,
+      percentual: r.situacao === 'CONCLUIDA' ? 100 : r.percentual ?? null,
+      situacao: r.situacao,
+    };
+    const gravacao = r.id
+      ? this.projetoService.salvarAtividade(this.projeto.id, fase.id, r.id, corpo)
+      : this.projetoService.criarAtividade(this.projeto.id, fase.id, corpo);
+    gravacao.subscribe({
+      next: (salva) => {
+        const lista = fase.atividades ?? [];
+        const i = lista.findIndex((a) => a.id === salva.id);
+        fase.atividades = i >= 0 ? lista.map((a) => (a.id === salva.id ? salva : a)) : [...lista, salva];
+        this.rascunhoAtividade = null;
+      },
+      error: () => this.avisarFalha(),
+    });
+  }
+
+  // Marca ou desmarca a atividade como concluída, sem abrir o formulário.
+  alternarConclusao(a: Atividade) {
+    this.rascunhoAtividade = {
+      ...a,
+      situacao: a.situacao === 'CONCLUIDA' ? 'EM_ANDAMENTO' : 'CONCLUIDA',
+      percentual: a.situacao === 'CONCLUIDA' ? null : 100,
+    };
+    this.salvarAtividade();
+  }
+
+  removerAtividade(a: Atividade) {
+    const fase = this.faseAberta;
+    if (!fase?.id) return;
+    this.projetoService.removerAtividade(this.projeto.id, fase.id, a.id).subscribe({
+      next: () => {
+        fase.atividades = (fase.atividades ?? []).filter((x) => x.id !== a.id);
+        if (this.rascunhoAtividade?.id === a.id) this.rascunhoAtividade = null;
+      },
+      error: () => this.avisarFalha(),
+    });
+  }
+
+  atividadeAtrasada(a: Atividade): boolean {
+    return !!a.prazo && a.situacao !== 'CONCLUIDA' && a.prazo < this.hojeIso();
+  }
+
+  private hojeIso(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
   get percentualDecorrido(): number {
