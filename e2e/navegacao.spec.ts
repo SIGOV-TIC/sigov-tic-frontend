@@ -6,6 +6,7 @@ const telas = [
   { link: 'Cronograma', titulo: /Cronograma/, url: /\/cronograma/ },
   { link: 'Orçamento', titulo: /Orçamento/, url: /\/orcamento/ },
   { link: 'Objetivos', titulo: /Objetivos/, url: /\/objetivos/ },
+  { link: 'Status Report', titulo: /Status Report/, url: /\/status-report/ },
 ];
 
 test.describe('Navegação', () => {
