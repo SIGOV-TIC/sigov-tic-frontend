@@ -1,0 +1,153 @@
+<div class="page-header no-print">
+    <h1>Status Report</h1>
+    <div class="filtros">
+        <label class="filtro">
+            <span>Projeto</span>
+            <select [ngModel]="projeto?.id" (ngModelChange)="selecionar($event)" [disabled]="!projetos.length">
+                @for (p of projetos; track p.id) {
+                    <option [value]="p.id">{{ p.sigla }} · {{ p.nome }}</option>
+                }
+            </select>
+        </label>
+        <label class="filtro">
+            <span>Quinzena</span>
+            <select [(ngModel)]="quinzena" (ngModelChange)="mudarQuinzena()">
+                @for (q of quinzenas; track q.chave) {
+                    <option [ngValue]="q">{{ q.rotulo }}</option>
+                }
+            </select>
+        </label>
+        <button type="button" class="btn-exportar" (click)="imprimir()" [disabled]="!projeto">
+            <mat-icon>picture_as_pdf</mat-icon> Exportar PDF
+        </button>
+    </div>
+</div>
+
+@if (erro) {
+    <p class="estado-vazio">Não foi possível carregar os dados. Verifique a conexão e tente de novo.</p>
+} @else if (carregando && !projeto) {
+    <p class="estado-vazio">Carregando...</p>
+} @else if (!projeto) {
+    <p class="estado-vazio">Nenhum projeto cadastrado.</p>
+} @else {
+    @let p = projeto;
+    @let ind = indices;
+    <article class="relatorio" [class.atualizando]="carregando">
+
+        <header class="rel-topo">
+            <div>
+                <span class="rel-tipo">Status Report · {{ quinzena.rotulo }}</span>
+                <h2><a [routerLink]="['/projeto', p.id]">{{ p.nome }}</a> <span class="sigla">{{ p.sigla }}</span></h2>
+                <p class="rel-meta">
+                    @if (p.gerenteResponsavel) { <span>Gerente <b>{{ p.gerenteResponsavel }}</b></span> }
+                    @if (p.po) { <span>PO <b>{{ p.po.nome }}</b></span> }
+                    @if (p.scrumMaster) { <span>Scrum Master <b>{{ p.scrumMaster.nome }}</b></span> }
+                </p>
+            </div>
+            <span class="rel-emissao">Emitido em {{ data(emissao) }}</span>
+        </header>
+
+        <section class="rel-indicadores">
+            <div>
+                <small>Situação</small>
+                <b class="estado estado-{{ estado }}"><mat-icon>{{ iconeEstado }}</mat-icon>{{ rotuloEstado }}</b>
+            </div>
+            <div>
+                <small>Concluído</small>
+                <b>{{ avanco }}%</b>
+                @if (esperado !== null) { <span>esperado pelo prazo: {{ esperado }}%</span> }
+            </div>
+            <div>
+                <small>IDP · prazo</small>
+                <b [class.atencao]="abaixo(ind?.idp)">{{ indice(ind?.idp) }}</b>
+            </div>
+            <div>
+                <small>IDC · custo</small>
+                <b [class.atencao]="abaixo(ind?.idc)">{{ indice(ind?.idc) }}</b>
+            </div>
+        </section>
+
+        <div class="rel-colunas">
+            <section>
+                <h3>Andamento na quinzena</h3>
+                @if (atualizacoesDoPeriodo.length) {
+                    <ol class="rel-atualizacoes">
+                        @for (a of atualizacoesDoPeriodo; track a.id) {
+                            <li>
+                                <time [attr.datetime]="a.data">{{ dataCurta(a.data) }}</time>
+                                <p>{{ a.texto }}@if (a.autor) {<small>{{ a.autor }}</small>}</p>
+                            </li>
+                        }
+                    </ol>
+                } @else {
+                    <p class="vazio">Nenhuma atualização registrada na quinzena.</p>
+                }
+            </section>
+            <section>
+                <h3>Ponto de atenção</h3>
+                <p [class.vazio]="!p.pontoAtencao">{{ p.pontoAtencao || 'Nenhum ponto de atenção registrado.' }}</p>
+                <h3>Recomendação do Escritório de Projetos</h3>
+                <p [class.vazio]="!p.recomendacao">{{ p.recomendacao || 'Nenhuma recomendação registrada.' }}</p>
+            </section>
+        </div>
+
+        <section>
+            <h3>Fases</h3>
+            @if (fases.length) {
+                <table class="rel-tabela">
+                    <thead>
+                        <tr><th>Fase</th><th>Situação</th><th class="num">Concluído</th><th class="num">Início</th><th class="num">Fim</th></tr>
+                    </thead>
+                    <tbody>
+                        @for (f of fases; track $index) {
+                            <tr>
+                                <td>{{ f.fase.nome }}</td>
+                                <td>
+                                    @if (f.estado === 'ATRASADO' || f.estado === 'RISCO') {
+                                        <span class="estado estado-{{ f.estado }}"><mat-icon>{{ f.estado === 'ATRASADO' ? 'error' : 'warning' }}</mat-icon>{{ f.estado === 'ATRASADO' ? 'Atrasada' : 'Em risco' }}</span>
+                                    } @else {
+                                        {{ rotuloSituacao(f.situacao) }}
+                                    }
+                                </td>
+                                <td class="num">{{ f.situacao === 'CONCLUIDA' ? 100 : (f.fase.percentual ?? 0) }}%</td>
+                                <td class="num">{{ data(f.fase.dataInicio) }}</td>
+                                <td class="num">{{ data(f.fase.dataFim) }}</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            } @else {
+                <p class="vazio">Nenhuma fase cadastrada.</p>
+            }
+        </section>
+
+        <div class="rel-colunas">
+            <section>
+                <h3>Atividades atrasadas <span class="contagem">{{ atrasadas.length }}</span></h3>
+                <ng-container *ngTemplateOutlet="listaAtividades; context: { $implicit: atrasadas, vazio: 'Nenhuma atividade atrasada.', atraso: true }"></ng-container>
+            </section>
+            <section>
+                <h3>Próximas entregas <span class="contagem">{{ proximas.length }}</span></h3>
+                <ng-container *ngTemplateOutlet="listaAtividades; context: { $implicit: proximas, vazio: 'Nenhuma entrega prevista nos próximos ' + horizonte + ' dias.', atraso: false }"></ng-container>
+            </section>
+        </div>
+    </article>
+}
+
+<ng-template #listaAtividades let-itens let-vazio="vazio" let-atraso="atraso">
+    @if (itens.length) {
+        <ul class="rel-atividades">
+            @for (item of itens; track item.atividade.id) {
+                <li>
+                    <time [class.atencao]="atraso">{{ dataCurta(item.atividade.prazo) }}</time>
+                    <span>
+                        <b>{{ item.atividade.titulo }}</b>
+                        <small>{{ item.fase }} · {{ item.atividade.responsavel || 'Sem responsável' }}</small>
+                    </span>
+                </li>
+            }
+        </ul>
+    } @else {
+        <p class="vazio">{{ vazio }}</p>
+    }
+</ng-template>

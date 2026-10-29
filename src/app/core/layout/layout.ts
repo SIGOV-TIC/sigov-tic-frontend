@@ -62,6 +62,10 @@ export class Layout implements OnInit {
     return this.router.url.startsWith('/orcamento');
   }
 
+  get estaNoStatusReport(): boolean {
+    return this.router.url.startsWith('/status-report');
+  }
+
   get estaNosObjetivos(): boolean {
     return this.router.url.startsWith('/objetivos');
   }
