@@ -46,3 +46,7 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 .vercel
+
+# Testes
+/test-results
+/playwright-report
