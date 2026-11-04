@@ -113,6 +113,24 @@
     }
 }
 
+.secao { margin: 28px 0 10px; font-size: 13px; font-weight: 500; color: var(--text-muted); }
+
+.maiores {
+    td { border-top: 1px solid var(--fio); }
+    tbody tr:first-child td { border-top: none; }
+}
+
+.col-posicao { width: 1%; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
 .linha-area td { border-top: 1px solid var(--fio); color: var(--text-primary); }
 .linha-area:first-child td { border-top: none; }
 
