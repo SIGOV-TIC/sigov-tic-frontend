@@ -98,7 +98,7 @@
         </button>
     </div>
 
-    <div class="tl" #rolagem>
+    <div class="tl" #rolagem [class.arrastando]="arrastando" (pointerdown)="iniciarArraste($event)">
         <div class="tl-conteudo" [style.--tl-largura.px]="larguraLinhaTempo">
 
             <div class="tl-linha tl-cab">

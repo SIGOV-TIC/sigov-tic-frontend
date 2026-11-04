@@ -129,6 +129,46 @@ export class Cronograma implements OnInit, AfterViewChecked {
     });
   }
 
+  // ---- Arrastar a matriz ----
+  // Clicar e arrastar rola a linha do tempo na horizontal. Um gesto que passa de poucos pixels é um arraste:
+  // o clique que o fecha não abre o painel da fase nem segue o link do projeto.
+  arrastando = false;
+  private arrasto: { x: number; rolagem: number; moveu: boolean } | null = null;
+  private readonly limiteArraste = 4;
+
+  iniciarArraste(ev: PointerEvent) {
+    const el = this.rolagem?.nativeElement;
+    if (!el || ev.pointerType !== 'mouse' || ev.button !== 0) return;
+    this.arrasto = { x: ev.clientX, rolagem: el.scrollLeft, moveu: false };
+  }
+
+  @HostListener('document:pointermove', ['$event'])
+  moverArraste(ev: PointerEvent) {
+    const el = this.rolagem?.nativeElement;
+    if (!this.arrasto || !el) return;
+    const dx = ev.clientX - this.arrasto.x;
+    if (!this.arrasto.moveu && Math.abs(dx) <= this.limiteArraste) return;
+    this.arrasto.moveu = true;
+    this.arrastando = true;
+    el.scrollLeft = this.arrasto.rolagem - dx;
+  }
+
+  @HostListener('document:pointerup')
+  @HostListener('document:pointercancel')
+  terminarArraste() {
+    const arrasto = this.arrasto;
+    this.arrasto = null;
+    this.arrastando = false;
+    if (!arrasto?.moveu) return;
+    // O clique que vem logo depois do arraste é engolido; se não vier nenhum, a guarda sai no mesmo ciclo.
+    const engolir = (e: Event) => {
+      e.stopPropagation();
+      e.preventDefault();
+    };
+    window.addEventListener('click', engolir, { capture: true, once: true });
+    setTimeout(() => window.removeEventListener('click', engolir, { capture: true }), 0);
+  }
+
   // Ao abrir a tela ou mudar o período, a rolagem horizontal põe "hoje" à vista.
   ngAfterViewChecked() {
     const el = this.rolagem?.nativeElement;

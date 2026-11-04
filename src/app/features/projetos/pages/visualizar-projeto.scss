@@ -541,7 +541,7 @@
 .cf-primario {
     border-color: var(--accent-yellow);
     background-color: var(--accent-yellow);
-    color: #0A1628;
+    color: var(--estado-texto);
     font-weight: 600;
 
     &:hover { background-color: var(--accent-yellow-hover); }

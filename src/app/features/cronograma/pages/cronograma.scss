@@ -41,7 +41,7 @@
 
 .btn-acao {
     background-color: var(--accent-yellow);
-    color: #0A1628;
+    color: var(--estado-texto);
     border: none;
     &:hover { background-color: var(--accent-yellow-hover); }
 }
@@ -182,6 +182,14 @@
     background-color: var(--bg-card);
     border: 1px solid var(--fio-forte);
     border-radius: var(--raio-cartao);
+    cursor: grab;
+
+    &.arrastando {
+        cursor: grabbing;
+        user-select: none;
+
+        * { cursor: grabbing !important; }
+    }
 }
 
 .tl-conteudo {
