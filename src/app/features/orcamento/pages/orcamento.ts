@@ -103,6 +103,15 @@ export class Orcamento implements OnInit {
       .sort((a, b) => ORDEM_CUSTO.indexOf(a.situacao) - ORDEM_CUSTO.indexOf(b.situacao) || b.orcado - a.orcado);
   }
 
+  // Os maiores orçamentos. Com poucos projetos a lista repetiria a tabela, então só aparece quando há mais que o limite.
+  readonly tamanhoMaiores = 5;
+
+  get maiores(): LinhaOrcamento[] {
+    const ls = this.linhas;
+    if (ls.length <= this.tamanhoMaiores) return [];
+    return [...ls].sort((a, b) => b.orcado - a.orcado).slice(0, this.tamanhoMaiores);
+  }
+
   get atencao(): LinhaOrcamento[] {
     return this.linhas.filter((l) => l.situacao !== 'OK');
   }

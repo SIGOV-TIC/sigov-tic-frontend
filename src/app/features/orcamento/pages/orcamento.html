@@ -135,6 +135,50 @@
         </table>
     </div>
     <app-paginacao [total]="areasLinhas.length" [pagina]="pagA.atual" [tamanho]="tamanhoAreas" (mudar)="pagina.ir($event)" />
+    @let top = maiores;
+    @if (top.length > 0) {
+        <h2 class="secao">Maiores investimentos</h2>
+        <div class="tabela-rolagem">
+            <table class="tabela maiores">
+                <thead>
+                    <tr>
+                        <th class="col-posicao"><span class="sr-only">Posição</span></th>
+                        <th>Projeto</th>
+                        <th>Área</th>
+                        <th class="num">Orçado</th>
+                        <th class="col-trilho">Gasto / avanço</th>
+                        <th class="col-situacao">Situação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (l of top; track l.projeto.id; let i = $index) {
+                        <tr class="situacao-{{ l.situacao }}">
+                            <td class="col-posicao">{{ i + 1 }}</td>
+                            <td>
+                                <a [routerLink]="['/projeto', l.projeto.id]" class="proj" [title]="l.motivo">
+                                    <b>{{ l.projeto.sigla }}</b> <span>{{ l.projeto.nome }}</span>
+                                </a>
+                            </td>
+                            <td>{{ l.projeto.areaSolicitante || 'Sem área' }}</td>
+                            <td class="num">{{ moeda(l.orcado) }}</td>
+                            <td class="col-trilho">
+                                <span class="trilho" role="img" [attr.aria-label]="'Gasto ' + l.pctGasto + '%, avanço ' + l.avanco + '%'">
+                                    <span class="trilho-gasto" [style.width.%]="largura(l.pctGasto)"></span>
+                                    <span class="trilho-marca" [style.left.%]="largura(l.avanco)"></span>
+                                </span>
+                                <span class="par">{{ l.pctGasto }}% / {{ l.avanco }}%</span>
+                            </td>
+                            <td class="col-situacao">
+                                @if (l.situacao !== 'OK') {
+                                    <span class="situacao"><mat-icon>{{ icones[l.situacao] }}</mat-icon>{{ rotulos[l.situacao] }}</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
     @if (semOrcamento > 0) {
         <p class="rodape">{{ semOrcamento }} {{ semOrcamento === 1 ? 'projeto sem orçamento informado não aparece' : 'projetos sem orçamento informado não aparecem' }} aqui.</p>
     }

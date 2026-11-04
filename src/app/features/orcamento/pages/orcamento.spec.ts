@@ -13,13 +13,13 @@ const lista = [
   projeto({ id: 'sem', sigla: 'SEM', areaSolicitante: 'Infra', orcamentoEstimado: 0 }),
 ];
 
-async function abrir() {
+async function abrir(dados = lista) {
   entrarComo('USER');
   TestBed.configureTestingModule({ imports: [Orcamento], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
   const fixture = TestBed.createComponent(Orcamento);
   const api = TestBed.inject(HttpTestingController);
   await fixture.whenStable();
-  responderListagem(api, lista);
+  responderListagem(api, dados);
   await redesenhar(fixture);
   return { tela: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
 }
@@ -66,6 +66,38 @@ describe('Orçamento', () => {
     tela.area = 'Sistemas';
     expect(tela.linhas.map((l) => l.projeto.sigla)).toEqual(['ALE', 'OK']);
     expect(tela.semOrcamento).toBe(0);
+  });
+
+  describe('maiores investimentos', () => {
+    const muitos = ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((sigla, i) =>
+      projeto({
+        id: 'p' + sigla,
+        sigla,
+        areaSolicitante: i % 2 ? 'Infra' : 'Sistemas',
+        orcamentoEstimado: (i + 1) * 100_000,
+        custoRealizado: i === 6 ? 900_000 : 10_000,
+      }),
+    );
+
+    it('com poucos projetos a lista não aparece', async () => {
+      const { tela, el } = await abrir();
+      expect(tela.maiores).toEqual([]);
+      expect(el.textContent).not.toContain('Maiores investimentos');
+    });
+
+    it('lista os cinco maiores orçamentos, do maior para o menor, com a situação de cada um', async () => {
+      const { tela, el } = await abrir(muitos);
+      expect(tela.maiores.map((l) => l.projeto.sigla)).toEqual(['G', 'F', 'E', 'D', 'C']);
+      expect(tela.maiores[0].situacao).toBe('ESTOURADO');
+      expect(el.textContent).toContain('Maiores investimentos');
+      expect(el.querySelectorAll('.maiores tbody tr')).toHaveLength(5);
+    });
+
+    it('respeita o filtro de área e some quando sobram cinco ou menos', async () => {
+      const { tela } = await abrir(muitos);
+      tela.area = 'Sistemas';
+      expect(tela.maiores).toEqual([]);
+    });
   });
 
   it('abre e fecha áreas', async () => {
