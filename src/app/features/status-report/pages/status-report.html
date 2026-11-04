@@ -24,11 +24,11 @@
 </div>
 
 @if (erro) {
-    <p class="estado-vazio">Não foi possível carregar os dados. Verifique a conexão e tente de novo.</p>
+    <app-estado tipo="erro" [mensagem]="erro" (tentar)="tentarNovamente()" />
 } @else if (carregando && !projeto) {
-    <p class="estado-vazio">Carregando...</p>
+    <app-estado tipo="carregando" mensagem="Carregando relatório..." />
 } @else if (!projeto) {
-    <p class="estado-vazio">Nenhum projeto cadastrado.</p>
+    <app-estado tipo="vazio" mensagem="Nenhum projeto cadastrado." />
 } @else {
     @let p = projeto;
     @let ind = indices;

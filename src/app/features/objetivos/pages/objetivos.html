@@ -6,12 +6,9 @@
 </div>
 
 @if (carregando) {
-    <div class="estado-vazio"><p>Carregando objetivos...</p></div>
+    <app-estado tipo="carregando" mensagem="Carregando objetivos..." />
 } @else if (erro) {
-    <div class="estado-vazio">
-        <p class="falha-api">Não foi possível carregar os dados. Verifique a conexão e tente de novo.</p>
-        <button class="falha-tentar" (click)="recarregar()">Tentar novamente</button>
-    </div>
+    <app-estado tipo="erro" [mensagem]="erro" (tentar)="recarregar()" />
 } @else {
     @let os = objetivos;
     <div class="resumo">
@@ -28,7 +25,7 @@
     </div>
 
     @if (os.length === 0) {
-        <div class="estado-vazio"><p>Nenhum objetivo com meta ou projeto vinculado.</p></div>
+        <app-estado tipo="vazio" mensagem="Nenhum objetivo com meta ou projeto vinculado." />
     }
 
     <div class="lista">

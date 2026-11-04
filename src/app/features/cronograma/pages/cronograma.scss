@@ -441,14 +441,6 @@
 .status-aprovado { background-color: var(--badge-aprovado-bg); color: var(--badge-aprovado-text); }
 .status-rejeitado { background-color: var(--badge-rejeitado-bg); color: var(--badge-rejeitado-text); }
 
-.estado-vazio {
-    padding: 60px 24px;
-    text-align: center;
-    color: var(--text-muted);
-    background-color: var(--bg-card);
-    border: 1px solid var(--fio-forte);
-    border-radius: var(--raio-cartao);
-}
 
 
 // Painel de detalhe

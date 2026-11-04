@@ -228,7 +228,7 @@ describe('Tela do projeto', () => {
     });
   });
 
-  it('erro ao carregar mostra a mensagem de falha', async () => {
+  it('projeto inexistente mostra a falha com a causa', async () => {
     entrarComo('USER', 'u1');
     TestBed.configureTestingModule({
       imports: [VisualizarProjeto],
@@ -243,6 +243,6 @@ describe('Tela do projeto', () => {
     await fixture.whenStable();
     TestBed.inject(HttpTestingController).expectOne('/api/projetos/p1').flush(null, { status: 404, statusText: 'x' });
     await redesenhar(fixture);
-    expect(fixture.nativeElement.textContent).toContain('Não foi possível carregar os dados');
+    expect(fixture.nativeElement.textContent).toContain('Não encontramos o projeto');
   });
 });

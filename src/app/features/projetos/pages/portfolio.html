@@ -20,27 +20,19 @@
 </div>
 
 @if (carregando) {
-    <div class="estado-vazio">
-        <p>Carregando projetos...</p>
-    </div>
+    <app-estado tipo="carregando" mensagem="Carregando projetos..." />
 } @else if (erro) {
-    <div class="estado-vazio estado-erro">
-        <mat-icon class="estado-icon">error</mat-icon>
-        <p>{{ erro }}</p>
-        <button class="btn-tentar" (click)="carregar()">Tentar novamente</button>
-    </div>
+    <app-estado tipo="erro" [mensagem]="erro" (tentar)="carregar()" />
 } @else if (projetosFiltrados.length === 0) {
-    <div class="estado-vazio">
-        <mat-icon class="estado-icon">folder_open</mat-icon>
-        @if (busca.trim()) {
-            <p>Nenhum projeto encontrado para "{{ busca }}"</p>
-        } @else {
-            <p>Nenhum projeto cadastrado ainda</p>
+    @if (busca.trim()) {
+        <app-estado tipo="vazio" icone="folder_open" [mensagem]="'Nenhum projeto encontrado para &quot;' + busca + '&quot;'" />
+    } @else {
+        <app-estado tipo="vazio" icone="folder_open" mensagem="Nenhum projeto cadastrado ainda">
             @if (auth.pode('criarProjeto')) {
                 <a routerLink="/cadastro" class="btn-novo-inline">Cadastrar primeiro projeto</a>
             }
-        }
-    </div>
+        </app-estado>
+    }
 } @else {
     <div class="tabela-container">
         <table>
