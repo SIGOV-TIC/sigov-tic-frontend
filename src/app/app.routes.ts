@@ -8,6 +8,7 @@ import { Orcamento } from './features/orcamento/pages/orcamento';
 import { Objetivos } from './features/objetivos/pages/objetivos';
 import { Login } from './features/login/login';
 import { Usuarios } from './features/usuarios/pages/usuarios';
+import { Configuracoes } from './features/configuracoes/pages/configuracoes';
 import { StatusReport } from './features/status-report/pages/status-report';
 import { adminGuard, authGuard, criacaoProjetoGuard, edicaoProjetoGuard } from './core/auth/auth.guard';
 
@@ -27,6 +28,7 @@ export const routes: Routes = [
       { path: 'status-report', component: StatusReport },
       { path: 'projeto/:id', component: VisualizarProjeto },
       { path: 'projeto/:id/editar', component: CadastroProjeto, canActivate: [edicaoProjetoGuard] },
+      { path: 'configuracoes', component: Configuracoes },
       { path: 'usuarios', component: Usuarios, canActivate: [adminGuard] },
     ],
   },

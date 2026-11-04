@@ -8,6 +8,8 @@ import { ProjetoService } from '../../projetos/services/projeto.service';
 import { analisarProjeto, Estado, ICONE_ESTADO, progressoProjeto, ROTULO_ESTADO } from '../../projetos/utils/saude';
 import { calcularDesvio, fracaoDecorrida, TOLERANCIA_DESVIO } from '../../projetos/utils/desvio';
 import { situacaoFase } from '../../projetos/utils/fase';
+import { EstadoTela } from '../../../shared/estado/estado';
+import { mensagemDeErro } from '../../../shared/estado/erro-api';
 
 // Quinzena do relatório: 1 a 15, ou 16 ao fim do mês.
 interface Quinzena {
@@ -46,7 +48,7 @@ function quinzenaDe(ano: number, mes: number, metade: 1 | 2): Quinzena {
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-status-report',
-  imports: [RouterLink, FormsModule, MatIconModule, NgTemplateOutlet],
+  imports: [RouterLink, FormsModule, MatIconModule, NgTemplateOutlet, EstadoTela],
   templateUrl: './status-report.html',
   styleUrl: './status-report.scss',
 })
@@ -54,7 +56,7 @@ export class StatusReport implements OnInit {
   projetos: ProjetoResponse[] = [];
   projeto: ProjetoResponse | null = null;
   carregando = true;
-  erro = false;
+  erro = '';
 
   // A quinzena atual e as cinco anteriores.
   readonly quinzenas: Quinzena[] = (() => {
@@ -96,11 +98,17 @@ export class StatusReport implements OnInit {
         const id = params.get('projeto');
         this.selecionar(this.projetos.find((p) => p.id === id)?.id ?? this.projetos[0]?.id);
       },
-      error: () => {
+      error: (e) => {
         this.carregando = false;
-        this.erro = true;
+        this.erro = mensagemDeErro(e, 'o relatório');
       },
     });
+  }
+
+  tentarNovamente() {
+    this.erro = '';
+    this.carregando = true;
+    this.ngOnInit();
   }
 
   // A lista não traz tudo o que o relatório usa de forma garantida; o projeto vem completo pelo id.
@@ -116,9 +124,9 @@ export class StatusReport implements OnInit {
         this.carregando = false;
         this.gravarNaUrl();
       },
-      error: () => {
+      error: (e) => {
         this.carregando = false;
-        this.erro = true;
+        this.erro = mensagemDeErro(e, 'o relatório');
       },
     });
   }

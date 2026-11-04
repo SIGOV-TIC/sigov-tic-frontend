@@ -8,6 +8,8 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { Paginacao, paginaNaUrl } from '../../../shared/paginacao/paginacao';
 import { indiceFaseAtual, situacaoFase } from '../../projetos/utils/fase';
 import { analisarProjeto, Estado, estadoProjeto, ICONE_ESTADO, progressoProjeto } from '../../projetos/utils/saude';
+import { EstadoTela } from '../../../shared/estado/estado';
+import { mensagemDeErro } from '../../../shared/estado/erro-api';
 
 type Escala = 'MES' | 'TRIMESTRE';
 
@@ -59,14 +61,14 @@ const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'o
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-cronograma',
-  imports: [RouterLink, FormsModule, MatIconModule, Paginacao],
+  imports: [RouterLink, FormsModule, MatIconModule, Paginacao, EstadoTela],
   templateUrl: './cronograma.html',
   styleUrl: './cronograma.scss',
 })
 export class Cronograma implements OnInit, AfterViewChecked {
   projetos: ProjetoResponse[] = [];
   carregando = true;
-  erro = false;
+  erro = '';
 
   anosDisponiveis: number[] = [];
   areasDisponiveis: string[] = [];
@@ -120,9 +122,9 @@ export class Cronograma implements OnInit, AfterViewChecked {
         this.prepararOpcoes();
         this.carregando = false;
       },
-      error: () => {
+      error: (e) => {
         this.carregando = false;
-        this.erro = true;
+        this.erro = mensagemDeErro(e, 'o cronograma');
       },
     });
   }

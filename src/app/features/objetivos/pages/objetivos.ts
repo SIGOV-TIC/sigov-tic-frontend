@@ -18,6 +18,8 @@ import { Meta, MetaRequest, MetaService } from '../services/meta.service';
 import { avaliarMeta } from '../utils/meta';
 import { AuthService } from '../../../core/auth/auth.service';
 import { fatia, Paginacao } from '../../../shared/paginacao/paginacao';
+import { EstadoTela } from '../../../shared/estado/estado';
+import { mensagemDeErro } from '../../../shared/estado/erro-api';
 
 interface LinhaMeta {
   meta: Meta;
@@ -54,7 +56,7 @@ const SEM_OBJETIVO = 'Sem objetivo estratégico definido';
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-objetivos',
-  imports: [RouterLink, FormsModule, MatIconModule, Paginacao],
+  imports: [RouterLink, FormsModule, MatIconModule, Paginacao, EstadoTela],
   templateUrl: './objetivos.html',
   styleUrl: './objetivos.scss',
 })
@@ -62,7 +64,7 @@ export class Objetivos implements OnInit {
   projetos: ProjetoResponse[] = [];
   metas: Meta[] = [];
   carregando = true;
-  erro = false;
+  erro = '';
 
   abertos = new Set<string>();
 
@@ -89,9 +91,9 @@ export class Objetivos implements OnInit {
         if (abrir) this.abertos.add(abrir);
         this.carregando = false;
       },
-      error: () => {
+      error: (e) => {
         this.carregando = false;
-        this.erro = true;
+        this.erro = mensagemDeErro(e, 'os objetivos');
       },
     });
   }

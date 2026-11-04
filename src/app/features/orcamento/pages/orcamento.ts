@@ -8,6 +8,8 @@ import { MARGEM_RISCO_PONTOS } from '../../projetos/utils/saude';
 import { moedaCompacta } from '../../projetos/utils/moeda';
 import { analisarCusto, ORDEM_CUSTO, SituacaoCusto, situacaoCusto } from '../../projetos/utils/custo';
 import { fatia, Paginacao, paginaNaUrl } from '../../../shared/paginacao/paginacao';
+import { EstadoTela } from '../../../shared/estado/estado';
+import { mensagemDeErro } from '../../../shared/estado/erro-api';
 
 interface LinhaOrcamento {
   projeto: ProjetoResponse;
@@ -34,14 +36,14 @@ interface LinhaArea {
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-orcamento',
-  imports: [RouterLink, FormsModule, MatIconModule, Paginacao],
+  imports: [RouterLink, FormsModule, MatIconModule, Paginacao, EstadoTela],
   templateUrl: './orcamento.html',
   styleUrl: './orcamento.scss',
 })
 export class Orcamento implements OnInit {
   projetos: ProjetoResponse[] = [];
   carregando = true;
-  erro = false;
+  erro = '';
   area = '';
 
   // Áreas abertas na tabela. As que têm projeto fora do previsto abrem sozinhas na primeira carga.
@@ -71,9 +73,9 @@ export class Orcamento implements OnInit {
         this.porArea.filter((a) => a.linhas.some((l) => l.situacao !== 'OK')).forEach((a) => this.abertas.add(a.area));
         this.carregando = false;
       },
-      error: () => {
+      error: (e) => {
         this.carregando = false;
-        this.erro = true;
+        this.erro = mensagemDeErro(e, 'o orçamento');
       },
     });
   }

@@ -87,6 +87,6 @@ describe('Portfólio', () => {
     const api = TestBed.inject(HttpTestingController);
     await fixture.whenStable();
     api.match(() => true).forEach((r) => r.flush(null, { status: 500, statusText: 'Erro' }));
-    expect(fixture.componentInstance.erro).toBe('Não foi possível carregar os projetos.');
+    expect(fixture.componentInstance.erro).toBe('O servidor teve um problema. Tente de novo em instantes.');
   });
 });

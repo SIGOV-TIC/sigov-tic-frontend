@@ -10,12 +10,29 @@ export interface Sessao {
   id?: string;
   nome?: string;
   perfil?: string;
+  cargo?: string;
+  foto?: string;
+}
+
+interface UsuarioResposta {
+  id: string;
+  nome: string;
+  perfil: string;
+  cargo?: string | null;
+  foto?: string | null;
 }
 
 interface RespostaLogin {
   username: string;
   roles: string[];
-  usuario?: { id: string; nome: string; perfil: string };
+  usuario?: UsuarioResposta;
+}
+
+// O que o usuário edita no próprio perfil.
+export interface DadosPerfil {
+  nome: string;
+  cargo: string | null;
+  foto: string | null;
 }
 
 // editarProjeto: todos os campos. acompanharProjeto: pontos de atenção, andamento das fases, atualizações e atividades.
@@ -65,6 +82,20 @@ export class AuthService {
       .pipe(tap((r) => this.guardar(this.sessaoDe(r))));
   }
 
+  perfilAtual(): Observable<UsuarioResposta> {
+    return this.http.get<UsuarioResposta>('/api/users/me');
+  }
+
+  // Grava o perfil na API e já reflete o resultado na sessão (menu, avatar).
+  atualizarPerfil(dados: DadosPerfil): Observable<UsuarioResposta> {
+    return this.http.put<UsuarioResposta>('/api/users/me', dados).pipe(
+      tap((u) => {
+        const atual = this.sessao();
+        if (atual) this.guardar({ ...atual, nome: u.nome, cargo: u.cargo ?? undefined, foto: u.foto ?? undefined });
+      }),
+    );
+  }
+
   logout(): Observable<void> {
     return this.http.post<void>('/api/auth/logout', {}).pipe(finalize(() => this.encerrar()));
   }
@@ -78,7 +109,15 @@ export class AuthService {
   }
 
   private sessaoDe(r: RespostaLogin): Sessao {
-    return { username: r.username, roles: r.roles, id: r.usuario?.id, nome: r.usuario?.nome, perfil: r.usuario?.perfil };
+    return {
+      username: r.username,
+      roles: r.roles,
+      id: r.usuario?.id,
+      nome: r.usuario?.nome,
+      perfil: r.usuario?.perfil,
+      cargo: r.usuario?.cargo ?? undefined,
+      foto: r.usuario?.foto ?? undefined,
+    };
   }
 
   private guardar(s: Sessao) {

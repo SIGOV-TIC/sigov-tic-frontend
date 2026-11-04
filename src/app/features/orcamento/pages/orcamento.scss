@@ -230,13 +230,5 @@
 
 .rodape { margin: 10px 0 0; font-size: 12px; color: var(--text-muted); }
 
-.estado-vazio {
-    padding: var(--spacing-4xl) var(--spacing-md);
-    text-align: center;
-    color: var(--text-muted);
-    background-color: var(--bg-card);
-    border: 1px solid var(--fio-forte);
-    border-radius: var(--border-radius-md);
-}
 
 @media print { .barra-filtro { display: none; } }

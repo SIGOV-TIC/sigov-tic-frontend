@@ -1,0 +1,49 @@
+<div class="page-header">
+    <h1>Configurações</h1>
+</div>
+
+<form class="conta" (ngSubmit)="salvar()">
+    <div class="foto">
+        <span class="avatar">
+            @if (foto()) {
+                <img [src]="foto()" alt="Sua foto">
+            } @else {
+                {{ iniciais }}
+            }
+        </span>
+        <div class="foto-acoes">
+            <label class="btn-sec">
+                <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" (change)="escolherFoto($event)">
+                Escolher foto
+            </label>
+            @if (foto()) {
+                <button type="button" class="btn-sec" (click)="removerFoto()">Remover</button>
+            }
+        </div>
+    </div>
+
+    <label class="campo">Nome
+        <input name="nome" [(ngModel)]="nome" maxlength="120" autocomplete="name">
+    </label>
+    <label class="campo">Cargo
+        <input name="cargo" [(ngModel)]="cargo" maxlength="120" autocomplete="organization-title">
+    </label>
+
+    <dl class="fixos">
+        <dt>Login</dt>
+        <dd>{{ login }}</dd>
+        <dt>Perfil</dt>
+        <dd>{{ auth.rotuloPerfil() }}</dd>
+    </dl>
+
+    @if (erro()) {
+        <p class="form-erro" role="alert">{{ erro() }}</p>
+    }
+    @if (salvo()) {
+        <p class="form-ok" role="status">Alterações salvas.</p>
+    }
+
+    <div class="form-acoes">
+        <button type="submit" class="btn-acao" [disabled]="salvando()">{{ salvando() ? 'Salvando…' : 'Salvar' }}</button>
+    </div>
+</form>

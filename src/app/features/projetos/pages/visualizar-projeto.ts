@@ -9,6 +9,8 @@ import { ProjetoService } from '../services/projeto.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { indiceFaseAtual, janelaFase, materializarSituacoes, situacaoFase } from '../utils/fase';
 import { MARGEM_RISCO_PONTOS } from '../utils/saude';
+import { EstadoTela } from '../../../shared/estado/estado';
+import { mensagemDeErro } from '../../../shared/estado/erro-api';
 
 type CampoTexto = 'pontoAtencao' | 'recomendacao';
 
@@ -16,14 +18,14 @@ type CampoTexto = 'pontoAtencao' | 'recomendacao';
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-visualizar-projeto',
-  imports: [RouterLink, FormsModule, MatIconModule, NgTemplateOutlet],
+  imports: [RouterLink, FormsModule, MatIconModule, NgTemplateOutlet, EstadoTela],
   templateUrl: './visualizar-projeto.html',
   styleUrl: './visualizar-projeto.scss',
 })
 export class VisualizarProjeto implements OnInit {
   projeto!: ProjetoResponse;
   carregando = true;
-  erro = false;
+  erro = '';
   campoEmEdicao: CampoTexto | null = null;
   textoEdicao = '';
   // Fase aberta na camada de detalhe; `rascunhoFase` é a cópia em edição, para Cancelar desfazer.
@@ -67,9 +69,9 @@ export class VisualizarProjeto implements OnInit {
         this.preencherDatasPlanejadas();
         this.carregando = false;
       },
-      error: () => {
+      error: (e) => {
         this.carregando = false;
-        this.erro = true;
+        this.erro = mensagemDeErro(e, 'o projeto');
       },
     });
   }

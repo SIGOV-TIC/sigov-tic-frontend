@@ -5,6 +5,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/auth/auth.service';
 import { PERFIS, rotuloPerfil } from '../../../core/auth/perfis';
 import { Usuario, UsuarioRequest, UsuarioService } from '../services/usuario.service';
+import { EstadoTela } from '../../../shared/estado/estado';
+import { mensagemDeErro } from '../../../shared/estado/erro-api';
 
 type Edicao = UsuarioRequest & { id?: string };
 
@@ -12,14 +14,14 @@ type Edicao = UsuarioRequest & { id?: string };
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-usuarios',
-  imports: [FormsModule, MatIconModule],
+  imports: [FormsModule, MatIconModule, EstadoTela],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.scss',
 })
 export class Usuarios implements OnInit {
   usuarios: Usuario[] = [];
   carregando = true;
-  erro = false;
+  erro = '';
 
   readonly perfis = PERFIS;
 
@@ -34,9 +36,9 @@ export class Usuarios implements OnInit {
         this.usuarios = us;
         this.carregando = false;
       },
-      error: () => {
+      error: (e) => {
         this.carregando = false;
-        this.erro = true;
+        this.erro = mensagemDeErro(e, 'as contas');
       },
     });
   }

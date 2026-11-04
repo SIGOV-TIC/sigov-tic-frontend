@@ -8,12 +8,14 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { moedaCompacta } from '../utils/moeda';
 import { calcularDesvio, Desvio, TOLERANCIA_DESVIO } from '../utils/desvio';
 import { fatia, Paginacao, paginaNaUrl } from '../../../shared/paginacao/paginacao';
+import { EstadoTela } from '../../../shared/estado/estado';
+import { mensagemDeErro } from '../../../shared/estado/erro-api';
 
 @Component({
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-portfolio',
-  imports: [FormsModule, RouterLink, MatIconModule, Paginacao],
+  imports: [FormsModule, RouterLink, MatIconModule, Paginacao, EstadoTela],
   templateUrl: './portfolio.html',
   styleUrl: './portfolio.scss',
 })
@@ -47,8 +49,8 @@ export class Portfolio implements OnInit {
         this.aplicarBusca();
         this.carregando = false;
       },
-      error: () => {
-        this.erro = 'Não foi possível carregar os projetos.';
+      error: (e) => {
+        this.erro = mensagemDeErro(e, 'os projetos');
         this.carregando = false;
       },
     });

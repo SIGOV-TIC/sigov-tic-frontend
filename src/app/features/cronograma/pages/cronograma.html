@@ -79,14 +79,9 @@
 </form>
 
 @if (carregando) {
-    <div class="estado-vazio">
-        <p>Carregando cronograma...</p>
-    </div>
+    <app-estado tipo="carregando" mensagem="Carregando cronograma..." />
 } @else if (erro) {
-    <div class="estado-vazio">
-        <p class="falha-api">Não foi possível carregar os dados. Verifique a conexão e tente de novo.</p>
-        <button class="falha-tentar" (click)="recarregar()">Tentar novamente</button>
-    </div>
+    <app-estado tipo="erro" [mensagem]="erro" (tentar)="recarregar()" />
 } @else {
     @let ls = linhas;
     @let pag = paginaDe(ls, semCronograma);

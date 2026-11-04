@@ -12,6 +12,8 @@ import { avaliarMeta } from '../../objetivos/utils/meta';
 import { situacaoFase } from '../../projetos/utils/fase';
 import { Retrato, RetratoService } from '../services/retrato.service';
 import { fatia, Paginacao, paginaNaUrl } from '../../../shared/paginacao/paginacao';
+import { EstadoTela } from '../../../shared/estado/estado';
+import { mensagemDeErro } from '../../../shared/estado/erro-api';
 
 type Gravidade = 'grave' | 'atencao';
 
@@ -58,7 +60,7 @@ const MESES = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'O
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-dashboard',
-  imports: [RouterLink, MatIconModule, Paginacao],
+  imports: [RouterLink, MatIconModule, Paginacao, EstadoTela],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -66,7 +68,7 @@ export class Dashboard implements OnInit {
   projetos: ProjetoResponse[] = [];
   metas: Meta[] = [];
   carregando = true;
-  erro = false;
+  erro = '';
 
   readonly hoje = new Date();
 
@@ -88,9 +90,9 @@ export class Dashboard implements OnInit {
         this.carregando = false;
         this.registrarRetrato();
       },
-      error: () => {
+      error: (e) => {
         this.carregando = false;
-        this.erro = true;
+        this.erro = mensagemDeErro(e, 'o dashboard');
       },
     });
   }
