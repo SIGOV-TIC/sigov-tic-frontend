@@ -97,6 +97,9 @@ export class ApiFalsa {
   readonly escritas: Pedido[] = [];
   // Quando definido, toda chamada fora do login responde com este status.
   forcarStatus: number | null = null;
+  // Perfil editado em /api/users/me e o login de quem entrou.
+  perfilProprio: { nome?: string; cargo?: string | null; foto?: string | null } = {};
+  loginAtual = 'pmo';
 
   constructor(private page: Page) {}
 
@@ -107,6 +110,7 @@ export class ApiFalsa {
   // Abre o app já logado, como se a pessoa tivesse entrado antes.
   async entrarComo(login: keyof typeof CONTAS) {
     const c = CONTAS[login];
+    this.loginAtual = login;
     await this.page.addInitScript(
       ([sessao]) => localStorage.setItem('sigov_sessao', sessao),
       [JSON.stringify({ username: login, roles: ['ROLE_' + c.perfil], id: c.id, nome: c.nome, perfil: c.perfil })],
@@ -184,6 +188,12 @@ export class ApiFalsa {
       return vazio();
     }
     if (caminho === '/api/metas' && metodo === 'GET') return json(metas);
+    if (caminho === '/api/users/me') {
+      const login = this.loginAtual;
+      const c = CONTAS[login];
+      if (metodo === 'PUT') Object.assign(this.perfilProprio, { nome: corpo.nome, cargo: corpo.cargo, foto: corpo.foto });
+      return json({ id: c.id, login, perfil: c.perfil, ativo: true, ...{ nome: c.nome, cargo: null, foto: null }, ...this.perfilProprio });
+    }
     if (caminho === '/api/users/gestores') return json(usuarios.filter((u) => u.perfil === 'GESTOR_PROJETO'));
     if (caminho === '/api/users' && metodo === 'GET') return json(usuarios);
     if (caminho === '/api/users' && metodo === 'POST') {

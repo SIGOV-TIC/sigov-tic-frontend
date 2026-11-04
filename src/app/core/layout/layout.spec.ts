@@ -72,6 +72,19 @@ describe('Menu do usuário', () => {
     expect(menu.aberto).toBe(false);
   });
 
+  it('mostra a foto da sessão no lugar das iniciais', () => {
+    entrarComo('USER', 'u1');
+    localStorage.setItem(
+      'sigov_sessao',
+      JSON.stringify({ ...JSON.parse(localStorage.getItem('sigov_sessao')!), foto: 'data:image/jpeg;base64,AAAA' }),
+    );
+    configurar();
+    const fixture = TestBed.createComponent(MenuUsuario);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.foto).toBe('data:image/jpeg;base64,AAAA');
+    expect(fixture.nativeElement.querySelector('.menu-avatar img')).not.toBeNull();
+  });
+
   it('sair avisa o layout', () => {
     entrarComo('USER');
     configurar();

@@ -1,6 +1,12 @@
 <div class="menu">
     <button type="button" class="menu-gatilho" [class.aberto]="aberto" aria-haspopup="menu" [attr.aria-expanded]="aberto" (click)="alternar()">
-        <span class="menu-avatar">{{ iniciais }}</span>
+        <span class="menu-avatar">
+            @if (foto) {
+                <img [src]="foto" alt="">
+            } @else {
+                {{ iniciais }}
+            }
+        </span>
         <span class="menu-nome">{{ nome }}</span>
         <mat-icon class="menu-seta">expand_more</mat-icon>
     </button>
@@ -13,13 +19,10 @@
                     <span class="menu-cabecalho-perfil">{{ perfil }}</span>
                 }
             </div>
-            <button type="button" class="menu-item" role="menuitem" disabled>
+            <a class="menu-item" role="menuitem" routerLink="/configuracoes" (click)="aberto = false">
                 <mat-icon>settings</mat-icon>
-                <span class="menu-item-texto">
-                    <span>Configurações</span>
-                    <span class="menu-item-nota">Foto, nome, senha e cargo · em breve</span>
-                </span>
-            </button>
+                <span>Configurações</span>
+            </a>
             <button type="button" class="menu-item" role="menuitem" (click)="aoSair()">
                 <mat-icon>logout</mat-icon>
                 <span>Sair</span>
