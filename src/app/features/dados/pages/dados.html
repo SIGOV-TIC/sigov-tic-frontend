@@ -1,0 +1,87 @@
+<div class="page-header">
+    <h1>Dados</h1>
+    <div class="acoes">
+        <button type="button" class="btn-csv" (click)="baixarCsv()" [disabled]="baixando || !total">
+            <mat-icon>download</mat-icon> Baixar CSV
+        </button>
+    </div>
+</div>
+
+<div class="filtros">
+    <label class="filtro">
+        <span>Projeto</span>
+        <select [(ngModel)]="recorte.projeto" (ngModelChange)="filtrar()">
+            <option value="">Todos os projetos</option>
+            @for (p of projetos; track p.id) {
+                <option [value]="p.id">{{ p.sigla }} · {{ p.nome }}</option>
+            }
+        </select>
+    </label>
+    <label class="filtro">
+        <span>Área</span>
+        <select [(ngModel)]="recorte.area" (ngModelChange)="filtrar()">
+            <option value="">Todas as áreas</option>
+            @for (a of areas; track a) { <option [value]="a">{{ a }}</option> }
+        </select>
+    </label>
+    <label class="filtro">
+        <span>De</span>
+        <input type="date" [(ngModel)]="recorte.de" (ngModelChange)="filtrar()" />
+    </label>
+    <label class="filtro">
+        <span>Até</span>
+        <input type="date" [(ngModel)]="recorte.ate" (ngModelChange)="filtrar()" />
+    </label>
+    @if (temFiltro) {
+        <button type="button" class="limpar" (click)="limpar()">Limpar</button>
+    }
+</div>
+
+<div class="metricas">
+    @for (m of metricas; track m) {
+        <button type="button" class="pilula" [class.marcada]="marcada(m)" (click)="alternarMetrica(m)">
+            {{ rotuloMetrica[m] }}
+        </button>
+    }
+</div>
+
+@if (erro) {
+    <app-estado tipo="erro" [mensagem]="erro" (tentar)="buscar()" />
+} @else if (carregando && !linhas.length) {
+    <app-estado tipo="carregando" mensagem="Carregando os dados..." />
+} @else if (!total) {
+    <app-estado tipo="vazio" mensagem="Nenhum dado para este recorte. Os dados vêm das quinzenas emitidas no Status Report." />
+} @else {
+    <p class="resumo">
+        {{ total }} {{ total === 1 ? 'linha' : 'linhas' }} ·
+        {{ projetosNaTabela }} {{ projetosNaTabela === 1 ? 'projeto' : 'projetos' }} ·
+        {{ quinzenas }} {{ quinzenas === 1 ? 'quinzena' : 'quinzenas' }}
+    </p>
+
+    <table class="tabela">
+        <thead>
+            <tr>
+                <th>Projeto</th>
+                <th>Área</th>
+                <th>Quinzena</th>
+                <th>Métrica</th>
+                <th class="num">Valor</th>
+                <th class="num">Meta</th>
+            </tr>
+        </thead>
+        <tbody [class.atualizando]="carregando">
+            @for (l of visiveis; track l.projetoId + l.quinzenaInicio + l.metrica) {
+                <tr>
+                    <td><b>{{ l.sigla }}</b></td>
+                    <td>{{ l.area || '—' }}</td>
+                    <td>{{ quinzena(l) }}</td>
+                    <td>{{ rotuloMetrica[l.metrica] }}</td>
+                    <td class="num">{{ valor(l) }}</td>
+                    <td class="num meta">{{ meta(l) }}</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <app-paginacao [total]="total" [pagina]="paginaAtual" [tamanho]="porPagina" (mudar)="pagina.ir($event)" />
+}

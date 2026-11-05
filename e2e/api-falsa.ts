@@ -246,6 +246,39 @@ export class ApiFalsa {
       return json(nova, 201);
     }
     if (caminho === '/api/retratos' || caminho === '/api/retratos/hoje') return json(metodo === 'GET' ? [] : {});
+    if (caminho === '/api/retratos-quinzenais/areas') {
+      return json([...new Set(this.retratos.map((r) => r.area as string))]);
+    }
+    if (caminho === '/api/retratos-quinzenais/fatos' || caminho === '/api/retratos-quinzenais/fatos.csv') {
+      const p = url.searchParams;
+      const metricas = p.getAll('metrica');
+      const linhas = this.retratos
+        .filter((r) => !p.get('projeto') || r.projetoId === p.get('projeto'))
+        .filter((r) => !p.get('area') || r.area === p.get('area'))
+        .filter((r) => !p.get('de') || (r.quinzenaInicio as string) >= p.get('de')!)
+        .flatMap((r) =>
+          (r.fatos as { metrica: string; valor: number | null; meta: number | null }[])
+            .filter((f) => !metricas.length || metricas.includes(f.metrica))
+            .map((f) => ({
+              projetoId: r.projetoId,
+              sigla: r.sigla,
+              area: r.area,
+              gerente: r.gerente,
+              quinzenaInicio: r.quinzenaInicio,
+              quinzenaFim: r.quinzenaFim,
+              emitidoEm: r.emitidoEm,
+              metrica: f.metrica,
+              valor: f.valor,
+              meta: f.meta,
+            })),
+        );
+      if (caminho.endsWith('.csv')) {
+        const cabecalho = 'projeto_id,sigla,area,gerente,quinzena_inicio,quinzena_fim,emitido_em,metrica,valor,meta';
+        const corpo = linhas.map((l) => Object.values(l).join(',')).join('\n');
+        return route.fulfill({ status: 200, contentType: 'text/csv', body: cabecalho + '\n' + corpo });
+      }
+      return json(linhas);
+    }
     if (caminho === '/api/retratos-quinzenais') {
       if (metodo === 'GET') return json(this.retratos.filter((r) => r.projetoId === url.searchParams.get('projeto')));
       const inicio = url.searchParams.get('dia') ?? '';
