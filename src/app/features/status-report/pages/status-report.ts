@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Atividade, Atualizacao, ProjetoResponse, SituacaoFase } from '../../projetos/models/projeto';
 import { ProjetoService } from '../../projetos/services/projeto.service';
 import { analisarProjeto, Estado, ICONE_ESTADO, progressoProjeto, ROTULO_ESTADO } from '../../projetos/utils/saude';
-import { calcularDesvio, fracaoDecorrida, TOLERANCIA_DESVIO } from '../../projetos/utils/desvio';
+import { basePlausivel, calcularDesvio, fracaoDecorrida, TOLERANCIA_DESVIO } from '../../projetos/utils/desvio';
 import { situacaoFase } from '../../projetos/utils/fase';
 import { EstadoTela } from '../../../shared/estado/estado';
 import { mensagemDeErro } from '../../../shared/estado/erro-api';
@@ -155,7 +155,23 @@ export class StatusReport implements OnInit {
   }
 
   imprimir() {
+    // O cabeçalho corrido vive na margem da página: é a única forma de repeti-lo
+    // em todas as folhas. O texto é dinâmico, então entra como estilo na hora.
+    const estilo = document.createElement('style');
+    estilo.textContent = this.estiloDeImpressao();
+    document.head.appendChild(estilo);
     window.print();
+    estilo.remove();
+  }
+
+  estiloDeImpressao(): string {
+    const esquerda = `${this.projeto?.sigla ?? ''} · ${this.projeto?.nome ?? ''}`;
+    const direita = `${this.emitido ? 'Status Report' : 'Prévia'} · ${this.quinzena.rotulo}`;
+    const fonte = "font: 8pt 'Inter', sans-serif; color: #4F5D73;";
+    return `@page {
+      @top-left { content: ${JSON.stringify(esquerda)}; ${fonte} }
+      @top-right { content: ${JSON.stringify(direita)}; ${fonte} }
+    }`;
   }
 
   private carregarRetratos(projetoId: string) {
@@ -322,6 +338,22 @@ export class StatusReport implements OnInit {
     return this.congelado('ATIVIDADES_ATRASADAS');
   }
 
+  // Índice tão fora do plano que a causa provável é a linha de base, não a execução.
+  baseARevisar(indice: number | null | undefined): boolean {
+    return !basePlausivel(indice);
+  }
+
+  get algumIndiceImplausivel(): boolean {
+    return this.baseARevisar(this.indices?.idp) || this.baseARevisar(this.indices?.idc);
+  }
+
+  // Quinzenas emitidas com o mesmo avanço não desenham tendência: a linha seria reta
+  // por falta de história, não por estabilidade do projeto.
+  get serieSemVariacao(): boolean {
+    const avancos = this.daSerie('PERCENTUAL_CONCLUIDO').filter((v) => v != null);
+    return avancos.length > 1 && new Set(avancos).size === 1;
+  }
+
   // Índice fora da tolerância de 10% para baixo.
   abaixo(indice: number | null | undefined): boolean {
     return indice != null && indice < 1 - TOLERANCIA_DESVIO / 100;
@@ -338,6 +370,18 @@ export class StatusReport implements OnInit {
     }
     if (this.emitido) return [];
     return (this.projeto?.atualizacoes ?? []).filter((a) => a.data >= this.quinzena.ini && a.data <= this.quinzena.fim);
+  }
+
+  // Identificador curto do documento: projeto, quinzena e emissão.
+  get identificador(): string {
+    const quinzena = this.quinzena.ini.replaceAll('-', '');
+    const emissao = this.retrato ? this.retrato.id.slice(0, 6).toUpperCase() : 'PREVIA';
+    return `${this.projeto?.sigla ?? '—'}-${quinzena}-${emissao}`;
+  }
+
+  // Quinzena sem nada registrado: uma linha resolve, três negativas não.
+  get semNarrativa(): boolean {
+    return !this.atualizacoesDoPeriodo.length && !this.pontoAtencao && !this.recomendacao;
   }
 
   get pontoAtencao(): string {

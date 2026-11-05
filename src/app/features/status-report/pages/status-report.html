@@ -22,7 +22,8 @@
                 <mat-icon>draft</mat-icon> {{ emitido ? 'Emitir novamente' : 'Emitir' }}
             </button>
         }
-        <button type="button" class="btn-exportar" (click)="imprimir()" [disabled]="!projeto">
+        <button type="button" class="btn-exportar" (click)="imprimir()" [disabled]="!projeto"
+                title="Na janela de impressão, desmarque &quot;Cabeçalhos e rodapés&quot; para o PDF sair limpo.">
             <mat-icon>picture_as_pdf</mat-icon> Exportar PDF
         </button>
     </div>
@@ -42,6 +43,22 @@
     @let p = projeto;
     @let ind = indices;
     <article class="relatorio" [class.atualizando]="carregando">
+
+        <section class="rel-identificacao so-print">
+            <div class="rel-id-topo">
+                <span class="rel-id-sistema">SIGOV-TIC · Gestão do Portfólio de TIC</span>
+                <span class="rel-id-classificacao">Uso interno</span>
+            </div>
+            <h1 class="rel-id-titulo">Relatório de Acompanhamento de Projeto</h1>
+            <dl class="rel-id-campos">
+                <div><dt>Projeto</dt><dd>{{ p.sigla }} · {{ p.nome }}</dd></div>
+                <div><dt>Período</dt><dd>{{ quinzena.rotulo }}</dd></div>
+                <div><dt>Situação do documento</dt><dd>{{ emitido ? 'Emitido' : 'Prévia — não emitido' }}</dd></div>
+                <div><dt>Emitido em</dt><dd>{{ retrato ? data(retrato.emitidoEm.slice(0, 10)) : '—' }}</dd></div>
+                <div><dt>Emitido por</dt><dd>{{ retrato?.autor || '—' }}</dd></div>
+                <div><dt>Identificador</dt><dd>{{ identificador }}</dd></div>
+            </dl>
+        </section>
 
         <header class="rel-topo">
             <div>
@@ -73,12 +90,21 @@
             <div>
                 <small>IDP · prazo</small>
                 <b [class.atencao]="abaixo(ind?.idp)">{{ indice(ind?.idp) }}</b>
+                @if (baseARevisar(ind?.idp)) { <span class="revisar">linha de base a revisar</span> }
             </div>
             <div>
                 <small>IDC · custo</small>
                 <b [class.atencao]="abaixo(ind?.idc)">{{ indice(ind?.idc) }}</b>
+                @if (baseARevisar(ind?.idc)) { <span class="revisar">linha de base a revisar</span> }
             </div>
         </section>
+
+        @if (semNarrativa) {
+            <section class="rel-sem-registro">
+                <h3>Andamento na quinzena</h3>
+                <p class="vazio">Sem registros no período.</p>
+            </section>
+        } @else {
 
         <div class="rel-colunas">
             <section>
@@ -104,7 +130,23 @@
             </section>
         </div>
 
-        @if (temSerie) {
+        }
+
+        @if (algumIndiceImplausivel) {
+            <p class="aviso">
+                <mat-icon>warning</mat-icon>
+                Índice muito fora do plano: confira as datas e o orçamento do projeto antes de usar este relatório.
+            </p>
+        }
+
+        @if (temSerie && serieSemVariacao) {
+            <p class="aviso">
+                <mat-icon>info</mat-icon>
+                As quinzenas emitidas têm o mesmo avanço. Sem variação entre elas não há tendência para desenhar.
+            </p>
+        }
+
+        @if (temSerie && !serieSemVariacao) {
             <section class="rel-graficos">
                 <app-grafico-tendencia
                     [titulo]="'Avanço acumulado · % · ' + periodoSerie"
@@ -183,6 +225,13 @@
         </div>
 
         }
+
+        <section class="rel-responsaveis so-print">
+            <div><span>Gerente do projeto</span><b>{{ p.gerenteResponsavel || '—' }}</b></div>
+            <div><span>Product Owner</span><b>{{ p.po?.nome || '—' }}</b></div>
+            <div><span>Scrum Master</span><b>{{ p.scrumMaster?.nome || '—' }}</b></div>
+            <div><span>Emitido por</span><b>{{ retrato?.autor || '—' }}</b></div>
+        </section>
     </article>
 }
 
