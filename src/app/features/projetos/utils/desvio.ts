@@ -35,14 +35,21 @@ export function fracaoDecorrida(p: ProjetoRequest, hoje: Date = new Date()): num
   return Math.min(1, Math.max(0, (hoje.getTime() - ini) / (fim - ini)));
 }
 
+// Sem fases cadastradas não há avanço físico apurado: o projeto não é "zero por cento
+// entregue", é não medido. Índice calculado sobre isso diria 0,00 e seria mentira.
+export function avancoMensuravel(p: ProjetoRequest): boolean {
+  return (p.fases?.length ?? 0) > 0 || p.prazoQuadrante === 'CONCLUIDO';
+}
+
 export function calcularDesvio(p: ProjetoRequest, hoje: Date = new Date()): Desvio {
   const tempo = fracaoDecorrida(p, hoje);
   const fisico = progressoProjeto(p) / 100;
   const orcamento = p.orcamentoEstimado ?? 0;
   const gasto = p.custoRealizado ?? 0;
+  const medivel = avancoMensuravel(p);
 
-  const idp = tempo ? fisico / tempo : null;
-  const idc = orcamento > 0 && gasto > 0 ? (orcamento * fisico) / gasto : null;
+  const idp = tempo && medivel ? fisico / tempo : null;
+  const idc = medivel && orcamento > 0 && gasto > 0 ? (orcamento * fisico) / gasto : null;
   const indiceCritico = idp != null && idc != null ? idp * idc : null;
   const desvioReal = indiceCritico != null ? (indiceCritico - 1) * 100 : null;
   const limite = 1 - TOLERANCIA_DESVIO / 100;
