@@ -286,15 +286,18 @@ html, body {
   .sidebar,
   .header,
   .footer,
+  app-feedback-botao,
   .no-print {
     display: none !important;
   }
 
+  app-root,
   .layout,
   .main-wrapper,
   .main-content {
     display: block !important;
     height: auto !important;
+    min-height: 0 !important;
     overflow: visible !important;
     margin: 0 !important;
     padding: 0 !important;

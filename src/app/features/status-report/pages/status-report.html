@@ -88,12 +88,12 @@
                 @if (esperado !== null) { <span>esperado pelo prazo: {{ esperado }}%</span> }
             </div>
             <div>
-                <small>IDP · prazo</small>
+                <small title="Índice de desempenho de prazo (SPI): avanço entregue dividido pelo prazo decorrido. 1,00 é o plano.">IDP · prazo</small>
                 <b [class.atencao]="abaixo(ind?.idp)">{{ indice(ind?.idp) }}</b>
                 @if (baseARevisar(ind?.idp)) { <span class="revisar">linha de base a revisar</span> }
             </div>
             <div>
-                <small>IDC · custo</small>
+                <small title="Índice de desempenho de custo (CPI): valor entregue dividido pelo custo realizado. 1,00 é o plano.">IDC · custo</small>
                 <b [class.atencao]="abaixo(ind?.idc)">{{ indice(ind?.idc) }}</b>
                 @if (baseARevisar(ind?.idc)) { <span class="revisar">linha de base a revisar</span> }
             </div>

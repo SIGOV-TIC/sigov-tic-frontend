@@ -313,7 +313,7 @@ time { font-size: 13px; line-height: 1.6; color: var(--text-faint); font-variant
     }
 }
 
-@media (max-width: 900px) {
+@media screen and (max-width: 900px) {
     .rel-indicadores { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 16px; }
     .rel-indicadores > div:nth-child(3) { padding-left: 0; border-left: none; }
     .rel-colunas { grid-template-columns: 1fr; gap: 20px; }
