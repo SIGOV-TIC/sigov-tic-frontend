@@ -30,6 +30,49 @@ function deslocar(meses: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
 }
 
+// Quinzenas já emitidas do primeiro projeto: o avanço vai ficando para trás do plano
+// e o custo sobe, que é o caso em que o gráfico precisa dizer alguma coisa.
+function historicoDeRetratos() {
+  const hoje = new Date();
+  const serie = [
+    { concluido: 8, esperado: 10, idp: 0.8, idc: 1.4, realizado: 120000 },
+    { concluido: 17, esperado: 22, idp: 0.77, idc: 1.3, realizado: 260000 },
+    { concluido: 24, esperado: 34, idp: 0.71, idc: 1.18, realizado: 420000 },
+    { concluido: 31, esperado: 45, idp: 0.69, idc: 1.05, realizado: 610000 },
+    { concluido: 40, esperado: 55, idp: 0.72, idc: 1.1, realizado: 780000 },
+  ];
+  return serie.map((q, i) => {
+    const inicio = new Date(hoje.getFullYear(), hoje.getMonth() - (serie.length - i), 1);
+    const dia = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    return {
+      id: 'h' + i,
+      projetoId: 'p1',
+      sigla: 'ERP',
+      area: 'DTI',
+      gerente: 'Cláudio Silva',
+      quinzenaInicio: `${dia(inicio)}-01`,
+      quinzenaFim: `${dia(inicio)}-15`,
+      emitidoEm: `${dia(inicio)}-16T09:00:00Z`,
+      autor: 'Paula Escritório',
+      andamento: i === serie.length - 1 ? `${dia(inicio)}-10 · Ana: Homologação do módulo piloto concluída.` : null,
+      pontoAtencao: 'Fornecedor atrasou a entrega do ambiente.',
+      recomendacao: 'Repactuar o cronograma da fase de homologação.',
+      fatos: [
+        { metrica: 'PERCENTUAL_CONCLUIDO', valor: q.concluido, meta: q.esperado },
+        { metrica: 'PERCENTUAL_ESPERADO', valor: q.esperado, meta: null },
+        { metrica: 'IDP', valor: q.idp, meta: 1 },
+        { metrica: 'IDC', valor: q.idc, meta: 1 },
+        { metrica: 'ORCADO', valor: 1500000, meta: null },
+        { metrica: 'REALIZADO', valor: q.realizado, meta: 1500000 },
+        { metrica: 'FASES_CONCLUIDAS', valor: 1, meta: 3 },
+        { metrica: 'FASES_TOTAL', valor: 3, meta: null },
+        { metrica: 'ATIVIDADES_ABERTAS', valor: 5, meta: null },
+        { metrica: 'ATIVIDADES_ATRASADAS', valor: 2, meta: 0 },
+      ],
+    };
+  });
+}
+
 function dadosIniciais() {
   // Datas relativas a hoje, para o cenário valer em qualquer dia.
   const projetos = [
@@ -100,7 +143,7 @@ export class ApiFalsa {
   // Perfil editado em /api/users/me e o login de quem entrou.
   perfilProprio: { nome?: string; cargo?: string | null; foto?: string | null } = {};
   loginAtual = 'pmo';
-  private retratos: unknown[] = [];
+  private retratos: Record<string, unknown>[] = historicoDeRetratos();
 
   constructor(private page: Page) {}
 
@@ -204,7 +247,7 @@ export class ApiFalsa {
     }
     if (caminho === '/api/retratos' || caminho === '/api/retratos/hoje') return json(metodo === 'GET' ? [] : {});
     if (caminho === '/api/retratos-quinzenais') {
-      if (metodo === 'GET') return json(this.retratos);
+      if (metodo === 'GET') return json(this.retratos.filter((r) => r.projetoId === url.searchParams.get('projeto')));
       const inicio = url.searchParams.get('dia') ?? '';
       const emitido = {
         id: 'r' + this.retratos.length,

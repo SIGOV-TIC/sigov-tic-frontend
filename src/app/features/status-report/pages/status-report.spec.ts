@@ -207,6 +207,57 @@ describe('Status Report', () => {
       expect(tela.emitido).toBe(false);
     });
 
+    it('um retrato só não vira gráfico de tendência', async () => {
+      const { tela, el } = await abrir(undefined, 'USER', [retrato()]);
+      expect(tela.temSerie).toBe(false);
+      expect(el.textContent).not.toContain('Avanço acumulado');
+    });
+
+    it('duas quinzenas emitidas viram série, na ordem do tempo', async () => {
+      const anterior = retrato({
+        id: 'r0',
+        quinzenaInicio: '2026-06-16',
+        quinzenaFim: '2026-06-30',
+        emitidoEm: '2026-07-01T09:00:00Z',
+        fatos: [
+          { metrica: 'PERCENTUAL_CONCLUIDO', valor: 25, meta: 30 },
+          { metrica: 'PERCENTUAL_ESPERADO', valor: 30, meta: null },
+          { metrica: 'IDP', valor: 0.83, meta: 1 },
+          { metrica: 'IDC', valor: 1.2, meta: 1 },
+          { metrica: 'ORCADO', valor: 1000, meta: null },
+          { metrica: 'REALIZADO', valor: 400, meta: 1000 },
+        ],
+      });
+      const { tela, el } = await abrir(undefined, 'USER', [retrato(), anterior]);
+
+      expect(tela.temSerie).toBe(true);
+      expect(tela.rotulosSerie).toEqual(['16/06', '01/07']);
+      expect(tela.serieAvanco[0].valores).toEqual([25, 40]);
+      expect(tela.serieAvanco[1].valores).toEqual([30, 55]);
+      expect(tela.serieIndices.map((s) => s.valores)).toEqual([[0.83, 0.72], [1.2, 1.1]]);
+      expect(tela.faixaIndices).toEqual({ de: 0.9, ate: 1.1 });
+      expect(el.textContent).toContain('Avanço acumulado');
+      expect(el.textContent).toContain('Desempenho de prazo e de custo');
+    });
+
+    it('a série para na quinzena escolhida: o relatório não mostra o futuro', async () => {
+      const antiga = retrato({ id: 'r0', quinzenaInicio: '2026-06-16', emitidoEm: '2026-07-01T09:00:00Z' });
+      const { tela } = await abrir('2026-6-2', 'USER', [retrato(), antiga]);
+      expect(tela.rotulosSerie).toEqual(['16/06']);
+      expect(tela.temSerie).toBe(false);
+    });
+
+    it('sem custo realizado o gráfico de orçamento não aparece', async () => {
+      const semCusto = (extra: object) =>
+        retrato({ ...extra, fatos: [{ metrica: 'REALIZADO', valor: 0, meta: 1000 }] });
+      const { tela } = await abrir(undefined, 'USER', [
+        semCusto({}),
+        semCusto({ id: 'r0', quinzenaInicio: '2026-06-16', emitidoEm: '2026-07-01T09:00:00Z' }),
+      ]);
+      expect(tela.temSerie).toBe(true);
+      expect(tela.temOrcamento).toBe(false);
+    });
+
     it('quinzena sem documento segue em prévia mesmo com outras emitidas', async () => {
       const { tela } = await abrir('2026-6-2', 'USER', [retrato()]);
       expect(tela.emitido).toBe(false);
