@@ -245,3 +245,10 @@ time { font-size: 13px; line-height: 1.6; color: var(--text-faint); font-variant
     .rel-indicadores > div:nth-child(3) { padding-left: 0; border-left: none; }
     .rel-colunas { grid-template-columns: 1fr; gap: 20px; }
 }
+
+// Os gráficos ficam acima das contagens: tendência primeiro, número depois.
+.rel-graficos {
+    display: grid;
+    gap: 28px;
+    grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+}

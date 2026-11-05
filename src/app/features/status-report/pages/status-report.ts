@@ -13,6 +13,7 @@ import { mensagemDeErro } from '../../../shared/estado/erro-api';
 import { AuthService } from '../../../core/auth/auth.service';
 import { RetratoService } from '../services/retrato.service';
 import { Metrica, Retrato, meta, valor } from '../models/retrato';
+import { GraficoTendencia, SerieGrafico } from '../../../shared/grafico/grafico-tendencia';
 
 // Quinzena do relatório: 1 a 15, ou 16 ao fim do mês.
 interface Quinzena {
@@ -51,7 +52,7 @@ function quinzenaDe(ano: number, mes: number, metade: 1 | 2): Quinzena {
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-status-report',
-  imports: [RouterLink, FormsModule, MatIconModule, NgTemplateOutlet, EstadoTela],
+  imports: [RouterLink, FormsModule, MatIconModule, NgTemplateOutlet, EstadoTela, GraficoTendencia],
   templateUrl: './status-report.html',
   styleUrl: './status-report.scss',
 })
@@ -204,6 +205,67 @@ export class StatusReport implements OnInit {
   // Data de referência: o fim da quinzena, ou hoje se ela ainda não acabou.
   private get referencia(): string {
     return this.quinzena.fim < this.emissao ? this.quinzena.fim : this.emissao;
+  }
+
+  // ---- Série histórica ----
+  // Os gráficos leem só o que foi emitido, em ordem de quinzena. Um ponto sozinho
+  // não é tendência: abaixo de duas quinzenas não há gráfico.
+  private get serie(): Retrato[] {
+    const porQuinzena = new Map<string, Retrato>();
+    for (const r of [...this.retratos].sort((a, b) => a.emitidoEm.localeCompare(b.emitidoEm))) {
+      porQuinzena.set(r.quinzenaInicio, r);
+    }
+    return [...porQuinzena.values()]
+      .sort((a, b) => a.quinzenaInicio.localeCompare(b.quinzenaInicio))
+      .filter((r) => r.quinzenaInicio <= this.quinzena.ini);
+  }
+
+  get temSerie(): boolean {
+    return this.serie.length >= 2;
+  }
+
+  get rotulosSerie(): string[] {
+    return this.serie.map((r) => {
+      const [, mes, dia] = r.quinzenaInicio.split('-');
+      return `${dia}/${mes}`;
+    });
+  }
+
+  private daSerie(metrica: Metrica): (number | null)[] {
+    return this.serie.map((r) => valor(r, metrica));
+  }
+
+  get serieAvanco(): SerieGrafico[] {
+    return [
+      { nome: 'Realizado', cor: 1, estilo: 'realizado', valores: this.daSerie('PERCENTUAL_CONCLUIDO') },
+      { nome: 'Planejado', cor: 'neutra', estilo: 'planejado', valores: this.daSerie('PERCENTUAL_ESPERADO') },
+    ];
+  }
+
+  get serieIndices(): SerieGrafico[] {
+    return [
+      { nome: 'IDP · prazo', cor: 1, estilo: 'realizado', valores: this.daSerie('IDP') },
+      { nome: 'IDC · custo', cor: 2, estilo: 'realizado', valores: this.daSerie('IDC') },
+    ];
+  }
+
+  get serieOrcamento(): SerieGrafico[] {
+    return [
+      { nome: 'Realizado', cor: 1, estilo: 'realizado', valores: this.daSerie('REALIZADO') },
+      { nome: 'Orçado', cor: 'neutra', estilo: 'planejado', valores: this.daSerie('ORCADO') },
+    ];
+  }
+
+  get temOrcamento(): boolean {
+    return this.daSerie('REALIZADO').some((v) => v != null && v > 0);
+  }
+
+  // O plano vale 1; a faixa aceita 10% para cada lado.
+  readonly faixaIndices = { de: 1 - TOLERANCIA_DESVIO / 100, ate: 1 + TOLERANCIA_DESVIO / 100 };
+
+  get periodoSerie(): string {
+    const primeira = this.rotulosSerie[0];
+    return primeira ? `${primeira} a ${this.rotulosSerie.at(-1)}` : '';
   }
 
   // Valor congelado do documento emitido; null na prévia.

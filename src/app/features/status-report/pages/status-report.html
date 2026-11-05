@@ -104,6 +104,23 @@
             </section>
         </div>
 
+        @if (temSerie) {
+            <section class="rel-graficos">
+                <app-grafico-tendencia
+                    [titulo]="'Avanço acumulado · % · ' + periodoSerie"
+                    [rotulos]="rotulosSerie" [series]="serieAvanco" formato="percentual" />
+                <app-grafico-tendencia
+                    [titulo]="'Desempenho de prazo e de custo · índice · ' + periodoSerie"
+                    [rotulos]="rotulosSerie" [series]="serieIndices" [faixa]="faixaIndices" [referencia]="1"
+                    formato="indice" />
+                @if (temOrcamento) {
+                    <app-grafico-tendencia
+                        [titulo]="'Orçamento acumulado · R$ · ' + periodoSerie"
+                        [rotulos]="rotulosSerie" [series]="serieOrcamento" formato="moeda" />
+                }
+            </section>
+        }
+
         @if (emitido) {
             <section class="rel-contagens">
                 <div>

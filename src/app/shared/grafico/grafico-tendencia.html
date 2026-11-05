@@ -1,0 +1,93 @@
+<figure class="grafico" #caixa>
+    <figcaption>
+        <h4>{{ titulo }}</h4>
+        <div class="legenda">
+            @if (series.length > 1) {
+                @for (s of series; track s.nome) {
+                    <span><i [style.background-color]="corDe(s)" [class.plano]="s.estilo === 'planejado'"></i>{{ s.nome }}</span>
+                }
+            }
+            <button type="button" class="ver-dados no-print" (click)="alternarDados()">
+                {{ verDados() ? 'Ver o gráfico' : 'Ver os dados' }}
+            </button>
+        </div>
+    </figcaption>
+
+    @if (verDados()) {
+        <table class="tabela-dados">
+            <thead>
+                <tr>
+                    <th>Quinzena</th>
+                    @for (s of series; track s.nome) { <th class="num">{{ s.nome }}</th> }
+                </tr>
+            </thead>
+            <tbody>
+                @for (rotulo of rotulos; track $index) {
+                    @let linha = $index;
+                    <tr>
+                        <td>{{ rotulo }}</td>
+                        @for (s of series; track s.nome) { <td class="num">{{ formatar(valorEm(s, linha)) }}</td> }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    } @else {
+        <svg [attr.width]="largura()" [attr.height]="altura" [attr.viewBox]="'0 0 ' + largura() + ' ' + altura" role="img"
+             [attr.aria-label]="titulo" (pointerleave)="soltar()">
+
+            @if (faixaDesenhada; as f) {
+                <rect class="faixa" [attr.x]="margem.esquerda" [attr.y]="f.y"
+                      [attr.width]="largura() - margem.esquerda - margem.direita" [attr.height]="f.altura" />
+            }
+
+            @for (m of marcas; track m.valor) {
+                <line class="grade" [attr.x1]="margem.esquerda" [attr.x2]="largura() - margem.direita"
+                      [attr.y1]="m.y" [attr.y2]="m.y" />
+                <text class="rotulo-eixo" [attr.x]="margem.esquerda - 8" [attr.y]="m.y + 4" text-anchor="end">{{ m.rotulo }}</text>
+            }
+
+            @if (yReferencia !== null) {
+                <line class="referencia" [attr.x1]="margem.esquerda" [attr.x2]="largura() - margem.direita"
+                      [attr.y1]="yReferencia" [attr.y2]="yReferencia" />
+            }
+
+            @for (rotulo of rotulos; track $index) {
+                <text class="rotulo-eixo" [attr.x]="xDe($index)" [attr.y]="altura - 8" text-anchor="middle">{{ rotulo }}</text>
+            }
+
+            @for (d of desenhadas; track d.serie.nome) {
+                <path class="linha" [class.plano]="d.serie.estilo === 'planejado'" [attr.d]="d.caminho" [attr.stroke]="corDe(d.serie)" />
+                @if (d.fim; as fim) {
+                    <circle class="ponta" [attr.cx]="fim.x" [attr.cy]="fim.y" r="4" [attr.fill]="corDe(d.serie)" />
+                    <text class="rotulo-ponta" [attr.x]="fim.x + 10" [attr.y]="fim.y + 4">{{ formatar(fim.valor) }}</text>
+                }
+            }
+
+            @if (foco() !== null) {
+                @let i = foco()!;
+                <line class="cruz" [attr.x1]="xDe(i)" [attr.x2]="xDe(i)" [attr.y1]="margem.topo" [attr.y2]="altura - margem.baixo" />
+                @for (s of series; track s.nome) {
+                    @let v = valorEm(s, i);
+                    @if (v !== null) {
+                        <circle class="ponta" [attr.cx]="xDe(i)" [attr.cy]="yDe(v)" r="4" [attr.fill]="corDe(s)" />
+                    }
+                }
+            }
+
+            @for (rotulo of rotulos; track $index) {
+                <rect class="fatia" [attr.x]="fatiaX($index)" [attr.y]="margem.topo"
+                      [attr.width]="larguraFatia" [attr.height]="altura - margem.topo - margem.baixo"
+                      (pointerenter)="apontar($index)" />
+            }
+        </svg>
+
+        @if (foco() !== null) {
+            <div class="dica" [style.left.px]="xDe(foco()!)">
+                <b>{{ rotulos[foco()!] }}</b>
+                @for (s of series; track s.nome) {
+                    <span><i [style.background-color]="corDe(s)"></i>{{ s.nome }} <b>{{ formatar(valorEm(s, foco()!)) }}</b></span>
+                }
+            </div>
+        }
+    }
+</figure>
