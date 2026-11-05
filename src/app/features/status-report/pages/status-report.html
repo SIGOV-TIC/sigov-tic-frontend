@@ -118,6 +118,9 @@
                         [titulo]="'Orçamento acumulado · R$ · ' + periodoSerie"
                         [rotulos]="rotulosSerie" [series]="serieOrcamento" formato="moeda" />
                 }
+                <a class="ir-dados no-print" [routerLink]="['/dados']" [queryParams]="{ projeto: p.id }">
+                    Ver todos os dados deste projeto
+                </a>
             </section>
         }
 

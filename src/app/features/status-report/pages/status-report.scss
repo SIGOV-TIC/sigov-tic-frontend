@@ -252,3 +252,14 @@ time { font-size: 13px; line-height: 1.6; color: var(--text-faint); font-variant
     gap: 28px;
     grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
 }
+
+.ir-dados {
+    grid-column: 1 / -1;
+    justify-self: start;
+    font-size: 13px;
+    color: var(--text-muted);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+
+    &:hover { color: var(--text-primary); }
+}

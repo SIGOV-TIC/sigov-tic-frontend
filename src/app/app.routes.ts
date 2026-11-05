@@ -10,6 +10,7 @@ import { Login } from './features/login/login';
 import { Usuarios } from './features/usuarios/pages/usuarios';
 import { Configuracoes } from './features/configuracoes/pages/configuracoes';
 import { StatusReport } from './features/status-report/pages/status-report';
+import { Dados } from './features/dados/pages/dados';
 import { adminGuard, authGuard, criacaoProjetoGuard, edicaoProjetoGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
@@ -26,6 +27,7 @@ export const routes: Routes = [
       { path: 'orcamento', component: Orcamento },
       { path: 'objetivos', component: Objetivos },
       { path: 'status-report', component: StatusReport },
+      { path: 'dados', component: Dados },
       { path: 'projeto/:id', component: VisualizarProjeto },
       { path: 'projeto/:id/editar', component: CadastroProjeto, canActivate: [edicaoProjetoGuard] },
       { path: 'configuracoes', component: Configuracoes },
