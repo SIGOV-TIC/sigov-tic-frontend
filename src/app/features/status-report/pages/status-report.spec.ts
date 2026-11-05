@@ -4,6 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { StatusReport } from './status-report';
 import { dia, entrarComo, projeto, redesenhar, responderListagem } from '../../../testing/dados';
+import { Retrato } from '../models/retrato';
 
 function completo() {
   const p = projeto({
@@ -23,8 +24,36 @@ function completo() {
   return p;
 }
 
-async function abrir(quinzena?: string) {
-  entrarComo('USER');
+function retrato(extra: Partial<Retrato> = {}): Retrato {
+  return {
+    id: 'r1',
+    projetoId: 'p1',
+    sigla: 'ERP',
+    area: 'TIC',
+    gerente: 'Fernanda',
+    quinzenaInicio: '2026-07-01',
+    quinzenaFim: '2026-07-15',
+    emitidoEm: '2026-07-16T09:30:00Z',
+    autor: 'Pessoa do Escritório',
+    andamento: '2026-07-10 · Ana: Homologação concluída.',
+    pontoAtencao: 'Fornecedor atrasou.',
+    recomendacao: 'Repactuar o cronograma.',
+    fatos: [
+      { metrica: 'PERCENTUAL_CONCLUIDO', valor: 40, meta: 55 },
+      { metrica: 'PERCENTUAL_ESPERADO', valor: 55, meta: null },
+      { metrica: 'IDP', valor: 0.72, meta: 1 },
+      { metrica: 'IDC', valor: 1.1, meta: 1 },
+      { metrica: 'FASES_CONCLUIDAS', valor: 1, meta: 3 },
+      { metrica: 'FASES_TOTAL', valor: 3, meta: null },
+      { metrica: 'ATIVIDADES_ABERTAS', valor: 5, meta: null },
+      { metrica: 'ATIVIDADES_ATRASADAS', valor: 2, meta: 0 },
+    ],
+    ...extra,
+  };
+}
+
+async function abrir(quinzena?: string, perfil: 'USER' | 'ESCRITORIO' = 'USER', retratos: Retrato[] = []) {
+  entrarComo(perfil);
   TestBed.configureTestingModule({
     imports: [StatusReport],
     providers: [
@@ -41,7 +70,9 @@ async function abrir(quinzena?: string) {
   responderListagem(api, [projeto({ id: 'p2', sigla: 'ZZZ' }), projeto({ id: 'p1', sigla: 'ERP' })]);
   api.expectOne('/api/projetos/p1').flush(completo());
   await redesenhar(fixture);
-  return { tela: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
+  api.match((r) => r.url === '/api/retratos-quinzenais').forEach((r) => r.flush(retratos));
+  await redesenhar(fixture);
+  return { tela: fixture.componentInstance, el: fixture.nativeElement as HTMLElement, api, fixture };
 }
 
 describe('Status Report', () => {
@@ -98,5 +129,88 @@ describe('Status Report', () => {
     expect(tela.indice(null)).toBe('—');
     expect(tela.abaixo(0.85)).toBe(true);
     expect(tela.abaixo(0.95)).toBe(false);
+  });
+
+  describe('emitir e arquivar', () => {
+    it('sem emissão a quinzena é prévia, calculada do projeto', async () => {
+      const { tela, el } = await abrir();
+      expect(tela.emitido).toBe(false);
+      expect(el.textContent).toContain('Prévia · 1 a 15 de jul 2026');
+      expect(el.textContent).toContain('Situação em 12/07/2026');
+      expect(tela.avanco).toBe(50);
+    });
+
+    it('a quinzena emitida mostra os valores congelados, não o projeto de hoje', async () => {
+      const { tela, el } = await abrir(undefined, 'USER', [retrato()]);
+      expect(tela.emitido).toBe(true);
+      // O projeto está em 50%, mas o documento guardou 40%.
+      expect(tela.avanco).toBe(40);
+      expect(tela.esperado).toBe(55);
+      expect(tela.indices).toEqual({ idp: 0.72, idc: 1.1 });
+      expect(tela.pontoAtencao).toBe('Fornecedor atrasou.');
+      expect(tela.recomendacao).toBe('Repactuar o cronograma.');
+      expect(el.textContent).toContain('Emitido em 16/07/2026 por Pessoa do Escritório');
+      expect(el.textContent).toContain('Homologação concluída.');
+    });
+
+    it('documento emitido traz as contagens congeladas no lugar das listas do projeto', async () => {
+      const { tela, el } = await abrir(undefined, 'USER', [retrato()]);
+      expect(tela.fasesConcluidas).toBe(1);
+      expect(tela.fasesTotal).toBe(3);
+      expect(tela.atividadesAtrasadas).toBe(2);
+      expect(el.textContent).toContain('Fases concluídas');
+      expect(el.textContent).not.toContain('Próximas entregas');
+    });
+
+    it('a lista de quinzenas marca as que já têm documento', async () => {
+      const { tela, el } = await abrir(undefined, 'USER', [retrato()]);
+      expect(tela.foiEmitida(tela.quinzenas[0])).toBe(true);
+      expect(tela.foiEmitida(tela.quinzenas[1])).toBe(false);
+      expect(el.querySelector('select[ng-reflect-model], .filtro select')).toBeTruthy();
+      expect(el.textContent).toContain('1 a 15 de jul 2026 · emitido');
+    });
+
+    it('quem só visualiza não vê o botão de emitir', async () => {
+      const { tela, el } = await abrir();
+      expect(tela.podeEmitir).toBe(false);
+      expect(el.textContent).not.toContain('Emitir');
+    });
+
+    it('o Escritório vê o botão de emitir', async () => {
+      const { tela, el } = await abrir(undefined, 'ESCRITORIO');
+      expect(tela.podeEmitir).toBe(true);
+      expect(el.textContent).toContain('Emitir');
+    });
+
+    it('emitir grava a quinzena e a tela passa a mostrar o documento', async () => {
+      const { tela, el, api, fixture } = await abrir(undefined, 'ESCRITORIO');
+      tela.emitir();
+      const pedido = api.expectOne((r) => r.method === 'POST' && r.url === '/api/retratos-quinzenais');
+      expect(pedido.request.params.get('projeto')).toBe('p1');
+      expect(pedido.request.params.get('dia')).toBe('2026-07-01');
+      pedido.flush(retrato());
+      await redesenhar(fixture);
+
+      expect(tela.emitido).toBe(true);
+      expect(tela.emitindo).toBe(false);
+      expect(el.textContent).toContain('Emitir novamente');
+    });
+
+    it('falha na emissão não deixa a tela travada', async () => {
+      const { tela, api, fixture } = await abrir(undefined, 'ESCRITORIO');
+      tela.emitir();
+      api.expectOne((r) => r.method === 'POST').flush('', { status: 403, statusText: 'Forbidden' });
+      await redesenhar(fixture);
+
+      expect(tela.emitindo).toBe(false);
+      expect(tela.erroEmissao).toBeTruthy();
+      expect(tela.emitido).toBe(false);
+    });
+
+    it('quinzena sem documento segue em prévia mesmo com outras emitidas', async () => {
+      const { tela } = await abrir('2026-6-2', 'USER', [retrato()]);
+      expect(tela.emitido).toBe(false);
+      expect(tela.avanco).toBe(50);
+    });
   });
 });
