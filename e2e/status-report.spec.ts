@@ -5,10 +5,10 @@ test.describe('Status Report', () => {
     await api.entrarComo('pmo');
     await page.goto('/status-report');
 
-    await expect(page.getByText(/^Prévia ·/)).toBeVisible();
+    await expect(page.locator('.rel-tipo', { hasText: /^Prévia ·/ })).toBeVisible();
     await page.getByRole('button', { name: 'Emitir' }).click();
 
-    await expect(page.getByText(/^Status Report ·/)).toBeVisible();
+    await expect(page.locator('.rel-tipo', { hasText: /^Status Report ·/ })).toBeVisible();
     await expect(page.getByText(/Emitido em .* por /)).toBeVisible();
     await expect(page.getByText('Fases concluídas')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Emitir novamente' })).toBeVisible();
@@ -19,7 +19,7 @@ test.describe('Status Report', () => {
     await api.entrarComo('diretoria');
     await page.goto('/status-report');
 
-    await expect(page.getByText(/^Prévia ·/)).toBeVisible();
+    await expect(page.locator('.rel-tipo', { hasText: /^Prévia ·/ })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Emitir' })).toHaveCount(0);
   });
 });
@@ -40,4 +40,20 @@ test('o gráfico mostra a série emitida e "ver os dados" abre a mesma tabela', 
 
   await grafico.getByRole('button', { name: 'Ver o gráfico' }).click();
   await expect(grafico.locator('svg')).toBeVisible();
+});
+
+test('o documento impresso abre com bloco de identificação e fecha com os responsáveis', async ({ page, api }) => {
+  await api.entrarComo('pmo');
+  await page.goto('/status-report');
+  await page.getByRole('button', { name: 'Emitir' }).click();
+  await page.locator('.rel-tipo', { hasText: /^Status Report ·/ }).waitFor();
+
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.getByText('Relatório de Acompanhamento de Projeto')).toBeVisible();
+  await expect(page.getByText('Uso interno')).toBeVisible();
+  await expect(page.getByText('Identificador')).toBeVisible();
+  await expect(page.getByText('Gerente do projeto')).toBeVisible();
+  // Na tela, nada disso aparece.
+  await page.emulateMedia({ media: 'screen' });
+  await expect(page.getByText('Relatório de Acompanhamento de Projeto')).toBeHidden();
 });

@@ -228,7 +228,8 @@ html, body {
 // Impressão: só o conteúdo da página, em A4 paisagem, sempre no tema claro e em tinta de papel.
 @page {
   size: A4 landscape;
-  margin: 12mm 12mm 16mm;
+  // A folga de cima abriga o cabeçalho corrido das telas que o imprimem.
+  margin: 18mm 12mm 16mm;
 
   @bottom-left {
     content: 'SIGOV-TIC · Governança do PDTIC';

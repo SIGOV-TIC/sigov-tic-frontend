@@ -258,6 +258,60 @@ describe('Status Report', () => {
       expect(tela.temOrcamento).toBe(false);
     });
 
+    it('índice fora da faixa plausível acusa a linha de base, não a execução', async () => {
+      const absurdo = retrato({
+        fatos: [
+          { metrica: 'IDP', valor: 7.5, meta: 1 },
+          { metrica: 'IDC', valor: 1.1, meta: 1 },
+        ],
+      });
+      const { tela, el } = await abrir(undefined, 'USER', [absurdo]);
+
+      expect(tela.baseARevisar(7.5)).toBe(true);
+      expect(tela.baseARevisar(1.1)).toBe(false);
+      expect(tela.baseARevisar(0.4)).toBe(true);
+      expect(tela.baseARevisar(null)).toBe(false);
+      expect(tela.algumIndiceImplausivel).toBe(true);
+      expect(el.textContent).toContain('linha de base a revisar');
+      expect(el.textContent).toContain('Índice muito fora do plano');
+    });
+
+    it('quinzenas com o mesmo avanço não viram gráfico de tendência', async () => {
+      const parado = (extra: object) =>
+        retrato({ ...extra, fatos: [{ metrica: 'PERCENTUAL_CONCLUIDO', valor: 40, meta: 55 }] });
+      const { tela, el } = await abrir(undefined, 'USER', [
+        parado({}),
+        parado({ id: 'r0', quinzenaInicio: '2026-06-16', emitidoEm: '2026-07-01T09:00:00Z' }),
+      ]);
+
+      expect(tela.temSerie).toBe(true);
+      expect(tela.serieSemVariacao).toBe(true);
+      expect(el.textContent).toContain('Sem variação entre elas não há tendência');
+      expect(el.textContent).not.toContain('Avanço acumulado');
+    });
+
+    it('quinzena sem nada registrado resolve em uma linha, não em três negativas', async () => {
+      const vazio = retrato({ andamento: null, pontoAtencao: null, recomendacao: null });
+      const { tela, el } = await abrir(undefined, 'USER', [vazio]);
+
+      expect(tela.semNarrativa).toBe(true);
+      expect(el.textContent).toContain('Sem registros no período.');
+      expect(el.textContent).not.toContain('Nenhum ponto de atenção registrado.');
+    });
+
+    it('o documento tem identificador com projeto, quinzena e emissão', async () => {
+      const { tela } = await abrir(undefined, 'USER', [retrato()]);
+      expect(tela.identificador).toBe('ERP-20260701-R1');
+    });
+
+    it('o cabeçalho de impressão leva projeto e quinzena para todas as páginas', async () => {
+      const { tela } = await abrir(undefined, 'USER', [retrato()]);
+      const css = tela.estiloDeImpressao();
+      expect(css).toContain('@top-left');
+      expect(css).toContain('Implantação do ERP');
+      expect(css).toContain('Status Report · 1 a 15 de jul 2026');
+    });
+
     it('quinzena sem documento segue em prévia mesmo com outras emitidas', async () => {
       const { tela } = await abrir('2026-6-2', 'USER', [retrato()]);
       expect(tela.emitido).toBe(false);

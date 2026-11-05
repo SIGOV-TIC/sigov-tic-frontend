@@ -56,3 +56,13 @@ export function calcularDesvio(p: ProjetoRequest, hoje: Date = new Date()): Desv
     dentro: desvioReal != null ? Math.abs(desvioReal) <= TOLERANCIA_DESVIO : null,
   };
 }
+
+// Faixa em que um índice de desempenho ainda se explica pela execução.
+// Fora dela (metade ou o dobro do plano) a causa quase sempre é a linha de base:
+// datas largas demais, orçamento desatualizado ou percentual de fase inflado.
+export const INDICE_MINIMO_PLAUSIVEL = 0.5;
+export const INDICE_MAXIMO_PLAUSIVEL = 2;
+
+export function basePlausivel(indice: number | null | undefined): boolean {
+  return indice == null || (indice >= INDICE_MINIMO_PLAUSIVEL && indice <= INDICE_MAXIMO_PLAUSIVEL);
+}
