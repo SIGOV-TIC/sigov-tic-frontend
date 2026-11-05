@@ -100,6 +100,7 @@ export class ApiFalsa {
   // Perfil editado em /api/users/me e o login de quem entrou.
   perfilProprio: { nome?: string; cargo?: string | null; foto?: string | null } = {};
   loginAtual = 'pmo';
+  private retratos: unknown[] = [];
 
   constructor(private page: Page) {}
 
@@ -202,6 +203,36 @@ export class ApiFalsa {
       return json(nova, 201);
     }
     if (caminho === '/api/retratos' || caminho === '/api/retratos/hoje') return json(metodo === 'GET' ? [] : {});
+    if (caminho === '/api/retratos-quinzenais') {
+      if (metodo === 'GET') return json(this.retratos);
+      const inicio = url.searchParams.get('dia') ?? '';
+      const emitido = {
+        id: 'r' + this.retratos.length,
+        projetoId: url.searchParams.get('projeto'),
+        sigla: 'CSD',
+        area: 'TIC',
+        gerente: 'Fernanda Lima',
+        quinzenaInicio: inicio,
+        quinzenaFim: inicio.slice(0, 8) + '15',
+        emitidoEm: new Date().toISOString(),
+        autor: CONTAS[this.loginAtual].nome,
+        andamento: inicio + ' · Ana: Homologação do módulo piloto concluída.',
+        pontoAtencao: 'Fornecedor atrasou a entrega do ambiente.',
+        recomendacao: 'Repactuar o cronograma da fase de homologação.',
+        fatos: [
+          { metrica: 'PERCENTUAL_CONCLUIDO', valor: 40, meta: 55 },
+          { metrica: 'PERCENTUAL_ESPERADO', valor: 55, meta: null },
+          { metrica: 'IDP', valor: 0.72, meta: 1 },
+          { metrica: 'IDC', valor: 1.1, meta: 1 },
+          { metrica: 'FASES_CONCLUIDAS', valor: 1, meta: 3 },
+          { metrica: 'FASES_TOTAL', valor: 3, meta: null },
+          { metrica: 'ATIVIDADES_ABERTAS', valor: 5, meta: null },
+          { metrica: 'ATIVIDADES_ATRASADAS', valor: 2, meta: 0 },
+        ],
+      };
+      this.retratos.unshift(emitido);
+      return json(emitido, 201);
+    }
     if (caminho === '/api/feedback') return json({ id: 'fb1' }, 201);
     return erro(404, 'Rota nao simulada: ' + metodo + ' ' + caminho);
   }

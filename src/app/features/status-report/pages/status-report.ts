@@ -10,6 +10,9 @@ import { calcularDesvio, fracaoDecorrida, TOLERANCIA_DESVIO } from '../../projet
 import { situacaoFase } from '../../projetos/utils/fase';
 import { EstadoTela } from '../../../shared/estado/estado';
 import { mensagemDeErro } from '../../../shared/estado/erro-api';
+import { AuthService } from '../../../core/auth/auth.service';
+import { RetratoService } from '../services/retrato.service';
+import { Metrica, Retrato, meta, valor } from '../models/retrato';
 
 // Quinzena do relatório: 1 a 15, ou 16 ao fim do mês.
 interface Quinzena {
@@ -82,8 +85,15 @@ export class StatusReport implements OnInit {
   quinzena = this.quinzenas[0];
   readonly emissao = iso(new Date());
 
+  // Retratos já emitidos do projeto; o da quinzena escolhida é o documento que vale.
+  retratos: Retrato[] = [];
+  emitindo = false;
+  erroEmissao = '';
+
   constructor(
     private projetoService: ProjetoService,
+    private retratoService: RetratoService,
+    private auth: AuthService,
     private route: ActivatedRoute,
     private router: Router,
   ) {}
@@ -123,6 +133,7 @@ export class StatusReport implements OnInit {
         this.projeto = p;
         this.carregando = false;
         this.gravarNaUrl();
+        this.carregarRetratos(id);
       },
       error: (e) => {
         this.carregando = false;
@@ -146,9 +157,62 @@ export class StatusReport implements OnInit {
     window.print();
   }
 
+  private carregarRetratos(projetoId: string) {
+    this.retratos = [];
+    this.retratoService.porProjeto(projetoId).subscribe({
+      next: (lista) => (this.retratos = lista),
+      // Sem retratos a tela segue como prévia; não há o que avisar.
+      error: () => (this.retratos = []),
+    });
+  }
+
+  // O documento emitido da quinzena escolhida; null enquanto ela é só prévia.
+  get retrato(): Retrato | null {
+    return this.retratos.find((r) => r.quinzenaInicio === this.quinzena.ini) ?? null;
+  }
+
+  get emitido(): boolean {
+    return !!this.retrato;
+  }
+
+  // Quinzenas que já têm documento emitido, para marcar na lista.
+  foiEmitida(q: Quinzena): boolean {
+    return this.retratos.some((r) => r.quinzenaInicio === q.ini);
+  }
+
+  get podeEmitir(): boolean {
+    return (this.auth.ehEscritorio() || this.auth.ehAdmin()) && this.quinzena.ini <= this.emissao;
+  }
+
+  emitir() {
+    const id = this.projeto?.id;
+    if (!id || this.emitindo) return;
+    this.emitindo = true;
+    this.erroEmissao = '';
+    this.retratoService.emitir(id, this.quinzena.ini).subscribe({
+      next: (r) => {
+        this.retratos = [r, ...this.retratos.filter((x) => x.id !== r.id)];
+        this.emitindo = false;
+      },
+      error: (e) => {
+        this.emitindo = false;
+        this.erroEmissao = mensagemDeErro(e, 'o relatório');
+      },
+    });
+  }
+
   // Data de referência: o fim da quinzena, ou hoje se ela ainda não acabou.
   private get referencia(): string {
     return this.quinzena.fim < this.emissao ? this.quinzena.fim : this.emissao;
+  }
+
+  // Valor congelado do documento emitido; null na prévia.
+  private congelado(metrica: Metrica): number | null {
+    return valor(this.retrato, metrica);
+  }
+
+  metaDe(metrica: Metrica): number | null {
+    return meta(this.retrato, metrica);
   }
 
   get estado(): Estado {
@@ -164,16 +228,36 @@ export class StatusReport implements OnInit {
   }
 
   get avanco(): number {
+    const congelado = this.congelado('PERCENTUAL_CONCLUIDO');
+    if (congelado != null) return congelado;
     return this.projeto ? progressoProjeto(this.projeto) : 0;
   }
 
   get esperado(): number | null {
+    if (this.emitido) return this.congelado('PERCENTUAL_ESPERADO');
     const f = this.projeto ? fracaoDecorrida(this.projeto) : null;
     return f == null ? null : Math.round(f * 100);
   }
 
   get indices() {
+    if (this.emitido) return { idp: this.congelado('IDP'), idc: this.congelado('IDC') };
     return this.projeto ? calcularDesvio(this.projeto) : null;
+  }
+
+  get fasesConcluidas(): number | null {
+    return this.congelado('FASES_CONCLUIDAS');
+  }
+
+  get fasesTotal(): number | null {
+    return this.congelado('FASES_TOTAL');
+  }
+
+  get atividadesAbertas(): number | null {
+    return this.congelado('ATIVIDADES_ABERTAS');
+  }
+
+  get atividadesAtrasadas(): number | null {
+    return this.congelado('ATIVIDADES_ATRASADAS');
   }
 
   // Índice fora da tolerância de 10% para baixo.
@@ -181,8 +265,25 @@ export class StatusReport implements OnInit {
     return indice != null && indice < 1 - TOLERANCIA_DESVIO / 100;
   }
 
+  // Narrativa: do documento emitido quando ele existe, do projeto enquanto é prévia.
   get atualizacoesDoPeriodo(): Atualizacao[] {
+    const congelado = this.retrato?.andamento;
+    if (congelado != null) {
+      return congelado.split('\n').map((linha, i) => {
+        const [, data, autor, texto] = /^(\d{4}-\d{2}-\d{2}) · ([^:]*): (.*)$/.exec(linha) ?? [];
+        return { id: `${i}`, data: data ?? '', autor: autor ?? '', texto: texto ?? linha } as Atualizacao;
+      });
+    }
+    if (this.emitido) return [];
     return (this.projeto?.atualizacoes ?? []).filter((a) => a.data >= this.quinzena.ini && a.data <= this.quinzena.fim);
+  }
+
+  get pontoAtencao(): string {
+    return (this.emitido ? this.retrato?.pontoAtencao : this.projeto?.pontoAtencao) || '';
+  }
+
+  get recomendacao(): string {
+    return (this.emitido ? this.retrato?.recomendacao : this.projeto?.recomendacao) || '';
   }
 
   get fases() {

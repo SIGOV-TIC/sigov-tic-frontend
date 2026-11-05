@@ -13,15 +13,24 @@
             <span>Quinzena</span>
             <select [(ngModel)]="quinzena" (ngModelChange)="mudarQuinzena()">
                 @for (q of quinzenas; track q.chave) {
-                    <option [ngValue]="q">{{ q.rotulo }}</option>
+                    <option [ngValue]="q">{{ q.rotulo }}{{ foiEmitida(q) ? ' · emitido' : '' }}</option>
                 }
             </select>
         </label>
+        @if (podeEmitir) {
+            <button type="button" class="btn-emitir" (click)="emitir()" [disabled]="!projeto || emitindo">
+                <mat-icon>draft</mat-icon> {{ emitido ? 'Emitir novamente' : 'Emitir' }}
+            </button>
+        }
         <button type="button" class="btn-exportar" (click)="imprimir()" [disabled]="!projeto">
             <mat-icon>picture_as_pdf</mat-icon> Exportar PDF
         </button>
     </div>
 </div>
+
+@if (erroEmissao) {
+    <p class="aviso-emissao no-print">{{ erroEmissao }}</p>
+}
 
 @if (erro) {
     <app-estado tipo="erro" [mensagem]="erro" (tentar)="tentarNovamente()" />
@@ -36,7 +45,7 @@
 
         <header class="rel-topo">
             <div>
-                <span class="rel-tipo">Status Report · {{ quinzena.rotulo }}</span>
+                <span class="rel-tipo">{{ emitido ? 'Status Report' : 'Prévia' }} · {{ quinzena.rotulo }}</span>
                 <h2><a [routerLink]="['/projeto', p.id]">{{ p.nome }}</a> <span class="sigla">{{ p.sigla }}</span></h2>
                 <p class="rel-meta">
                     @if (p.gerenteResponsavel) { <span>Gerente <b>{{ p.gerenteResponsavel }}</b></span> }
@@ -44,7 +53,11 @@
                     @if (p.scrumMaster) { <span>Scrum Master <b>{{ p.scrumMaster.nome }}</b></span> }
                 </p>
             </div>
-            <span class="rel-emissao">Emitido em {{ data(emissao) }}</span>
+            @if (retrato; as r) {
+                <span class="rel-emissao">Emitido em {{ data(r.emitidoEm.slice(0, 10)) }} por {{ r.autor }}</span>
+            } @else {
+                <span class="rel-emissao">Situação em {{ data(emissao) }}</span>
+            }
         </header>
 
         <section class="rel-indicadores">
@@ -85,11 +98,28 @@
             </section>
             <section>
                 <h3>Ponto de atenção</h3>
-                <p [class.vazio]="!p.pontoAtencao">{{ p.pontoAtencao || 'Nenhum ponto de atenção registrado.' }}</p>
+                <p [class.vazio]="!pontoAtencao">{{ pontoAtencao || 'Nenhum ponto de atenção registrado.' }}</p>
                 <h3>Recomendação do Escritório de Projetos</h3>
-                <p [class.vazio]="!p.recomendacao">{{ p.recomendacao || 'Nenhuma recomendação registrada.' }}</p>
+                <p [class.vazio]="!recomendacao">{{ recomendacao || 'Nenhuma recomendação registrada.' }}</p>
             </section>
         </div>
+
+        @if (emitido) {
+            <section class="rel-contagens">
+                <div>
+                    <small>Fases concluídas</small>
+                    <b>{{ fasesConcluidas }} <span>de {{ fasesTotal }}</span></b>
+                </div>
+                <div>
+                    <small>Atividades abertas</small>
+                    <b>{{ atividadesAbertas }}</b>
+                </div>
+                <div>
+                    <small>Atividades atrasadas</small>
+                    <b [class.atencao]="(atividadesAtrasadas ?? 0) > 0">{{ atividadesAtrasadas }}</b>
+                </div>
+            </section>
+        } @else {
 
         <section>
             <h3>Fases</h3>
@@ -131,6 +161,8 @@
                 <ng-container *ngTemplateOutlet="listaAtividades; context: { $implicit: proximas, vazio: 'Nenhuma entrega prevista nos próximos ' + horizonte + ' dias.', atraso: false }"></ng-container>
             </section>
         </div>
+
+        }
     </article>
 }
 
