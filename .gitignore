@@ -50,3 +50,6 @@ Thumbs.db
 # Testes
 /test-results
 /playwright-report
+campanha/saida/
+campanha/test-results/
+campanha/node_modules

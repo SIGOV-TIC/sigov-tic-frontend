@@ -1,4 +1,4 @@
-import { calcularDesvio, fracaoDecorrida, TOLERANCIA_DESVIO } from './desvio';
+import { avancoMensuravel, calcularDesvio, fracaoDecorrida, TOLERANCIA_DESVIO } from './desvio';
 import { dia, projeto } from '../../../testing/dados';
 
 describe('índices de desempenho (valor agregado)', () => {
@@ -39,5 +39,21 @@ describe('índices de desempenho (valor agregado)', () => {
 
   it('antes do início o IDP não é calculado', () => {
     expect(calcularDesvio(projeto(), dia('2025-12-01')).idp).toBeNull();
+  });
+
+  it('projeto sem fases não tem avanço apurado, então não tem índice', () => {
+    const semFases = projeto({ fases: [], custoRealizado: 50000 });
+    expect(avancoMensuravel(semFases)).toBe(false);
+    const d = calcularDesvio(semFases, meioDoAno);
+    // Sem fases o avanço é desconhecido; 0,00 diria que a equipe não entregou nada.
+    expect(d.idp).toBeNull();
+    expect(d.idc).toBeNull();
+    expect(d.desvioReal).toBeNull();
+  });
+
+  it('projeto concluído sem fases ainda é mensurável', () => {
+    const concluido = projeto({ fases: [], prazoQuadrante: 'CONCLUIDO', custoRealizado: 50000 });
+    expect(avancoMensuravel(concluido)).toBe(true);
+    expect(calcularDesvio(concluido, meioDoAno).idc).not.toBeNull();
   });
 });
