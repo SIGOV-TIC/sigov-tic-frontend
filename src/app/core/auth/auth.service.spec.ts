@@ -78,7 +78,7 @@ describe('AuthService', () => {
       expect(req.request.body).toEqual({ username: 'ana.po', password: 'segredo' });
       req.flush({ username: 'ana.po', roles: ['ROLE_GESTOR_PROJETO'], usuario: { id: 'u-po', nome: 'Ana', perfil: 'GESTOR_PROJETO' } });
 
-      expect(auth.sessao()).toEqual({ username: 'ana.po', roles: ['ROLE_GESTOR_PROJETO'], id: 'u-po', nome: 'Ana', perfil: 'GESTOR_PROJETO' });
+      expect(auth.sessao()).toEqual({ username: 'ana.po', roles: ['ROLE_GESTOR_PROJETO'], id: 'u-po', nome: 'Ana', perfil: 'GESTOR_PROJETO', trocaSenhaObrigatoria: false });
       expect(JSON.parse(localStorage.getItem(CHAVE)!).id).toBe('u-po');
     });
 

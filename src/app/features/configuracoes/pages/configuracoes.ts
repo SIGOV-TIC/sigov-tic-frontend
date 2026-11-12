@@ -1,8 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, OnInit, inject, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/auth/auth.service';
+import { FormTrocaSenha } from '../../../core/auth/senha/form-troca-senha';
 
 const TIPOS_FOTO = ['image/png', 'image/jpeg', 'image/webp'];
 const LADO_FOTO = 256;
@@ -43,7 +46,7 @@ export function reduzirFoto(arquivo: File): Promise<string> {
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-configuracoes',
-  imports: [FormsModule, MatIconModule],
+  imports: [FormsModule, MatIconModule, FormTrocaSenha],
   templateUrl: './configuracoes.html',
   styleUrl: './configuracoes.scss',
 })
@@ -58,6 +61,11 @@ export class Configuracoes implements OnInit {
   // Trocável nos testes: o canvas não existe fora do navegador.
   reduzir = reduzirFoto;
 
+  private readonly formSenha = viewChild(FormTrocaSenha);
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly route = inject(ActivatedRoute, { optional: true });
+  private readonly destroyRef = inject(DestroyRef);
+
   constructor(readonly auth: AuthService) {}
 
   get login(): string {
@@ -69,12 +77,21 @@ export class Configuracoes implements OnInit {
   }
 
   ngOnInit() {
+    // "Trocar senha" no menu do usuário abre esta tela em #senha, já com o cursor no primeiro campo.
+    this.route?.fragment.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((f) => {
+      if (f === 'senha') setTimeout(() => this.irParaSenha());
+    });
     this.preencher(this.auth.sessao());
     // A sessão guardada pode não ter foto nem cargo (login antigo): a API tem a versão atual.
     this.auth.perfilAtual().subscribe({
       next: (u) => this.preencher({ nome: u.nome, cargo: u.cargo ?? undefined, foto: u.foto ?? undefined }),
       error: () => undefined,
     });
+  }
+
+  irParaSenha() {
+    this.host.nativeElement.querySelector('#senha')?.scrollIntoView?.({ block: 'start' });
+    this.formSenha()?.focar();
   }
 
   private preencher(dados: { nome?: string; cargo?: string; foto?: string } | null) {

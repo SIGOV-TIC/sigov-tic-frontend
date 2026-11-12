@@ -12,6 +12,8 @@ export interface Sessao {
   perfil?: string;
   cargo?: string;
   foto?: string;
+  // Senha definida pelo admin: o sistema só libera depois da troca.
+  trocaSenhaObrigatoria?: boolean;
 }
 
 interface UsuarioResposta {
@@ -20,6 +22,7 @@ interface UsuarioResposta {
   perfil: string;
   cargo?: string | null;
   foto?: string | null;
+  trocaSenhaObrigatoria?: boolean;
 }
 
 interface RespostaLogin {
@@ -96,6 +99,22 @@ export class AuthService {
     );
   }
 
+  // Troca a própria senha; a API exige a atual. Ao concluir, a conta deixa de ter senha temporária.
+  trocarSenha(senhaAtual: string, novaSenha: string): Observable<void> {
+    return this.http.post<void>('/api/users/me/senha', { senhaAtual, novaSenha }).pipe(
+      tap(() => {
+        const atual = this.sessao();
+        if (atual?.trocaSenhaObrigatoria) this.guardar({ ...atual, trocaSenhaObrigatoria: false });
+      }),
+    );
+  }
+
+  // A API recusou a requisição porque a senha ainda é temporária (o admin pode tê-la redefinido agora).
+  exigirTrocaSenha() {
+    const atual = this.sessao();
+    if (atual && !atual.trocaSenhaObrigatoria) this.guardar({ ...atual, trocaSenhaObrigatoria: true });
+  }
+
   logout(): Observable<void> {
     return this.http.post<void>('/api/auth/logout', {}).pipe(finalize(() => this.encerrar()));
   }
@@ -117,6 +136,7 @@ export class AuthService {
       perfil: r.usuario?.perfil,
       cargo: r.usuario?.cargo ?? undefined,
       foto: r.usuario?.foto ?? undefined,
+      trocaSenhaObrigatoria: r.usuario?.trocaSenhaObrigatoria === true,
     };
   }
 

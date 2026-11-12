@@ -6,6 +6,10 @@ import { filter, map } from 'rxjs';
 import { Layout } from './core/layout/layout';
 import { respostasApi } from './core/auth/respostas';
 
+function telaSemLayout(url: string): boolean {
+  return url.startsWith('/login') || url.startsWith('/primeiro-acesso');
+}
+
 @Component({
   // Mantém as páginas abaixo alcançáveis pela detecção de mudanças após respostas da API.
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -18,12 +22,13 @@ export class App {
   private router = inject(Router);
   readonly respostasApi = respostasApi;
 
-  readonly naTelaDeLogin = toSignal(
+  // Login e primeiro acesso abrem sozinhos, sem menu lateral nem cabeçalho.
+  readonly semLayout = toSignal(
     this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
-      map(() => this.router.url.startsWith('/login')),
+      map(() => telaSemLayout(this.router.url)),
     ),
-    { initialValue: location.pathname.startsWith('/login') },
+    { initialValue: telaSemLayout(location.pathname) },
   );
 
   constructor() {

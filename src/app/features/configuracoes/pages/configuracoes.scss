@@ -15,6 +15,13 @@
     border-radius: var(--raio-cartao);
 }
 
+.senha {
+    margin-top: 24px;
+    scroll-margin-top: 24px;
+
+    h2 { margin: 0; font-size: 15px; font-weight: 600; color: var(--text-secondary); }
+}
+
 .foto {
     display: flex;
     align-items: center;

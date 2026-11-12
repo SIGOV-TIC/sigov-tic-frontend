@@ -69,6 +69,21 @@ describe('Login', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/dashboard');
   });
 
+  it('conta com senha temporária vai ao primeiro acesso, guardando o destino', () => {
+    criar('/orcamento');
+    vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    login.usuario = 'pmo';
+    login.senha = 'temporaria-1';
+    login.enviar();
+    api.expectOne('/api/auth/login').flush({
+      username: 'pmo',
+      roles: ['ROLE_ESCRITORIO'],
+      usuario: { id: 'u2', nome: 'Pmo', perfil: 'ESCRITORIO', trocaSenhaObrigatoria: true },
+    });
+    expect(router.navigate).toHaveBeenCalledWith(['/primeiro-acesso'], { queryParams: { voltar: '/orcamento' } });
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
+  });
+
   it.each([
     [401, 'entrar', 'Usuário ou senha incorretos.'],
     [0, 'entrar', 'Não foi possível conectar ao servidor. Tente de novo em alguns segundos.'],

@@ -143,6 +143,9 @@ export class ApiFalsa {
   // Perfil editado em /api/users/me e o login de quem entrou.
   perfilProprio: { nome?: string; cargo?: string | null; foto?: string | null } = {};
   loginAtual = 'pmo';
+  // Contas com senha temporária (criadas ou redefinidas pelo admin) e senhas trocadas.
+  readonly senhaTemporaria = new Set<string>();
+  private readonly senhas: Record<string, string> = {};
   private retratos: Record<string, unknown>[] = historicoDeRetratos();
 
   constructor(private page: Page) {}
@@ -179,11 +182,34 @@ export class ApiFalsa {
 
     if (caminho === '/api/auth/login') {
       const c = CONTAS[corpo?.username];
-      if (!c || corpo.password !== SENHA) return erro(401, 'Credenciais invalidas.');
-      return json({ username: corpo.username, roles: ['ROLE_' + c.perfil], usuario: { id: c.id, nome: c.nome, perfil: c.perfil } });
+      if (!c || corpo.password !== (this.senhas[corpo.username] ?? SENHA)) return erro(401, 'Credenciais invalidas.');
+      this.loginAtual = corpo.username;
+      const trocaSenhaObrigatoria = this.senhaTemporaria.has(corpo.username);
+      return json({
+        username: corpo.username,
+        roles: ['ROLE_' + c.perfil],
+        usuario: { id: c.id, nome: c.nome, perfil: c.perfil, trocaSenhaObrigatoria },
+      });
     }
     if (caminho === '/api/auth/logout') return vazio(200);
     if (this.forcarStatus) return erro(this.forcarStatus, 'Forcado.');
+
+    // Mesma barreira da API: com senha temporária só o perfil e a troca de senha respondem.
+    const liberadoComSenhaTemporaria = (metodo === 'GET' && caminho === '/api/users/me') || caminho === '/api/users/me/senha';
+    if (this.senhaTemporaria.has(this.loginAtual) && !liberadoComSenhaTemporaria) {
+      return route.fulfill({
+        status: 403,
+        json: { status: 403, message: 'Troque a senha temporaria para continuar.', codigo: 'TROCA_SENHA_OBRIGATORIA' },
+      });
+    }
+    if (caminho === '/api/users/me/senha' && metodo === 'POST') {
+      if (corpo.senhaAtual !== (this.senhas[this.loginAtual] ?? SENHA)) {
+        return erro(400, 'Senha atual incorreta. Restam 4 tentativas antes do bloqueio.');
+      }
+      this.senhas[this.loginAtual] = corpo.novaSenha;
+      this.senhaTemporaria.delete(this.loginAtual);
+      return vazio();
+    }
 
     const { projetos, metas, usuarios } = this.dados;
     let m: RegExpMatchArray | null;
