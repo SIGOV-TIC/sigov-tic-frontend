@@ -1,0 +1,51 @@
+.troca {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+
+    input {
+        height: 36px;
+        padding: 0 10px;
+        font: inherit;
+        font-size: 14px;
+        color: var(--text-primary);
+        background-color: var(--bg-input);
+        border: 1px solid var(--border-main);
+        border-radius: 6px;
+        color-scheme: inherit;
+
+        &:focus { outline: 2px solid var(--accent-blue); outline-offset: -1px; }
+    }
+}
+
+.campo-com-regra { display: flex; flex-direction: column; gap: 6px; }
+
+.regra { font-size: 12px; font-weight: 400; color: var(--text-faint); }
+
+.form-erro { margin: 0; font-size: 13px; color: var(--estado-atrasado-fg); }
+.form-ok { margin: 0; font-size: 13px; color: var(--text-secondary); }
+.form-acoes { display: flex; justify-content: flex-end; }
+
+.btn-acao {
+    height: 36px;
+    padding: 0 14px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--estado-texto);
+    background-color: var(--accent-yellow);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+
+    &:disabled { opacity: 0.6; cursor: default; }
+}

@@ -1,0 +1,14 @@
+<main class="acesso">
+    <section class="acesso-corpo" aria-labelledby="titulo-acesso">
+        <span class="acesso-marca">SIGOV-TIC</span>
+        <h1 id="titulo-acesso">Crie sua senha</h1>
+        <p class="acesso-sub">{{ nome }}, sua conta foi aberta com uma senha temporária. Troque-a para entrar no sistema.</p>
+
+        <app-form-troca-senha rotuloAtual="Senha temporária" rotuloBotao="Salvar e entrar" (trocada)="seguir()" />
+
+        <p class="acesso-sair">
+            Não é você?
+            <button type="button" class="acesso-link" (click)="sair()">Sair</button>
+        </p>
+    </section>
+</main>

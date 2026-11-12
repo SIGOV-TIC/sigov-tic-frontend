@@ -11,10 +11,12 @@ import { Usuarios } from './features/usuarios/pages/usuarios';
 import { Configuracoes } from './features/configuracoes/pages/configuracoes';
 import { StatusReport } from './features/status-report/pages/status-report';
 import { Dados } from './features/dados/pages/dados';
-import { adminGuard, authGuard, criacaoProjetoGuard, edicaoProjetoGuard } from './core/auth/auth.guard';
+import { PrimeiroAcesso } from './features/primeiro-acesso/primeiro-acesso';
+import { adminGuard, authGuard, criacaoProjetoGuard, edicaoProjetoGuard, primeiroAcessoGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
+  { path: 'primeiro-acesso', component: PrimeiroAcesso, canActivate: [primeiroAcessoGuard] },
   {
     path: '',
     canActivateChild: [authGuard],
