@@ -68,6 +68,8 @@ export class Orcamento implements OnInit {
   };
 
   gastos: Gasto[] = [];
+  // A seção abre no mês corrente; o histórico mostra o gráfico e os meses anteriores.
+  verHistorico = false;
 
   // Meses mostrados na tabela do realizado; o gráfico leva a série inteira.
   readonly mesesNaTabela = 12;

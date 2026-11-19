@@ -43,6 +43,20 @@ export class RealizadoMensal implements OnChanges {
   // Mais recente primeiro; só os meses com gasto.
   readonly mesesComGasto = computed(() => this.linhas().filter((l) => l.gastos.length).reverse());
 
+  // A tela abre na situação de agora; os meses anteriores ficam atrás do histórico.
+  readonly verHistorico = signal(false);
+  readonly atual = computed(() => this.linhas().at(-1) ?? null);
+  readonly mesesVisiveis = computed(() => {
+    const meses = this.mesesComGasto();
+    return this.verHistorico() ? meses : meses.filter((l) => l.mes === mesAtual());
+  });
+  readonly mesesAnteriores = computed(() => this.mesesComGasto().filter((l) => l.mes !== mesAtual()).length);
+
+  pctDoOrcado(valor: number): number | null {
+    const orcado = this.projeto?.orcamentoEstimado;
+    return orcado ? Math.round((valor / orcado) * 100) : null;
+  }
+
   readonly rotulos = computed(() => this.linhas().map((l) => rotuloMes(l.mes, true)));
   readonly series = computed<SerieGrafico[]>(() => {
     const series: SerieGrafico[] = [

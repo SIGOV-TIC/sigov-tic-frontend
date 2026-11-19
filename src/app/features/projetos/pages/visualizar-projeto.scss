@@ -122,13 +122,15 @@
 .projeto-grid {
     // Fios fracos no lugar das bordas cheias: marcam o limite sem disputar com o conteúdo.
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    // minmax(0, …): conteúdo largo (gráfico, tabela) não empurra a outra coluna.
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 20px;
     align-items: start;
 }
 
 .col-esquerda,
 .col-direita {
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 16px;

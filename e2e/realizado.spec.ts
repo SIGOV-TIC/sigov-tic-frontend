@@ -20,6 +20,16 @@ test.describe('Realizado mês a mês', () => {
     await expect(page.locator('.coluna').filter({ hasText: 'Realizado' }).locator('.coluna-valor')).toHaveText('R$ 2,3 mi');
   });
 
+  test('o projeto abre na situação do mês e o histórico traz os meses anteriores', async ({ page, api }) => {
+    await api.entrarComo('pmo');
+    await page.goto('/projeto/p1');
+    const cartao = page.locator('app-realizado-mensal');
+    await expect(cartao.locator('.agora')).toContainText('R$ 2.000.000');
+    await expect(cartao.getByText('Licenças do primeiro lote.')).toHaveCount(0);
+    await cartao.getByRole('button', { name: /Histórico · 2 meses/ }).click();
+    await expect(cartao.getByText('Licenças do primeiro lote.')).toBeVisible();
+  });
+
   test('quem não é do Escritório só lê', async ({ page, api }) => {
     await api.entrarComo('ana.po');
     await page.goto('/projeto/p1');
@@ -32,8 +42,12 @@ test.describe('Realizado mês a mês', () => {
     await api.entrarComo('pmo');
     await page.goto('/orcamento');
     await expect(page.getByRole('heading', { name: 'Realizado mês a mês' })).toBeVisible();
+    // Abre no mês corrente; o histórico traz o gráfico e os meses anteriores.
     const linhas = page.locator('table.realizado tbody tr');
-    await expect(linhas).toHaveCount(3);
+    await expect(linhas).toHaveCount(1);
     await expect(linhas.first().locator('td').nth(2)).toHaveText('R$ 2,9 mi');
+    await page.getByRole('button', { name: 'Histórico' }).click();
+    await expect(linhas).toHaveCount(3);
+    await expect(page.getByText('Realizado acumulado do portfólio')).toBeVisible();
   });
 });
