@@ -135,6 +135,36 @@
         </table>
     </div>
     <app-paginacao [total]="areasLinhas.length" [pagina]="pagA.atual" [tamanho]="tamanhoAreas" (mudar)="pagina.ir($event)" />
+    @let realizado = realizadoMensal;
+    @if (realizado.length > 0) {
+        <h2 class="secao">Realizado mês a mês</h2>
+        @if (realizado.length >= 2) {
+            <app-grafico-tendencia titulo="Realizado acumulado do portfólio" [rotulos]="rotulosRealizado(realizado)"
+                                   [series]="seriesRealizado(realizado)" formato="moeda" />
+        }
+        <div class="tabela-rolagem">
+            <table class="tabela realizado">
+                <thead>
+                    <tr>
+                        <th>Mês</th>
+                        <th class="num">No mês</th>
+                        <th class="num">Acumulado</th>
+                        <th class="num">Do orçado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (l of realizadoRecente(realizado); track l.mes) {
+                        <tr>
+                            <td>{{ rotuloMes(l.mes) }}</td>
+                            <td class="num">{{ l.noMes ? moeda(l.noMes) : '—' }}</td>
+                            <td class="num">{{ moeda(l.acumulado) }}</td>
+                            <td class="num">{{ pctDoOrcado(l.acumulado) }}%</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
     @let top = maiores;
     @if (top.length > 0) {
         <h2 class="secao">Maiores investimentos</h2>

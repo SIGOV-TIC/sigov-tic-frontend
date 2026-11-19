@@ -1,0 +1,147 @@
+:host { display: block; }
+
+.card-titulo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-xs);
+    margin-bottom: 12px;
+
+    h3 { margin: 0; font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+}
+
+.btn-icone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    background: none;
+    color: var(--text-faint);
+    cursor: pointer;
+
+    mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    &:hover { color: var(--text-primary); background-color: var(--row-hover); }
+    &:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 1px; }
+}
+
+.vazio { margin: 0; font-size: 14px; color: var(--text-faint); font-style: italic; }
+.erro { margin: 0; font-size: 13px; color: var(--estado-atrasado-fg); }
+.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+
+.gasto-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 18px;
+
+    label { display: flex; flex-direction: column; gap: 6px; }
+    label > span { font-size: 12px; color: var(--text-faint); }
+    .largo { grid-column: 1 / -1; }
+
+    input, select, textarea {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 0 10px;
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--border-main);
+        background-color: var(--bg-input);
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 14px;
+        color-scheme: inherit;
+
+        &:focus { outline: 2px solid var(--accent-blue); outline-offset: 1px; }
+    }
+    input, select { height: 36px; }
+    textarea { padding: 8px 10px; resize: vertical; line-height: 1.5; }
+}
+
+.acoes { display: flex; justify-content: flex-end; align-items: center; gap: var(--spacing-xs); }
+
+.btn-texto {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    &:hover { color: var(--text-primary); }
+}
+
+.btn-salvar {
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 8px;
+    border: 1px solid var(--accent-yellow);
+    background-color: var(--accent-yellow);
+    color: var(--estado-texto);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover:not(:disabled) { background-color: var(--accent-yellow-hover); }
+    &:disabled { opacity: 0.5; cursor: default; }
+}
+
+app-grafico-tendencia { display: block; margin-bottom: 16px; }
+
+.meses {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    > li { padding: 12px 0; border-top: 1px solid var(--fio); }
+    > li:first-child { border-top: none; padding-top: 0; }
+}
+
+// Mês, no mês e acumulado nas mesmas colunas, do cabeçalho aos gastos.
+.colunas-cabeca, .mes-cabeca, .gastos li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 124px 124px;
+    gap: 12px;
+}
+
+.colunas-cabeca {
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--fio-forte);
+    font-size: 12px;
+    color: var(--text-faint);
+}
+
+.mes-cabeca {
+    align-items: baseline;
+    font-size: 14px;
+    color: var(--text-primary);
+
+    .acumulado { color: var(--text-faint); font-size: 13px; }
+}
+
+.gastos {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 0;
+
+    li {
+        align-items: start;
+        padding: 6px 0 6px 12px;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .origem { color: var(--text-primary); }
+    p { margin: 2px 0 0; line-height: 1.5; }
+    small { display: block; margin-top: 2px; font-size: 12px; color: var(--text-faint); }
+}
+
+.gasto-acoes { display: flex; justify-content: flex-end; gap: 2px; visibility: hidden; }
+.gastos li:hover .gasto-acoes,
+.gasto-acoes:focus-within { visibility: visible; }
+
+@media (hover: none) {
+    .gasto-acoes { visibility: visible; }
+}

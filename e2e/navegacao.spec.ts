@@ -38,6 +38,8 @@ test.describe('Navegação', () => {
   test('busca global (Ctrl+K) encontra o projeto pelo nome sem acento', async ({ page, api }) => {
     await api.entrarComo('diretoria');
     await page.goto('/dashboard');
+    // A tela chega sob demanda; o atalho só vale depois que ela abriu.
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await page.keyboard.press('Control+k');
     await page.keyboard.type('modernizacao');
     await expect(page.locator('.busca-item.ativo')).toContainText('Modernização da Rede');

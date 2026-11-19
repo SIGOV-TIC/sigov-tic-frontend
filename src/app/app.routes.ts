@@ -1,39 +1,26 @@
 import { Routes } from '@angular/router';
-import { CadastroProjeto } from './features/projetos/pages/cadastro-projeto';
-import { Portfolio } from './features/projetos/pages/portfolio';
-import { VisualizarProjeto } from './features/projetos/pages/visualizar-projeto';
-import { Cronograma } from './features/cronograma/pages/cronograma';
-import { Dashboard } from './features/dashboard/pages/dashboard';
-import { Orcamento } from './features/orcamento/pages/orcamento';
-import { Objetivos } from './features/objetivos/pages/objetivos';
-import { Login } from './features/login/login';
-import { Usuarios } from './features/usuarios/pages/usuarios';
-import { Configuracoes } from './features/configuracoes/pages/configuracoes';
-import { StatusReport } from './features/status-report/pages/status-report';
-import { Dados } from './features/dados/pages/dados';
-import { PrimeiroAcesso } from './features/primeiro-acesso/primeiro-acesso';
 import { adminGuard, authGuard, criacaoProjetoGuard, edicaoProjetoGuard, primeiroAcessoGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
-  { path: 'login', component: Login },
-  { path: 'primeiro-acesso', component: PrimeiroAcesso, canActivate: [primeiroAcessoGuard] },
+  { path: 'login', loadComponent: () => import('./features/login/login').then((m) => m.Login) },
+  { path: 'primeiro-acesso', loadComponent: () => import('./features/primeiro-acesso/primeiro-acesso').then((m) => m.PrimeiroAcesso), canActivate: [primeiroAcessoGuard] },
   {
     path: '',
     canActivateChild: [authGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: Dashboard },
-      { path: 'cadastro', component: CadastroProjeto, canActivate: [criacaoProjetoGuard] },
-      { path: 'portfolio', component: Portfolio },
-      { path: 'cronograma', component: Cronograma },
-      { path: 'orcamento', component: Orcamento },
-      { path: 'objetivos', component: Objetivos },
-      { path: 'status-report', component: StatusReport },
-      { path: 'dados', component: Dados },
-      { path: 'projeto/:id', component: VisualizarProjeto },
-      { path: 'projeto/:id/editar', component: CadastroProjeto, canActivate: [edicaoProjetoGuard] },
-      { path: 'configuracoes', component: Configuracoes },
-      { path: 'usuarios', component: Usuarios, canActivate: [adminGuard] },
+      { path: 'dashboard', loadComponent: () => import('./features/dashboard/pages/dashboard').then((m) => m.Dashboard) },
+      { path: 'cadastro', loadComponent: () => import('./features/projetos/pages/cadastro-projeto').then((m) => m.CadastroProjeto), canActivate: [criacaoProjetoGuard] },
+      { path: 'portfolio', loadComponent: () => import('./features/projetos/pages/portfolio').then((m) => m.Portfolio) },
+      { path: 'cronograma', loadComponent: () => import('./features/cronograma/pages/cronograma').then((m) => m.Cronograma) },
+      { path: 'orcamento', loadComponent: () => import('./features/orcamento/pages/orcamento').then((m) => m.Orcamento) },
+      { path: 'objetivos', loadComponent: () => import('./features/objetivos/pages/objetivos').then((m) => m.Objetivos) },
+      { path: 'status-report', loadComponent: () => import('./features/status-report/pages/status-report').then((m) => m.StatusReport) },
+      { path: 'dados', loadComponent: () => import('./features/dados/pages/dados').then((m) => m.Dados) },
+      { path: 'projeto/:id', loadComponent: () => import('./features/projetos/pages/visualizar-projeto').then((m) => m.VisualizarProjeto) },
+      { path: 'projeto/:id/editar', loadComponent: () => import('./features/projetos/pages/cadastro-projeto').then((m) => m.CadastroProjeto), canActivate: [edicaoProjetoGuard] },
+      { path: 'configuracoes', loadComponent: () => import('./features/configuracoes/pages/configuracoes').then((m) => m.Configuracoes) },
+      { path: 'usuarios', loadComponent: () => import('./features/usuarios/pages/usuarios').then((m) => m.Usuarios), canActivate: [adminGuard] },
     ],
   },
 ];

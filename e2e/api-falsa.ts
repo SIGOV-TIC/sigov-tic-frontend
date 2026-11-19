@@ -148,6 +148,13 @@ export class ApiFalsa {
   readonly senhaTemporaria = new Set<string>();
   private readonly senhas: Record<string, string> = {};
   private retratos: Record<string, unknown>[] = historicoDeRetratos();
+  // Realizado mês a mês: a soma de cada projeto é o custoRealizado dele.
+  readonly gastos: { id: string; projetoId: string; mes: string; valor: number; motivo: string; origem: string; autor: string }[] = [
+    { id: 'g1', projetoId: 'p1', mes: deslocar(-2).slice(0, 7), valor: 800_000, motivo: 'Licenças do primeiro lote.', origem: 'Contrato 15/2026', autor: 'Paula Escritório' },
+    { id: 'g2', projetoId: 'p1', mes: deslocar(-1).slice(0, 7), valor: 700_000, motivo: 'Implantação do módulo financeiro.', origem: 'Contrato 15/2026', autor: 'Paula Escritório' },
+    { id: 'g3', projetoId: 'p1', mes: deslocar(0).slice(0, 7), valor: 500_000, motivo: 'Treinamento das áreas.', origem: 'Nota de empenho 2026NE0042', autor: 'Paula Escritório' },
+    { id: 'g4', projetoId: 'p2', mes: deslocar(-1).slice(0, 7), valor: 900_000, motivo: 'Troca dos switches do núcleo.', origem: 'Ata de registro de preços 07/2026', autor: 'Paula Escritório' },
+  ];
 
   constructor(private page: Page) {}
 
@@ -257,6 +264,27 @@ export class ApiFalsa {
       if (metodo === 'PUT') return json(Object.assign(atv, corpo));
       fase.atividades = fase.atividades.filter((a) => a !== atv);
       return vazio();
+    }
+    if (caminho === '/api/gastos') return json(this.gastos);
+    if (caminho === '/api/gastos/origens') return json([...new Set(this.gastos.map((g) => g.origem))].sort());
+    if ((m = caminho.match(/^\/api\/projetos\/([^/]+)\/gastos(?:\/([^/]+))?$/))) {
+      const p = projetos.find((x) => x.id === m![1])!;
+      const somar = () => (p.custoRealizado = this.gastos.filter((g) => g.projetoId === p.id).reduce((s, g) => s + g.valor, 0));
+      if (metodo === 'GET') return json(this.gastos.filter((g) => g.projetoId === p.id));
+      if (metodo === 'DELETE') {
+        this.gastos.splice(this.gastos.findIndex((g) => g.id === m![2]), 1);
+        somar();
+        return vazio();
+      }
+      if (metodo === 'PUT') {
+        const g = Object.assign(this.gastos.find((x) => x.id === m![2])!, corpo);
+        somar();
+        return json(g);
+      }
+      const novo = { id: 'g' + Date.now(), projetoId: p.id, autor: CONTAS[this.loginAtual as keyof typeof CONTAS]?.nome ?? '', ...corpo };
+      this.gastos.push(novo);
+      somar();
+      return json(novo, 201);
     }
     if (caminho === '/api/metas' && metodo === 'GET') return json(metas);
     if (caminho === '/api/users/me') {

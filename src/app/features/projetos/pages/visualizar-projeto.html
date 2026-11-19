@@ -241,6 +241,10 @@
             </div>
         </div>
 
+        <div class="card">
+            <app-realizado-mensal [projeto]="projeto" [podeEditar]="podeEditar" (realizado)="atualizarRealizado($event)" />
+        </div>
+
         <!-- Ponto de Atenção -->
         <div class="card">
             <ng-container *ngTemplateOutlet="campoEditavel; context: { chave: 'pontoAtencao', titulo: 'Ponto de Atenção', vazio: 'Nenhum ponto de atenção registrado.' }"></ng-container>

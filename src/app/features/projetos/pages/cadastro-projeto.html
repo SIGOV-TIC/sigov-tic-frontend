@@ -291,16 +291,17 @@
             </div>
             <div class="field-row">
                 <div class="field">
-                    <label for="orcamento">Planejado (R$ M)</label>
+                    <label for="orcamento">Planejado (R$)</label>
                     <input id="orcamento" type="number" min="0" step="any" [(ngModel)]="projeto.orcamentoEstimado" name="orcamentoEstimado"
                            [class.filled]="projeto.orcamentoEstimado"
-                           placeholder="ex: 14.600">
+                           placeholder="ex: 1500000">
                 </div>
                 <div class="field">
-                    <label for="custoRealizado">Realizado (R$ M)</label>
+                    <label for="custoRealizado">Realizado até hoje (R$)</label>
                     <input id="custoRealizado" type="number" min="0" step="any" [(ngModel)]="projeto.custoRealizado" name="custoRealizado"
-                           [class.filled]="projeto.custoRealizado"
-                           placeholder="ex: 0.710">
+                           [class.filled]="projeto.custoRealizado" [disabled]="modoEdicao"
+                           [title]="modoEdicao ? 'Lançado mês a mês na página do projeto' : ''"
+                           placeholder="ex: 250000">
                 </div>
             </div>
             <div class="field-row">
@@ -636,11 +637,11 @@
                         <span class="resumo-valor">{{ custoQuadranteLabel(projeto.custoQuadrante) }}</span>
                     </div>
                     <div class="resumo-item">
-                        <span class="resumo-label">Planejado (R$ M)</span>
+                        <span class="resumo-label">Planejado (R$)</span>
                         <span class="resumo-valor">{{ projeto.orcamentoEstimado ? 'R$ ' + projeto.orcamentoEstimado.toLocaleString('pt-BR') : '—' }}</span>
                     </div>
                     <div class="resumo-item">
-                        <span class="resumo-label">Realizado (R$ M)</span>
+                        <span class="resumo-label">Realizado (R$)</span>
                         <span class="resumo-valor">{{ projeto.custoRealizado ? 'R$ ' + projeto.custoRealizado.toLocaleString('pt-BR') : '—' }}</span>
                     </div>
                     <div class="resumo-item">
