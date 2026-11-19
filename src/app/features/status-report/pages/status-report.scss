@@ -58,7 +58,7 @@
     &:disabled { opacity: 0.5; cursor: default; }
 }
 
-// Emitir é o ato que fecha a quinzena: é a ação principal da tela.
+// Emitir é o ato que fecha o mês: é a ação principal da tela.
 .btn-emitir {
     background-color: var(--accent-blue);
     color: var(--estado-texto);

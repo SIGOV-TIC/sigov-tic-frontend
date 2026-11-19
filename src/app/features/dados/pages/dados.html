@@ -50,12 +50,12 @@
 } @else if (carregando && !linhas.length) {
     <app-estado tipo="carregando" mensagem="Carregando os dados..." />
 } @else if (!total) {
-    <app-estado tipo="vazio" mensagem="Nenhum dado para este recorte. Os dados vêm das quinzenas emitidas no Status Report." />
+    <app-estado tipo="vazio" mensagem="Nenhum dado para este recorte. Os dados vêm dos meses emitidos no Status Report." />
 } @else {
     <p class="resumo">
         {{ total }} {{ total === 1 ? 'linha' : 'linhas' }} ·
         {{ projetosNaTabela }} {{ projetosNaTabela === 1 ? 'projeto' : 'projetos' }} ·
-        {{ quinzenas }} {{ quinzenas === 1 ? 'quinzena' : 'quinzenas' }}
+        {{ meses }} {{ meses === 1 ? 'mês' : 'meses' }}
     </p>
 
     <table class="tabela">
@@ -63,18 +63,18 @@
             <tr>
                 <th>Projeto</th>
                 <th>Área</th>
-                <th>Quinzena</th>
+                <th>Mês</th>
                 <th>Métrica</th>
                 <th class="num">Valor</th>
                 <th class="num">Meta</th>
             </tr>
         </thead>
         <tbody [class.atualizando]="carregando">
-            @for (l of visiveis; track l.projetoId + l.quinzenaInicio + l.metrica) {
+            @for (l of visiveis; track l.projetoId + l.periodoInicio + l.metrica) {
                 <tr>
                     <td><b>{{ l.sigla }}</b></td>
                     <td>{{ l.area || '—' }}</td>
-                    <td>{{ quinzena(l) }}</td>
+                    <td>{{ mes(l) }}</td>
                     <td>{{ rotuloMetrica[l.metrica] }}</td>
                     <td class="num">{{ valor(l) }}</td>
                     <td class="num meta">{{ meta(l) }}</td>

@@ -10,10 +10,10 @@
             </select>
         </label>
         <label class="filtro">
-            <span>Quinzena</span>
-            <select [(ngModel)]="quinzena" (ngModelChange)="mudarQuinzena()">
-                @for (q of quinzenas; track q.chave) {
-                    <option [ngValue]="q">{{ q.rotulo }}{{ foiEmitida(q) ? ' · emitido' : '' }}</option>
+            <span>Mês</span>
+            <select [(ngModel)]="periodo" (ngModelChange)="mudarPeriodo()">
+                @for (p of periodos; track p.chave) {
+                    <option [ngValue]="p">{{ p.rotulo }}{{ foiEmitido(p) ? ' · emitido' : '' }}</option>
                 }
             </select>
         </label>
@@ -52,7 +52,7 @@
             <h1 class="rel-id-titulo">Relatório de Acompanhamento de Projeto</h1>
             <dl class="rel-id-campos">
                 <div><dt>Projeto</dt><dd>{{ p.sigla }} · {{ p.nome }}</dd></div>
-                <div><dt>Período</dt><dd>{{ quinzena.rotulo }}</dd></div>
+                <div><dt>Período</dt><dd>{{ periodo.rotulo }}</dd></div>
                 <div><dt>Situação do documento</dt><dd>{{ emitido ? 'Emitido' : 'Prévia — não emitido' }}</dd></div>
                 <div><dt>Emitido em</dt><dd>{{ retrato ? data(retrato.emitidoEm.slice(0, 10)) : '—' }}</dd></div>
                 <div><dt>Emitido por</dt><dd>{{ retrato?.autor || '—' }}</dd></div>
@@ -62,7 +62,7 @@
 
         <header class="rel-topo">
             <div>
-                <span class="rel-tipo">{{ emitido ? 'Status Report' : 'Prévia' }} · {{ quinzena.rotulo }}</span>
+                <span class="rel-tipo">{{ emitido ? 'Status Report' : 'Prévia' }} · {{ periodo.rotulo }}</span>
                 <h2><a [routerLink]="['/projeto', p.id]">{{ p.nome }}</a> <span class="sigla">{{ p.sigla }}</span></h2>
                 <p class="rel-meta">
                     @if (p.gerenteResponsavel) { <span>Gerente <b>{{ p.gerenteResponsavel }}</b></span> }
@@ -101,14 +101,14 @@
 
         @if (semNarrativa) {
             <section class="rel-sem-registro">
-                <h3>Andamento na quinzena</h3>
+                <h3>Andamento no mês</h3>
                 <p class="vazio">Sem registros no período.</p>
             </section>
         } @else {
 
         <div class="rel-colunas">
             <section>
-                <h3>Andamento na quinzena</h3>
+                <h3>Andamento no mês</h3>
                 @if (atualizacoesDoPeriodo.length) {
                     <ol class="rel-atualizacoes">
                         @for (a of atualizacoesDoPeriodo; track a.id) {
@@ -119,7 +119,7 @@
                         }
                     </ol>
                 } @else {
-                    <p class="vazio">Nenhuma atualização registrada na quinzena.</p>
+                    <p class="vazio">Nenhuma atualização registrada no mês.</p>
                 }
             </section>
             <section>
@@ -142,7 +142,7 @@
         @if (temSerie && serieSemVariacao) {
             <p class="aviso">
                 <mat-icon>info</mat-icon>
-                As quinzenas emitidas têm o mesmo avanço. Sem variação entre elas não há tendência para desenhar.
+                Os meses emitidos têm o mesmo avanço. Sem variação entre eles não há tendência para desenhar.
             </p>
         }
 

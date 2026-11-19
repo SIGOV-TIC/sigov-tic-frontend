@@ -19,6 +19,8 @@ import { fatia, Paginacao, paginaNaUrl } from '../../../shared/paginacao/paginac
 
 const POR_PAGINA = 25;
 
+const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
 @Component({
   // Os dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -138,8 +140,8 @@ export class Dados implements OnInit {
     return fatia(this.linhas, this.paginaAtual, POR_PAGINA);
   }
 
-  get quinzenas(): number {
-    return new Set(this.linhas.map((l) => l.quinzenaInicio)).size;
+  get meses(): number {
+    return new Set(this.linhas.map((l) => l.periodoInicio.slice(0, 7))).size;
   }
 
   get projetosNaTabela(): number {
@@ -178,9 +180,9 @@ export class Dados implements OnInit {
     return formatarMetrica(linha.metrica, linha.meta);
   }
 
-  quinzena(linha: LinhaFato): string {
-    const [, mesI, diaI] = linha.quinzenaInicio.split('-');
-    const [ano, , diaF] = linha.quinzenaFim.split('-');
-    return `${diaI} a ${diaF}/${mesI}/${ano}`;
+  // Mês do retrato, ex.: jun/2026.
+  mes(linha: LinhaFato): string {
+    const [ano, mes] = linha.periodoInicio.split('-');
+    return `${MESES[Number(mes) - 1]}/${ano}`;
   }
 }

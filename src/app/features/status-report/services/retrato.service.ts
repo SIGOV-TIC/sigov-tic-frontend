@@ -5,11 +5,11 @@ import { LinhaFato, Recorte, Retrato } from '../models/retrato';
 
 @Injectable({ providedIn: 'root' })
 export class RetratoService {
-  private readonly url = '/api/retratos-quinzenais';
+  private readonly url = '/api/retratos-mensais';
 
   constructor(private http: HttpClient) {}
 
-  // Histórico do projeto, da quinzena mais recente para a mais antiga.
+  // Histórico do projeto, do mês mais recente para o mais antigo.
   porProjeto(projetoId: string): Observable<Retrato[]> {
     return this.http.get<Retrato[]>(this.url, { params: new HttpParams().set('projeto', projetoId) });
   }

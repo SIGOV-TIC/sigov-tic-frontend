@@ -54,7 +54,7 @@ src/
     │   ├── cronograma/      linha do tempo das fases e exportação CSV
     │   ├── orcamento/       orçado, gasto e saldo por área
     │   ├── objetivos/       metas e avaliação de ritmo
-    │   ├── status-report/   relatório por projeto e quinzena
+    │   ├── status-report/   relatório por projeto e mês
     │   ├── usuarios/        contas e perfis
     │   └── login/
     ├── shared/paginacao/    paginação usada nas listagens
