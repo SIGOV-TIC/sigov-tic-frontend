@@ -181,7 +181,12 @@ export class CadastroProjeto implements OnInit {
         this.router.navigate(['/portfolio']);
         return;
       }
-      const { id, createdAt, updatedAt, po, scrumMaster, ...dados } = p;
+      // Aposentado é só leitura: volta para a tela do projeto.
+      if (p.aposentadoria) {
+        this.router.navigate(['/projeto', p.id]);
+        return;
+      }
+      const { id, createdAt, updatedAt, po, scrumMaster, aposentadoria, ...dados } = p;
       this.vinculados = [po, scrumMaster].filter((g): g is PessoaResumo => !!g);
       this.projeto = {
         ...dados,

@@ -4,15 +4,29 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Atividade, AtividadeRequest, FaseProjeto, ProjetoResponse, SituacaoFase, StatusProjeto } from '../models/projeto';
+import {
+  AposentadoriaRequest,
+  Atividade,
+  AtividadeRequest,
+  FaseProjeto,
+  MOTIVOS_APOSENTADORIA,
+  ProjetoResponse,
+  rotuloMotivo,
+  SituacaoFase,
+  StatusProjeto,
+} from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { indiceFaseAtual, janelaFase, materializarSituacoes, situacaoFase } from '../utils/fase';
+import { fracaoDecorrida } from '../utils/desvio';
+import { dataReferencia, indiceFaseAtual, janelaFase, materializarSituacoes, situacaoFase } from '../utils/fase';
 import { MARGEM_RISCO_PONTOS } from '../utils/saude';
 import { EstadoTela } from '../../../shared/estado/estado';
 import { mensagemDeErro } from '../../../shared/estado/erro-api';
 
 type CampoTexto = 'pontoAtencao' | 'recomendacao';
+
+// Dias de um mês médio.
+const DIAS_MES = 365.25 / 12;
 
 @Component({
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
@@ -46,15 +60,87 @@ export class VisualizarProjeto implements OnInit {
     private auth: AuthService,
   ) {}
 
+  // Aposentadoria em preenchimento; null quando o formulário está fechado.
+  rascunhoAposentadoria: (AposentadoriaRequest & { data: string }) | null = null;
+  gravandoAposentadoria = false;
+  erroAposentadoria = '';
+  readonly motivos = MOTIVOS_APOSENTADORIA;
+  readonly hoje = new Date().toLocaleDateString('sv-SE');
+
+  get aposentado(): boolean {
+    return !!this.projeto?.aposentadoria;
+  }
+
+  get podeAposentar(): boolean {
+    return this.auth.pode('aposentarProjeto', this.projeto);
+  }
+
   // Escritório de Projetos: todos os campos, inclusive nome e duração das fases e a recomendação.
+  // Aposentado é só leitura para todos.
   get podeEditar(): boolean {
-    return this.auth.pode('editarProjeto', this.projeto);
+    return !this.aposentado && this.auth.pode('editarProjeto', this.projeto);
   }
 
   // Escritório, PO e Scrum Master do projeto: pontos de atenção, andamento das fases, atualizações e atividades.
   // Os demais veem tudo só para leitura.
   get podeAcompanhar(): boolean {
-    return this.auth.pode('acompanharProjeto', this.projeto);
+    return !this.aposentado && this.auth.pode('acompanharProjeto', this.projeto);
+  }
+
+  get leituraAposentadoria(): string {
+    const a = this.projeto.aposentadoria;
+    if (!a) return '';
+    const data = new Date(a.data + 'T00:00').toLocaleDateString('pt-BR');
+    return ['Aposentado em ' + data, rotuloMotivo(a.motivo), a.autor ? 'por ' + a.autor : ''].filter(Boolean).join(' · ');
+  }
+
+  abrirAposentadoria() {
+    this.rascunhoAposentadoria = { motivo: 'CONCLUIDO', data: this.hoje, observacao: '' };
+    this.erroAposentadoria = '';
+  }
+
+  fecharAposentadoria() {
+    if (!this.gravandoAposentadoria) this.rascunhoAposentadoria = null;
+  }
+
+  aposentar() {
+    const r = this.rascunhoAposentadoria;
+    if (!r || this.gravandoAposentadoria) return;
+    this.gravandoAposentadoria = true;
+    this.erroAposentadoria = '';
+    this.projetoService
+      .aposentar(this.projeto.id, { motivo: r.motivo, data: r.data || null, observacao: r.observacao?.trim() || null })
+      .subscribe({
+        next: (p) => {
+          this.projeto = p;
+          this.preencherDatasPlanejadas();
+          this.gravandoAposentadoria = false;
+          this.rascunhoAposentadoria = null;
+          this.fecharFase();
+          this.campoEmEdicao = null;
+          this.novaAtualizacao = null;
+        },
+        error: (e) => {
+          this.gravandoAposentadoria = false;
+          this.erroAposentadoria =
+            e?.status === 409
+              ? 'O projeto já foi aposentado. Recarregue a página.'
+              : e?.status === 400
+                ? 'Confira o motivo e a data: ela não pode estar no futuro.'
+                : 'Não foi possível aposentar. Tente de novo.';
+        },
+      });
+  }
+
+  reativar() {
+    this.projetoService.reativar(this.projeto.id).subscribe({
+      next: (p) => {
+        this.projeto = p;
+        this.preencherDatasPlanejadas();
+        this.snackBar.open('Projeto de volta ao portfólio ativo.', 'Fechar', { duration: 4000 });
+      },
+      error: () => this.snackBar.open('Não foi possível reativar. Recarregue a página e tente de novo.', 'Fechar', { duration: 6000 }),
+    });
   }
 
   podeEditarCampo(campo: CampoTexto): boolean {
@@ -119,6 +205,7 @@ export class VisualizarProjeto implements OnInit {
 
   @HostListener('document:keydown', ['$event'])
   aoTeclar(e: KeyboardEvent) {
+    if (this.rascunhoAposentadoria && e.key === 'Escape') return this.fecharAposentadoria();
     if (this.faseSelecionada === null) return;
     if (e.key === 'Escape') {
       if (this.rascunhoAtividade) this.rascunhoAtividade = null;
@@ -143,7 +230,7 @@ export class VisualizarProjeto implements OnInit {
     let tempo: number | null = null;
     if (janela && andamento) {
       const total = janela.fim.getTime() - janela.ini.getTime();
-      tempo = Math.round(Math.min(100, Math.max(0, ((Date.now() - janela.ini.getTime()) / total) * 100)));
+      tempo = Math.round(Math.min(100, Math.max(0, ((dataReferencia(this.projeto).getTime() - janela.ini.getTime()) / total) * 100)));
     }
     return {
       ini: this.formatarData(fase.dataInicio),
@@ -344,22 +431,20 @@ export class VisualizarProjeto implements OnInit {
   }
 
   atividadeAtrasada(a: Atividade): boolean {
-    return !!a.prazo && a.situacao !== 'CONCLUIDA' && a.prazo < this.hojeIso();
+    return !!a.prazo && a.situacao !== 'CONCLUIDA' && a.prazo < this.isoDe(dataReferencia(this.projeto));
   }
 
   private hojeIso(): string {
-    const d = new Date();
+    return this.isoDe(new Date());
+  }
+
+  private isoDe(d: Date): string {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
   get percentualDecorrido(): number {
-    if (!this.projeto?.dataInicioPrevista || !this.projeto?.dataConclusaoPrevista) return 0;
-    const inicio = new Date(this.projeto.dataInicioPrevista).getTime();
-    const fim = new Date(this.projeto.dataConclusaoPrevista).getTime();
-    const hoje = Date.now();
-    if (fim <= inicio) return 0;
-    const pct = ((hoje - inicio) / (fim - inicio)) * 100;
-    return Math.round(Math.min(100, Math.max(0, pct)));
+    const f = fracaoDecorrida(this.projeto);
+    return f == null ? 0 : Math.round(f * 100);
   }
 
   get temPrazo(): boolean {
@@ -427,20 +512,24 @@ export class VisualizarProjeto implements OnInit {
     return 'R$ ' + valor.toLocaleString('pt-BR');
   }
 
+  // Meses completos desde o início, até hoje ou até a aposentadoria.
   get mesesDecorridos(): number {
-    if (!this.projeto?.dataInicioPrevista) return 0;
-    const inicio = new Date(this.projeto.dataInicioPrevista);
-    const hoje = new Date();
-    const diff = (hoje.getFullYear() - inicio.getFullYear()) * 12 + (hoje.getMonth() - inicio.getMonth());
-    return Math.max(0, diff);
+    const f = fracaoDecorrida(this.projeto);
+    return f == null ? 0 : Math.min(this.mesesTotais, Math.floor(f * this.duracaoDias / DIAS_MES));
   }
 
+  // Duração prevista em meses, contando o dia final (01/01 a 31/12 são 12 meses).
   get mesesTotais(): number {
-    if (!this.projeto?.dataInicioPrevista || !this.projeto?.dataConclusaoPrevista) return 0;
-    const inicio = new Date(this.projeto.dataInicioPrevista);
-    const fim = new Date(this.projeto.dataConclusaoPrevista);
-    const diff = (fim.getFullYear() - inicio.getFullYear()) * 12 + (fim.getMonth() - inicio.getMonth());
-    return Math.max(0, diff);
+    return Math.round(this.duracaoDias / DIAS_MES);
+  }
+
+  private get duracaoDias(): number {
+    const ini = this.projeto?.dataInicioPrevista;
+    const fim = this.projeto?.dataConclusaoPrevista;
+    if (!ini || !fim) return 0;
+    const [a1, m1, d1] = ini.split('-').map(Number);
+    const [a2, m2, d2] = fim.split('-').map(Number);
+    return Math.max(0, (Date.UTC(a2, m2 - 1, d2) - Date.UTC(a1, m1 - 1, d1)) / 86_400_000 + 1);
   }
 
   get totalSquad(): number {

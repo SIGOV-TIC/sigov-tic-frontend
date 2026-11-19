@@ -19,7 +19,7 @@ function comPapeis(): ProjetoResponse {
   });
 }
 
-async function abrir(perfil: 'ESCRITORIO' | 'GESTOR_PROJETO' | 'USER', id: string) {
+async function abrir(perfil: 'ESCRITORIO' | 'GESTOR_PROJETO' | 'USER', id: string, dados: ProjetoResponse = comPapeis()) {
   entrarComo(perfil, id);
   TestBed.configureTestingModule({
     imports: [VisualizarProjeto],
@@ -33,7 +33,7 @@ async function abrir(perfil: 'ESCRITORIO' | 'GESTOR_PROJETO' | 'USER', id: strin
   const fixture = TestBed.createComponent(VisualizarProjeto);
   const api = TestBed.inject(HttpTestingController);
   await fixture.whenStable();
-  api.expectOne('/api/projetos/p1').flush(comPapeis());
+  api.expectOne('/api/projetos/p1').flush(dados);
   await redesenhar(fixture);
   const tela = fixture.componentInstance;
   const el = fixture.nativeElement as HTMLElement;
@@ -70,6 +70,75 @@ describe('Tela do projeto', () => {
         expect(tela.podeAcompanhar).toBe(false);
         expect(el.querySelectorAll('.btn-icone')).toHaveLength(0);
         expect(texto()).toContain('Homologação concluída');
+      }
+    });
+  });
+
+  describe('aposentadoria', () => {
+    const aposentado = () => ({
+      ...comPapeis(),
+      aposentadoria: { data: '2026-10-31', motivo: 'CANCELADO' as const, observacao: 'Custo acima do previsto', autor: 'Renata' },
+    });
+
+    it('aposentado é só leitura para todos, inclusive Escritório e PO', async () => {
+      for (const [perfil, id] of [['ESCRITORIO', 'u-pmo'], ['GESTOR_PROJETO', 'u-po']] as const) {
+        TestBed.resetTestingModule();
+        const { tela, el, texto } = await abrir(perfil, id, aposentado());
+        expect(tela.podeEditar).toBe(false);
+        expect(tela.podeAcompanhar).toBe(false);
+        expect(el.querySelector('a[href="/projeto/p1/editar"]')).toBeNull();
+        expect(el.querySelectorAll('.btn-icone')).toHaveLength(0);
+        expect(texto()).toContain('Aposentado em 31/10/2026 · Cancelado · por Renata');
+        expect(texto()).toContain('Custo acima do previsto');
+        expect(texto()).toContain('Homologação concluída');
+      }
+    });
+
+    it('Escritório aposenta com motivo, data e observação', async () => {
+      const { fixture, tela, api, el } = await abrir('ESCRITORIO', 'u-pmo');
+      expect(el.textContent).toContain('Aposentar');
+      tela.abrirAposentadoria();
+      tela.rascunhoAposentadoria!.motivo = 'INCORPORADO';
+      tela.rascunhoAposentadoria!.data = '2026-11-01';
+      tela.rascunhoAposentadoria!.observacao = '  Vai para o projeto GOV  ';
+      tela.aposentar();
+
+      const req = api.expectOne('/api/projetos/p1/aposentadoria');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ motivo: 'INCORPORADO', data: '2026-11-01', observacao: 'Vai para o projeto GOV' });
+      req.flush({ ...comPapeis(), aposentadoria: { data: '2026-11-01', motivo: 'INCORPORADO', autor: 'Renata' } });
+      await redesenhar(fixture);
+
+      expect(tela.rascunhoAposentadoria).toBeNull();
+      expect(tela.podeEditar).toBe(false);
+      expect(el.textContent).toContain('Reativar');
+    });
+
+    it('Escritório reativa um aposentado', async () => {
+      const { tela, api } = await abrir('ESCRITORIO', 'u-pmo', aposentado());
+      tela.reativar();
+      const req = api.expectOne('/api/projetos/p1/aposentadoria');
+      expect(req.request.method).toBe('DELETE');
+      req.flush(comPapeis());
+      expect(tela.aposentado).toBe(false);
+      expect(tela.podeEditar).toBe(true);
+    });
+
+    it('prazo decorrido para no dia da aposentadoria', async () => {
+      const { tela } = await abrir('USER', 'u-leitor', {
+        ...aposentado(),
+        aposentadoria: { data: '2026-04-30', motivo: 'CANCELADO' as const, autor: 'Renata' },
+      });
+      expect(tela.percentualDecorrido).toBe(33);
+      expect(tela.mesesDecorridos).toBe(3);
+      expect(tela.mesesTotais).toBe(12);
+    });
+
+    it('PO e visualizador não veem Aposentar nem Reativar', async () => {
+      for (const [perfil, id] of [['GESTOR_PROJETO', 'u-po'], ['USER', 'u-leitor']] as const) {
+        TestBed.resetTestingModule();
+        const { tela } = await abrir(perfil, id, aposentado());
+        expect(tela.podeAposentar).toBe(false);
       }
     });
   });

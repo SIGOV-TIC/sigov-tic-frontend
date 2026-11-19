@@ -19,6 +19,15 @@ describe('índices de desempenho (valor agregado)', () => {
     expect(d.noPrazo).toBe(true);
   });
 
+  it('aposentado é lido no dia da aposentadoria, não hoje', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(dia('2026-11-19'));
+    const p = projeto({ aposentadoria: { data: '2026-04-30', motivo: 'CANCELADO', autor: 'Renata' } });
+    expect(fracaoDecorrida(p)).toBeCloseTo(fracaoDecorrida(projeto(), new Date(2026, 3, 30))!, 6);
+    expect(calcularDesvio(p).idp).toBeCloseTo(calcularDesvio(projeto(), new Date(2026, 3, 30)).idp!, 6);
+    vi.useRealTimers();
+  });
+
   it('projeto atrasado e caro sai da tolerância', () => {
     const p = projeto({ custoRealizado: 800_000 });
     p.fases![1].percentual = 0; // avanço de 25%

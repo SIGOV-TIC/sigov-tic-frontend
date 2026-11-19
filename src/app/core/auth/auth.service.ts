@@ -39,7 +39,7 @@ export interface DadosPerfil {
 }
 
 // editarProjeto: todos os campos. acompanharProjeto: pontos de atenção, andamento das fases, atualizações e atividades.
-export type Acao = 'criarProjeto' | 'editarProjeto' | 'acompanharProjeto' | 'editarMetas' | 'gerenciarUsuarios';
+export type Acao = 'criarProjeto' | 'editarProjeto' | 'acompanharProjeto' | 'aposentarProjeto' | 'editarMetas' | 'gerenciarUsuarios';
 
 // O que a regra precisa saber do projeto: quem é PO e Scrum Master.
 export interface VinculoProjeto {
