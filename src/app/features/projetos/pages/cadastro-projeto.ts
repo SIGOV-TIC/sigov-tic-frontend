@@ -89,8 +89,8 @@ export class CadastroProjeto implements OnInit {
   unidadesFiltradas: string[] = [];
 
   pessoas = [
-    'Murilo Henrique', 'Natan Heringer', 'Ana Carolina Souza',
-    'Roberto Campos', 'Fernanda Lima', 'Lucas Oliveira',
+    'Bruno Teixeira', 'Camila Rezende', 'Ana Carolina Souza',
+    'Renato Vasconcelos', 'Fernanda Lima', 'Lucas Oliveira',
     'Patrícia Mendes', 'Thiago Almeida',
   ];
   objetivosEstrategicos = [
