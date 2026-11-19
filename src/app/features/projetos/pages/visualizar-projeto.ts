@@ -4,7 +4,17 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Atividade, AtividadeRequest, FaseProjeto, ProjetoResponse, SituacaoFase, StatusProjeto } from '../models/projeto';
+import {
+  AposentadoriaRequest,
+  Atividade,
+  AtividadeRequest,
+  FaseProjeto,
+  MOTIVOS_APOSENTADORIA,
+  ProjetoResponse,
+  rotuloMotivo,
+  SituacaoFase,
+  StatusProjeto,
+} from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { indiceFaseAtual, janelaFase, materializarSituacoes, situacaoFase } from '../utils/fase';
@@ -46,15 +56,87 @@ export class VisualizarProjeto implements OnInit {
     private auth: AuthService,
   ) {}
 
+  // Aposentadoria em preenchimento; null quando o formulário está fechado.
+  rascunhoAposentadoria: (AposentadoriaRequest & { data: string }) | null = null;
+  gravandoAposentadoria = false;
+  erroAposentadoria = '';
+  readonly motivos = MOTIVOS_APOSENTADORIA;
+  readonly hoje = new Date().toLocaleDateString('sv-SE');
+
+  get aposentado(): boolean {
+    return !!this.projeto?.aposentadoria;
+  }
+
+  get podeAposentar(): boolean {
+    return this.auth.pode('aposentarProjeto', this.projeto);
+  }
+
   // Escritório de Projetos: todos os campos, inclusive nome e duração das fases e a recomendação.
+  // Aposentado é só leitura para todos.
   get podeEditar(): boolean {
-    return this.auth.pode('editarProjeto', this.projeto);
+    return !this.aposentado && this.auth.pode('editarProjeto', this.projeto);
   }
 
   // Escritório, PO e Scrum Master do projeto: pontos de atenção, andamento das fases, atualizações e atividades.
   // Os demais veem tudo só para leitura.
   get podeAcompanhar(): boolean {
-    return this.auth.pode('acompanharProjeto', this.projeto);
+    return !this.aposentado && this.auth.pode('acompanharProjeto', this.projeto);
+  }
+
+  get leituraAposentadoria(): string {
+    const a = this.projeto.aposentadoria;
+    if (!a) return '';
+    const data = new Date(a.data + 'T00:00').toLocaleDateString('pt-BR');
+    return ['Aposentado em ' + data, rotuloMotivo(a.motivo), a.autor ? 'por ' + a.autor : ''].filter(Boolean).join(' · ');
+  }
+
+  abrirAposentadoria() {
+    this.rascunhoAposentadoria = { motivo: 'CONCLUIDO', data: this.hoje, observacao: '' };
+    this.erroAposentadoria = '';
+  }
+
+  fecharAposentadoria() {
+    if (!this.gravandoAposentadoria) this.rascunhoAposentadoria = null;
+  }
+
+  aposentar() {
+    const r = this.rascunhoAposentadoria;
+    if (!r || this.gravandoAposentadoria) return;
+    this.gravandoAposentadoria = true;
+    this.erroAposentadoria = '';
+    this.projetoService
+      .aposentar(this.projeto.id, { motivo: r.motivo, data: r.data || null, observacao: r.observacao?.trim() || null })
+      .subscribe({
+        next: (p) => {
+          this.projeto = p;
+          this.preencherDatasPlanejadas();
+          this.gravandoAposentadoria = false;
+          this.rascunhoAposentadoria = null;
+          this.fecharFase();
+          this.campoEmEdicao = null;
+          this.novaAtualizacao = null;
+        },
+        error: (e) => {
+          this.gravandoAposentadoria = false;
+          this.erroAposentadoria =
+            e?.status === 409
+              ? 'O projeto já foi aposentado. Recarregue a página.'
+              : e?.status === 400
+                ? 'Confira o motivo e a data: ela não pode estar no futuro.'
+                : 'Não foi possível aposentar. Tente de novo.';
+        },
+      });
+  }
+
+  reativar() {
+    this.projetoService.reativar(this.projeto.id).subscribe({
+      next: (p) => {
+        this.projeto = p;
+        this.preencherDatasPlanejadas();
+        this.snackBar.open('Projeto de volta ao portfólio ativo.', 'Fechar', { duration: 4000 });
+      },
+      error: () => this.snackBar.open('Não foi possível reativar. Recarregue a página e tente de novo.', 'Fechar', { duration: 6000 }),
+    });
   }
 
   podeEditarCampo(campo: CampoTexto): boolean {
@@ -119,6 +201,7 @@ export class VisualizarProjeto implements OnInit {
 
   @HostListener('document:keydown', ['$event'])
   aoTeclar(e: KeyboardEvent) {
+    if (this.rascunhoAposentadoria && e.key === 'Escape') return this.fecharAposentadoria();
     if (this.faseSelecionada === null) return;
     if (e.key === 'Escape') {
       if (this.rascunhoAtividade) this.rascunhoAtividade = null;

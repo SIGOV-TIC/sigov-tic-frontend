@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { distinctUntilChanged, map } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { ProjetoResponse, StatusProjeto } from '../models/projeto';
+import { ProjetoResponse, rotuloMotivo, StatusProjeto } from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { moedaCompacta } from '../utils/moeda';
@@ -30,20 +32,51 @@ export class Portfolio implements OnInit {
   readonly tamanhoPagina = 10;
   readonly pagina = paginaNaUrl();
 
+  // Ativos entram nos totais; aposentados ficam numa lista à parte, só para consulta.
+  aposentados = false;
+
   constructor(
     private projetoService: ProjetoService,
     readonly auth: AuthService,
   ) {}
 
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+
+  // A situação vem da URL: o link do menu volta para os ativos, e o endereço pode ser compartilhado.
+  private readonly situacaoNaUrl = this.route.queryParamMap.pipe(
+    map((q) => q.get('situacao') === 'aposentados'),
+    distinctUntilChanged(),
+    takeUntilDestroyed(),
+  );
+
   ngOnInit() {
     this.projetoService.seedSeNecessario();
-    this.carregar();
+    this.situacaoNaUrl.subscribe((aposentados) => {
+      this.aposentados = aposentados;
+      this.carregar();
+    });
+  }
+
+  verAposentados(sim: boolean) {
+    if (sim === this.aposentados) return;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { situacao: sim ? 'aposentados' : null, pagina: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  motivo(projeto: ProjetoResponse): string {
+    return rotuloMotivo(projeto.aposentadoria?.motivo);
   }
 
   carregar() {
     this.carregando = true;
     this.erro = '';
-    this.projetoService.listar(0, 100).subscribe({
+    this.projetos = [];
+    this.projetoService.listar(0, 100, this.aposentados ? 'aposentados' : 'ativos').subscribe({
       next: (res) => {
         this.projetos = res.content;
         this.aplicarBusca();

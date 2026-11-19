@@ -80,6 +80,37 @@ describe('Portfólio', () => {
     expect(tela.projetosDaPagina).toHaveLength(10);
   });
 
+  it('lista só os ativos e alterna para os aposentados, com data, motivo e custo final', async () => {
+    const { fixture, tela, el, api } = await abrir();
+    expect(tela.aposentados).toBe(false);
+
+    tela.verAposentados(true);
+    await fixture.whenStable();
+    const req = api.expectOne((r) => r.url === '/api/projetos');
+    expect(req.request.params.get('situacao')).toBe('aposentados');
+    req.flush({
+      content: [
+        projeto({
+          id: 'p9',
+          nome: 'Legado',
+          sigla: 'LEG',
+          custoRealizado: 300_000,
+          aposentadoria: { data: '2026-05-31', motivo: 'CANCELADO', observacao: 'Custo acima do previsto', autor: 'Renata' },
+        }),
+      ],
+      page: 0, size: 100, totalElements: 1, totalPages: 1,
+    });
+    await redesenhar(fixture);
+
+    const linha = el.querySelector('tbody tr')!.textContent!.replace(/\s+/g, ' ');
+    expect(linha).toContain('Legado');
+    expect(linha).toContain('31/05/2026');
+    expect(linha).toContain('por Renata');
+    expect(linha).toContain('Cancelado');
+    expect(linha).toContain('Custo acima do previsto');
+    expect(el.querySelector('tfoot')).toBeNull();
+  });
+
   it('falha da API mostra o erro', async () => {
     entrarComo('USER');
     TestBed.configureTestingModule({ imports: [Portfolio], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });

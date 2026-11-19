@@ -191,7 +191,7 @@ export class BuscaGlobal {
     this.erro = false;
     this.projetoService.seedSeNecessario();
     forkJoin({
-      projetos: this.projetoService.listar(0, 200).pipe(catchError(() => of(null))),
+      projetos: this.projetoService.listar(0, 200, 'todos').pipe(catchError(() => of(null))),
       metas: this.metaService.listar().pipe(catchError(() => of([] as Meta[]))),
     }).subscribe(({ projetos, metas }) => {
       this.carregando = false;
@@ -210,7 +210,10 @@ export class BuscaGlobal {
     const objetivos = new Set<string>();
 
     for (const p of projetos) {
-      const detalhe = [p.sigla, p.areaExecutora || p.areaSolicitante, p.gerenteResponsavel].filter(Boolean).join(' · ');
+      const aposentado = !!p.aposentadoria;
+      const detalhe = [p.sigla, p.areaExecutora || p.areaSolicitante, p.gerenteResponsavel, aposentado ? 'aposentado' : '']
+        .filter(Boolean)
+        .join(' · ');
       itens.push({
         tipo: 'projeto',
         titulo: p.nome,
@@ -218,6 +221,8 @@ export class BuscaGlobal {
         alvo: normalizar([p.nome, p.sigla, p.areaSolicitante, p.areaExecutora, p.gerenteResponsavel, p.po?.nome].filter(Boolean).join(' ')),
         rota: ['/projeto', p.id],
       });
+      // Aposentado é achado pelo nome; suas fases e seu objetivo não entram mais no índice.
+      if (aposentado) continue;
       const obj = (p.objetivoEstrategico ?? '').trim();
       if (obj) objetivos.add(obj);
       for (const f of p.fases ?? []) {

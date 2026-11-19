@@ -3,12 +3,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, concat, defer, last, throwError, map, of, shareReplay, switchMap } from 'rxjs';
 import {
   AcompanhamentoRequest,
+  AposentadoriaRequest,
   Atividade,
   AtividadeRequest,
   Atualizacao,
   ProjetoPageResponse,
   ProjetoRequest,
   ProjetoResponse,
+  SituacaoPortfolio,
 } from '../models/projeto';
 import { PROJETOS_EXEMPLO } from './projetos-exemplo';
 
@@ -26,8 +28,9 @@ export class ProjetoService {
     return this.http.post<ProjetoResponse>(this.url, projeto);
   }
 
-  listar(page = 0, size = 20): Observable<ProjetoPageResponse> {
-    const params = new HttpParams().set('page', page).set('size', Math.min(size, 100));
+  // Por padrão só o portfólio ativo; aposentados ficam fora dos totais e das telas.
+  listar(page = 0, size = 20, situacao: SituacaoPortfolio = 'ativos'): Observable<ProjetoPageResponse> {
+    const params = new HttpParams().set('page', page).set('size', Math.min(size, 100)).set('situacao', situacao);
     return this.pronto$.pipe(switchMap(() => this.http.get<ProjetoPageResponse>(this.url, { params })));
   }
 
@@ -37,6 +40,14 @@ export class ProjetoService {
 
   atualizar(id: string, projeto: ProjetoRequest): Observable<ProjetoResponse> {
     return this.http.put<ProjetoResponse>(`${this.url}/${id}`, projeto);
+  }
+
+  aposentar(id: string, aposentadoria: AposentadoriaRequest): Observable<ProjetoResponse> {
+    return this.http.post<ProjetoResponse>(`${this.url}/${id}/aposentadoria`, aposentadoria);
+  }
+
+  reativar(id: string): Observable<ProjetoResponse> {
+    return this.http.delete<ProjetoResponse>(`${this.url}/${id}/aposentadoria`);
   }
 
   // PO e Scrum Master: pontos de atenção e andamento das fases.
@@ -67,7 +78,7 @@ export class ProjetoService {
   // Grava os projetos de exemplo uma única vez, se o banco estiver vazio.
   seedSeNecessario(): void {
     if (this.pronto$ !== ProjetoService.inicial) return;
-    this.pronto$ = defer(() => this.http.get<ProjetoPageResponse>(this.url, { params: { size: 1 } })).pipe(
+    this.pronto$ = defer(() => this.http.get<ProjetoPageResponse>(this.url, { params: { size: 1, situacao: 'todos' } })).pipe(
       switchMap((res) =>
         res.totalElements > 0
           ? of(undefined)

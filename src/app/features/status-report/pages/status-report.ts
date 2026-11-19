@@ -103,9 +103,12 @@ export class StatusReport implements OnInit {
     const params = this.route.snapshot.queryParamMap;
     this.quinzena = this.quinzenas.find((q) => q.chave === params.get('quinzena')) ?? this.quinzenas[0];
     this.projetoService.seedSeNecessario();
-    this.projetoService.listar(0, 100).subscribe({
+    this.projetoService.listar(0, 100, 'todos').subscribe({
       next: (pagina) => {
-        this.projetos = [...pagina.content].sort((a, b) => a.sigla.localeCompare(b.sigla));
+        // Ativos primeiro; aposentados no fim, para consultar o que já foi emitido.
+        this.projetos = [...pagina.content].sort(
+          (a, b) => Number(!!a.aposentadoria) - Number(!!b.aposentadoria) || a.sigla.localeCompare(b.sigla),
+        );
         const id = params.get('projeto');
         this.selecionar(this.projetos.find((p) => p.id === id)?.id ?? this.projetos[0]?.id);
       },
@@ -198,7 +201,13 @@ export class StatusReport implements OnInit {
   }
 
   get podeEmitir(): boolean {
-    return (this.auth.ehEscritorio() || this.auth.ehAdmin()) && this.quinzena.ini <= this.emissao;
+    // Aposentado: só as quinzenas que começaram até a data da aposentadoria.
+    const aposentadoEm = this.projeto?.aposentadoria?.data;
+    return (
+      (this.auth.ehEscritorio() || this.auth.ehAdmin()) &&
+      this.quinzena.ini <= this.emissao &&
+      (!aposentadoEm || this.quinzena.ini <= aposentadoEm)
+    );
   }
 
   emitir() {

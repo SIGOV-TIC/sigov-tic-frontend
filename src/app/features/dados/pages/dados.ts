@@ -59,7 +59,7 @@ export class Dados implements OnInit {
       ate: q.get('ate') ?? '',
       metricas: q.getAll('metrica') as Metrica[],
     };
-    this.projetoService.listar(0, 100).subscribe({
+    this.projetoService.listar(0, 100, 'todos').subscribe({
       next: (pagina) => (this.projetos = [...pagina.content].sort((a, b) => a.sigla.localeCompare(b.sigla))),
       error: () => (this.projetos = []),
     });

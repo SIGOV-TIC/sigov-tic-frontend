@@ -5,7 +5,7 @@
             <span>Projeto</span>
             <select [ngModel]="projeto?.id" (ngModelChange)="selecionar($event)" [disabled]="!projetos.length">
                 @for (p of projetos; track p.id) {
-                    <option [value]="p.id">{{ p.sigla }} · {{ p.nome }}</option>
+                    <option [value]="p.id">{{ p.sigla }} · {{ p.nome }}{{ p.aposentadoria ? ' · aposentado' : '' }}</option>
                 }
             </select>
         </label>
