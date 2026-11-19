@@ -135,6 +135,44 @@
         </table>
     </div>
     <app-paginacao [total]="areasLinhas.length" [pagina]="pagA.atual" [tamanho]="tamanhoAreas" (mudar)="pagina.ir($event)" />
+    @let realizado = realizadoMensal;
+    @if (realizado.length > 0) {
+        <div class="secao-topo">
+            <h2 class="secao">Realizado mês a mês</h2>
+            @if (realizado.length > 1) {
+                <button type="button" class="resumo-abrir" (click)="verHistorico = !verHistorico" [attr.aria-expanded]="verHistorico">
+                    <mat-icon>{{ verHistorico ? 'expand_less' : 'history' }}</mat-icon>
+                    {{ verHistorico ? 'Ocultar histórico' : 'Histórico' }}
+                </button>
+            }
+        </div>
+        @if (verHistorico && realizado.length >= 2) {
+            <app-grafico-tendencia titulo="Realizado acumulado do portfólio" [rotulos]="rotulosRealizado(realizado)"
+                                   [series]="seriesRealizado(realizado)" formato="moeda" />
+        }
+        <div class="tabela-rolagem">
+            <table class="tabela realizado">
+                <thead>
+                    <tr>
+                        <th>Mês</th>
+                        <th class="num">No mês</th>
+                        <th class="num">Acumulado</th>
+                        <th class="num">Do orçado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (l of (verHistorico ? realizadoRecente(realizado) : realizado.slice(-1)); track l.mes) {
+                        <tr>
+                            <td>{{ rotuloMes(l.mes) }}</td>
+                            <td class="num">{{ l.noMes ? moeda(l.noMes) : '—' }}</td>
+                            <td class="num">{{ moeda(l.acumulado) }}</td>
+                            <td class="num">{{ pctDoOrcado(l.acumulado) }}%</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
     @let top = maiores;
     @if (top.length > 0) {
         <h2 class="secao">Maiores investimentos</h2>

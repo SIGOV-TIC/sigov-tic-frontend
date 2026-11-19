@@ -8,7 +8,7 @@ import { analisarProjeto } from '../../projetos/utils/saude';
 import { analisarCusto } from '../../projetos/utils/custo';
 import { moedaCompacta } from '../../projetos/utils/moeda';
 import { Meta, MetaService } from '../../objetivos/services/meta.service';
-import { avaliarMeta } from '../../objetivos/utils/meta';
+import { avaliarMeta, prazoEfetivo } from '../../objetivos/utils/meta';
 import { situacaoFase } from '../../projetos/utils/fase';
 import { Retrato, RetratoService } from '../services/retrato.service';
 import { fatia, Paginacao, paginaNaUrl } from '../../../shared/paginacao/paginacao';
@@ -213,7 +213,7 @@ export class Dashboard implements OnInit {
         titulo: m.indicador,
         contexto: m.objetivo,
         situacao: pct ? `${n(m.valorAtual!)} realizado` : `Atual ${n(m.valorAtual!)}`,
-        referencia: av.estado === 'ATRASADO' ? `prazo venceu em ${this.dia(this.lerData(m.prazo))}` : `${n(av.valorEsperado)} esperado`,
+        referencia: av.estado === 'ATRASADO' ? `prazo venceu em ${this.dia(this.lerData(prazoEfetivo(m)))}` : `${n(av.valorEsperado)} esperado`,
         responsavel: m.responsavel,
         link: ['/objetivos'],
         query: { abrir: m.objetivo },
@@ -298,7 +298,7 @@ export class Dashboard implements OnInit {
     });
 
     this.metas.forEach((m) => {
-      const prazo = this.lerData(m.prazo);
+      const prazo = this.lerData(prazoEfetivo(m));
       if (prazo >= inicio && prazo <= limite && avaliarMeta(m).estado !== 'CONCLUIDO') {
         lista.push({ data: prazo, marco: m.indicador, dono: 'Meta', sub: m.objetivo, link: ['/objetivos'], query: { abrir: m.objetivo } });
       }

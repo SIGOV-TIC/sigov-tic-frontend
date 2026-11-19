@@ -25,7 +25,7 @@ describe('serviços da API', () => {
 
   it('metas', () => {
     const s = TestBed.inject(MetaService);
-    const meta = { objetivo: 'OE1', indicador: 'X', valorInicial: 0, valorAlvo: 10, prazo: '2026-12-31' };
+    const meta = { objetivo: 'OE1', indicador: 'X', valorInicial: 0, valorAlvo: 10, prazo: '2026-12-31', ano: 2026, ciclo: 'ANUAL' as const, itensFinanceiros: [] };
     s.listar().subscribe();
     espera('GET', '/api/metas');
     s.criar(meta).subscribe();

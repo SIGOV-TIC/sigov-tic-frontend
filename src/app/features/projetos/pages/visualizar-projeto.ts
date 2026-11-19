@@ -22,6 +22,8 @@ import { dataReferencia, indiceFaseAtual, janelaFase, materializarSituacoes, sit
 import { MARGEM_RISCO_PONTOS } from '../utils/saude';
 import { EstadoTela } from '../../../shared/estado/estado';
 import { mensagemDeErro } from '../../../shared/estado/erro-api';
+import { SomenteNumero } from '../../../shared/numero/somente-numero';
+import { RealizadoMensal } from '../../orcamento/components/realizado-mensal/realizado-mensal';
 
 type CampoTexto = 'pontoAtencao' | 'recomendacao';
 
@@ -32,7 +34,7 @@ const DIAS_MES = 365.25 / 12;
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-visualizar-projeto',
-  imports: [RouterLink, FormsModule, MatIconModule, NgTemplateOutlet, EstadoTela],
+  imports: [RouterLink, FormsModule, MatIconModule, NgTemplateOutlet, EstadoTela, SomenteNumero, RealizadoMensal],
   templateUrl: './visualizar-projeto.html',
   styleUrl: './visualizar-projeto.scss',
 })
@@ -530,6 +532,11 @@ export class VisualizarProjeto implements OnInit {
     const [a1, m1, d1] = ini.split('-').map(Number);
     const [a2, m2, d2] = fim.split('-').map(Number);
     return Math.max(0, (Date.UTC(a2, m2 - 1, d2) - Date.UTC(a1, m1 - 1, d1)) / 86_400_000 + 1);
+  }
+
+  // O realizado é a soma dos gastos do mês; o cartão de gastos avisa a cada gravação.
+  atualizarRealizado(total: number) {
+    if (this.projeto) this.projeto.custoRealizado = total;
   }
 
   get totalSquad(): number {

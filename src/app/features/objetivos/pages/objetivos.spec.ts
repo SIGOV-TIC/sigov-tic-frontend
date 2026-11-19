@@ -85,7 +85,7 @@ describe('Objetivos', () => {
       const { tela, api } = await abrir();
       tela.novaMeta('OE1');
       tela.salvar();
-      expect(tela.erroEdicao).toBe('Preencha objetivo, indicador, valores inicial e alvo e prazo.');
+      expect(tela.erroEdicao).toBe('Preencha objetivo, indicador, ano e os valores inicial e alvo.');
       tela.edicao!.indicador = 'Novo';
       tela.edicao!.valorAlvo = 0;
       tela.salvar();
@@ -100,10 +100,42 @@ describe('Objetivos', () => {
       tela.salvar();
       const req = api.expectOne('/api/metas');
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toMatchObject({ objetivo: 'OE4', valorInicial: 0, valorAlvo: 80, valorAtual: null, prazo: '2026-12-31' });
+      expect(req.request.body).toMatchObject({ objetivo: 'OE4', valorInicial: 0, valorAlvo: 80, valorAtual: null, prazo: null, ano: new Date().getFullYear(), ciclo: 'ANUAL', itensFinanceiros: [] });
       req.flush(meta({ id: 'm9', objetivo: 'OE4' }));
       expect(tela.metas).toHaveLength(4);
       expect(tela.abertos.has('OE4')).toBe(true);
+    });
+
+    it('linhas financeiras somam no total e linha incompleta não grava', async () => {
+      const { tela, api } = await abrir();
+      tela.novaMeta('OE4');
+      Object.assign(tela.edicao!, { indicador: 'Contratos de nuvem', ano: 2027, ciclo: 'QUADRIENAL' });
+      tela.adicionarItem();
+      Object.assign(tela.edicao!.itensFinanceiros[0], { quantidade: 2, unidade: 'contratos', valorUnitario: 500_000 });
+      tela.adicionarItem();
+      Object.assign(tela.edicao!.itensFinanceiros[1], { quantidade: 12, unidade: '', valorUnitario: 1500 });
+      expect(tela.totalFinanceiro(tela.edicao!.itensFinanceiros)).toBe(1_018_000);
+      tela.salvar();
+      expect(tela.erroEdicao).toContain('linha financeira');
+      api.expectNone('/api/metas');
+
+      tela.removerItem(1);
+      tela.salvar();
+      const req = api.expectOne('/api/metas');
+      expect(req.request.body).toMatchObject({
+        ano: 2027,
+        ciclo: 'QUADRIENAL',
+        itensFinanceiros: [{ quantidade: 2, unidade: 'contratos', valorUnitario: 500_000 }],
+      });
+    });
+
+    it('filtro de ano mostra só as metas do ciclo que cobre o ano', async () => {
+      const { tela } = await abrir();
+      const antes = tela.totalMetas;
+      tela.ano = 2031;
+      expect(tela.totalMetas).toBe(0);
+      tela.ano = null;
+      expect(tela.totalMetas).toBe(antes);
     });
 
     it('edita e exclui com confirmação', async () => {

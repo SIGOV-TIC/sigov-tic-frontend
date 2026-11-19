@@ -250,3 +250,12 @@
 
 
 @media print { .barra-filtro { display: none; } }
+
+.secao-topo {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+
+    .secao { margin-bottom: 10px; }
+}

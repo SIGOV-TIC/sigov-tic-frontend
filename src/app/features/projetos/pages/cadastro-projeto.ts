@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -9,12 +8,15 @@ import { PessoaResumo, ProjetoRequest, FaseProjeto, TipoProjeto, FaseCiclo, Quad
 import { ProjetoService } from '../services/projeto.service';
 import { UsuarioService } from '../../usuarios/services/usuario.service';
 import { janelaFase } from '../utils/fase';
+import { SomenteNumero } from '../../../shared/numero/somente-numero';
+import { Escolha } from '../../../shared/escolha/escolha';
+import { Opcoes, OpcoesService } from '../../../shared/escolha/opcoes.service';
 
 @Component({
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-cadastro-projeto',
-  imports: [FormsModule, MatAutocompleteModule, MatIconModule, MatInputModule],
+  imports: [FormsModule, MatIconModule, MatInputModule, SomenteNumero, Escolha],
   templateUrl: './cadastro-projeto.html',
   styleUrl: './cadastro-projeto.scss',
 })
@@ -41,26 +43,6 @@ export class CadastroProjeto implements OnInit {
   novaFase: FaseProjeto = { nome: '', duracaoMeses: 1, dataFim: '' };
   erroFase = '';
 
-  nomes = [
-    'Sistema de Governança de TIC',
-    'Modernização da Infraestrutura de Rede',
-    'Portal de Serviços Digitais',
-    'Adequação à LGPD',
-    'Implantação do SOC',
-  ];
-  siglas = ['SIGOV-TIC', 'MIR', 'PSD', 'LGPD-TIC', 'SOC'];
-  areas = [
-    'Coordenação-Geral de TIC',
-    'Diretoria de Tecnologia da Informação',
-    'Secretaria de Governança Digital',
-    'Subsecretaria de TIC',
-  ];
-  unidades = [
-    'Divisão de Sistemas e Soluções de TIC',
-    'Divisão de Infraestrutura e Segurança',
-    'Divisão de Governança e Gestão de TIC',
-    'Coordenação de Desenvolvimento',
-  ];
   descricoes = [
     'Desenvolvimento de sistema web para gestão do portfólio de projetos de TIC, permitindo cadastro, acompanhamento e governança dos projetos alinhados ao PDTIC.',
     'Modernização do parque de servidores e equipamentos de rede do órgão, incluindo substituição de ativos defasados e ampliação da capacidade.',
@@ -82,39 +64,7 @@ export class CadastroProjeto implements OnInit {
     'Redução de custos operacionais, agilidade no atendimento e melhoria da experiência do cidadão.',
   ];
 
-  nomesFiltrados: string[] = [];
-  siglasFiltradas: string[] = [];
-  areasFiltradas: string[] = [];
-  unidadesFiltradas: string[] = [];
 
-  pessoas = [
-    'Murilo Henrique', 'Natan Heringer', 'Ana Carolina Souza',
-    'Roberto Campos', 'Fernanda Lima', 'Lucas Oliveira',
-    'Patrícia Mendes', 'Thiago Almeida',
-  ];
-  objetivosEstrategicos = [
-    'Aprimorar a governança e gestão de TIC',
-    'Fortalecer a segurança cibernética e proteção de dados',
-    'Modernizar a infraestrutura tecnológica',
-    'Ampliar e melhorar os serviços digitais',
-    'Promover a inovação e transformação digital',
-  ];
-  iniciativasEstrategicas = [
-    'Implantação do SIGOV-TIC',
-    'Migração para infraestrutura em nuvem',
-    'Implantação do SOC (Security Operations Center)',
-    'Adequação à LGPD',
-    'Modernização do portal de serviços',
-    'Capacitação em competências digitais',
-  ];
-  indicadoresEstrategicos = [
-    '% de projetos alinhados ao PDTIC',
-    '% de conformidade com a IN SGD/ME nº 94',
-    'Índice de maturidade de governança de TIC',
-    'Tempo médio de resposta a incidentes de segurança',
-    '% de serviços digitais disponibilizados',
-    'Índice de satisfação dos usuários de TIC',
-  ];
   orcamentosMock = [250000, 500000, 1000000, 2500000];
 
   tiposProjeto: { valor: TipoProjeto; label: string }[] = [
@@ -143,14 +93,21 @@ export class CadastroProjeto implements OnInit {
     { valor: 'CONCLUIDO', label: 'Concluído' },
   ];
 
-  pessoasFiltradas: string[] = [];
-  objetivosFiltrados: string[] = [];
-  iniciativasFiltradas: string[] = [];
-  indicadoresFiltrados: string[] = [];
 
   mostrarResumo = false;
   etapasConcluidas = false;
   errosValidacao: string[] = [];
+
+  // Valores já gravados: áreas, pessoas e o plano estratégico se escolhem numa lista.
+  opcoes: Opcoes = {
+    areasSolicitantes: [],
+    areasExecutoras: [],
+    pessoas: [],
+    objetivos: [],
+    iniciativas: [],
+    indicadores: [],
+    origensDeGasto: [],
+  };
 
   constructor(
     private projetoService: ProjetoService,
@@ -158,18 +115,11 @@ export class CadastroProjeto implements OnInit {
     private route: ActivatedRoute,
     private snackBar: MatSnackBar,
     private usuarioService: UsuarioService,
-  ) {
-    this.nomesFiltrados = this.nomes;
-    this.siglasFiltradas = this.siglas;
-    this.areasFiltradas = this.areas;
-    this.unidadesFiltradas = this.unidades;
-    this.pessoasFiltradas = this.pessoas;
-    this.objetivosFiltrados = this.objetivosEstrategicos;
-    this.iniciativasFiltradas = this.iniciativasEstrategicas;
-    this.indicadoresFiltrados = this.indicadoresEstrategicos;
-  }
+    private opcoesService: OpcoesService,
+  ) {}
 
   ngOnInit() {
+    this.opcoesService.carregar().subscribe((o) => (this.opcoes = o));
     this.usuarioService.gestores().subscribe({
       next: (gs) => (this.gestores = gs.map(({ id, nome }) => ({ id, nome }))),
       error: () => (this.gestores = []),
@@ -228,20 +178,7 @@ export class CadastroProjeto implements OnInit {
     return this.etapasConcluidas && !!this.projeto.nome && !!this.projeto.sigla;
   }
 
-  filtrar(valor: string, lista: string[]): string[] {
-    if (!valor) return lista;
-    const termo = valor.toLowerCase();
-    return lista.filter(item => item.toLowerCase().includes(termo));
-  }
 
-  filtrarNomes(valor: string) { this.nomesFiltrados = this.filtrar(valor, this.nomes); }
-  filtrarSiglas(valor: string) { this.siglasFiltradas = this.filtrar(valor, this.siglas); }
-  filtrarAreas(valor: string) { this.areasFiltradas = this.filtrar(valor, this.areas); }
-  filtrarUnidades(valor: string) { this.unidadesFiltradas = this.filtrar(valor, this.unidades); }
-  filtrarPessoas(valor: string) { this.pessoasFiltradas = this.filtrar(valor, this.pessoas); }
-  filtrarObjetivos(valor: string) { this.objetivosFiltrados = this.filtrar(valor, this.objetivosEstrategicos); }
-  filtrarIniciativas(valor: string) { this.iniciativasFiltradas = this.filtrar(valor, this.iniciativasEstrategicas); }
-  filtrarIndicadores(valor: string) { this.indicadoresFiltrados = this.filtrar(valor, this.indicadoresEstrategicos); }
 
   preencherCampo(campo: keyof ProjetoRequest, valor: string) {
     (this.projeto as any)[campo] = valor;

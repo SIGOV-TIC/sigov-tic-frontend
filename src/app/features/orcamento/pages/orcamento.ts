@@ -10,6 +10,10 @@ import { analisarCusto, ORDEM_CUSTO, SituacaoCusto, situacaoCusto } from '../../
 import { fatia, Paginacao, paginaNaUrl } from '../../../shared/paginacao/paginacao';
 import { EstadoTela } from '../../../shared/estado/estado';
 import { mensagemDeErro } from '../../../shared/estado/erro-api';
+import { GraficoTendencia, SerieGrafico } from '../../../shared/grafico/grafico-tendencia';
+import { Gasto } from '../models/gasto';
+import { GastoService } from '../services/gasto.service';
+import { linhaDoTempo, MesRealizado, mesAtual, rotuloMes } from '../utils/linha-do-tempo';
 
 interface LinhaOrcamento {
   projeto: ProjetoResponse;
@@ -36,7 +40,7 @@ interface LinhaArea {
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-orcamento',
-  imports: [RouterLink, FormsModule, MatIconModule, Paginacao, EstadoTela],
+  imports: [RouterLink, FormsModule, MatIconModule, Paginacao, EstadoTela, GraficoTendencia],
   templateUrl: './orcamento.html',
   styleUrl: './orcamento.scss',
 })
@@ -63,9 +67,20 @@ export class Orcamento implements OnInit {
     OK: 'check_circle',
   };
 
-  constructor(private projetoService: ProjetoService) {}
+  gastos: Gasto[] = [];
+  // A seção abre no mês corrente; o histórico mostra o gráfico e os meses anteriores.
+  verHistorico = false;
+
+  // Meses mostrados na tabela do realizado; o gráfico leva a série inteira.
+  readonly mesesNaTabela = 12;
+
+  constructor(
+    private projetoService: ProjetoService,
+    private gastoService: GastoService,
+  ) {}
 
   ngOnInit() {
+    this.gastoService.todos().subscribe({ next: (g) => (this.gastos = g), error: () => (this.gastos = []) });
     this.projetoService.seedSeNecessario();
     this.projetoService.listar(0, 200).subscribe({
       next: (res) => {
@@ -89,6 +104,36 @@ export class Orcamento implements OnInit {
     return this.projetos.filter(
       (p) => (p.orcamentoEstimado ?? 0) > 0 && (!this.area || (p.areaSolicitante || 'Sem área') === this.area),
     );
+  }
+
+  // Realizado do portfólio mês a mês, com os mesmos projetos dos totais acima.
+  get realizadoMensal(): MesRealizado[] {
+    const ids = new Set(this.comOrcamento.map((p) => p.id));
+    return linhaDoTempo(this.gastos.filter((g) => ids.has(g.projetoId)), mesAtual());
+  }
+
+  realizadoRecente(linhas: MesRealizado[]): MesRealizado[] {
+    return linhas.slice(-this.mesesNaTabela).reverse();
+  }
+
+  rotulosRealizado(linhas: MesRealizado[]): string[] {
+    return linhas.map((l) => rotuloMes(l.mes, true));
+  }
+
+  seriesRealizado(linhas: MesRealizado[]): SerieGrafico[] {
+    const orcado = this.totalOrcado;
+    return [
+      { nome: 'Realizado acumulado', cor: 1, estilo: 'realizado', valores: linhas.map((l) => l.acumulado) },
+      { nome: 'Orçado', cor: 'neutra', estilo: 'planejado', valores: linhas.map(() => orcado) },
+    ];
+  }
+
+  rotuloMes(mes: string): string {
+    return rotuloMes(mes);
+  }
+
+  pctDoOrcado(valor: number): number {
+    return this.totalOrcado > 0 ? Math.round((valor / this.totalOrcado) * 100) : 0;
   }
 
   get semOrcamento(): number {

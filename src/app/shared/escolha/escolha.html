@@ -1,0 +1,19 @@
+@if (!digitando()) {
+    <select [id]="campoId ?? null" [disabled]="desabilitado()" [class.invalido]="invalido" [class.vazio]="!valor()"
+            (change)="escolher($any($event.target).value)">
+        <option value="" [selected]="!valor()">{{ vazio }}</option>
+        @for (o of lista; track o) {
+            <option [value]="o" [selected]="o === valor()">{{ o }}</option>
+        }
+        <option [value]="OUTRO">Outro…</option>
+    </select>
+} @else {
+    <span class="novo">
+        <input #campo [id]="campoId ?? null" [value]="valor()" [attr.maxlength]="maxlength" [class.invalido]="invalido"
+               placeholder="Novo valor" (input)="digitar($any($event.target).value)" (blur)="confirmar()"
+               (keydown.enter)="$event.preventDefault(); confirmar()">
+        <button type="button" (mousedown)="$event.preventDefault()" (click)="voltarParaLista()" aria-label="Escolher da lista" title="Escolher da lista">
+            <mat-icon>list</mat-icon>
+        </button>
+    </span>
+}

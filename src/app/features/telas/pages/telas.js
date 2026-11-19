@@ -31,8 +31,8 @@
     const AREAS = [
         { nome: 'Coordenação-Geral de TIC', qtd: 3, pct: 25, cor: '#3b82f6' },
         { nome: 'Diretoria de Tecnologia da Informação', qtd: 2, pct: 17, cor: '#22c55e' },
-        { nome: 'GECOR', qtd: 1, pct: 8, cor: '#eab308' },
-        { nome: 'GERED', qtd: 1, pct: 8, cor: '#ef4444' },
+        { nome: 'Atendimento', qtd: 1, pct: 8, cor: '#eab308' },
+        { nome: 'Infraestrutura', qtd: 1, pct: 8, cor: '#ef4444' },
         { nome: 'Outras (5 áreas)', qtd: 5, pct: 40, cor: '#94a3b8', outras: true },
     ];
     const totalProjetos = AREAS.reduce((s, a) => s + a.qtd, 0);

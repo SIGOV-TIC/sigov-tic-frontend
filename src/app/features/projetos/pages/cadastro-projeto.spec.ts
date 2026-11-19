@@ -137,9 +137,12 @@ describe('Cadastro de projeto', () => {
     expect(tela.projeto.orcamentoEstimado).toBe(50_000);
   });
 
-  it('busca nas sugestões ignora maiúsculas', async () => {
-    const { tela } = await abrir();
-    expect(tela.filtrar('lgpd', tela.nomes)).toEqual(['Adequação à LGPD']);
-    expect(tela.filtrar('', tela.siglas)).toBe(tela.siglas);
+  it('áreas, pessoas e plano estratégico vêm do que já está gravado', async () => {
+    const { tela, api } = await abrir();
+    const req = api.match('/api/opcoes');
+    req.forEach((r) => r.flush({ areasSolicitantes: ['Atendimento'], areasExecutoras: [], pessoas: ['Bruno Teixeira'],
+      objetivos: ['Eficiência operacional'], iniciativas: [], indicadores: [], origensDeGasto: [] }));
+    expect(tela.opcoes.areasSolicitantes).toEqual(['Atendimento']);
+    expect(tela.opcoes.objetivos).toEqual(['Eficiência operacional']);
   });
 });

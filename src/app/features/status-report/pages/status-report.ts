@@ -14,6 +14,9 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { RetratoService } from '../services/retrato.service';
 import { Metrica, Retrato, meta, valor } from '../models/retrato';
 import { GraficoTendencia, SerieGrafico } from '../../../shared/grafico/grafico-tendencia';
+import { Gasto } from '../../orcamento/models/gasto';
+import { GastoService } from '../../orcamento/services/gasto.service';
+import { acumuladoAte } from '../../orcamento/utils/linha-do-tempo';
 
 // Mês do relatório, do dia 1 ao último dia.
 interface Periodo {
@@ -82,12 +85,14 @@ export class StatusReport implements OnInit {
 
   // Retratos já emitidos do projeto; o do mês escolhido é o documento que vale.
   retratos: Retrato[] = [];
+  gastos: Gasto[] = [];
   emitindo = false;
   erroEmissao = '';
 
   constructor(
     private projetoService: ProjetoService,
     private retratoService: RetratoService,
+    private gastoService: GastoService,
     private auth: AuthService,
     private route: ActivatedRoute,
     private router: Router,
@@ -177,6 +182,11 @@ export class StatusReport implements OnInit {
       next: (lista) => (this.retratos = lista),
       // Sem retratos a tela segue como prévia; não há o que avisar.
       error: () => (this.retratos = []),
+    });
+    this.gastos = [];
+    this.gastoService.doProjeto(projetoId).subscribe({
+      next: (lista) => (this.gastos = lista),
+      error: () => (this.gastos = []),
     });
   }
 
@@ -274,15 +284,22 @@ export class StatusReport implements OnInit {
     ];
   }
 
+  // O realizado sai dos gastos lançados mês a mês: corrigir um mês corrige o gráfico.
+  // Sem gasto lançado, vale o que o retrato congelou.
+  private get realizadoDaSerie(): (number | null)[] {
+    if (!this.gastos.length) return this.daSerie('REALIZADO');
+    return this.serie.map((r) => acumuladoAte(this.gastos, mesDo(r)));
+  }
+
   get serieOrcamento(): SerieGrafico[] {
     return [
-      { nome: 'Realizado', cor: 1, estilo: 'realizado', valores: this.daSerie('REALIZADO') },
+      { nome: 'Realizado', cor: 1, estilo: 'realizado', valores: this.realizadoDaSerie },
       { nome: 'Orçado', cor: 'neutra', estilo: 'planejado', valores: this.daSerie('ORCADO') },
     ];
   }
 
   get temOrcamento(): boolean {
-    return this.daSerie('REALIZADO').some((v) => v != null && v > 0);
+    return this.realizadoDaSerie.some((v) => v != null && v > 0);
   }
 
   // O plano vale 1; a faixa aceita 10% para cada lado.
