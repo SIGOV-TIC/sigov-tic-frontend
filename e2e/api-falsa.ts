@@ -30,7 +30,7 @@ function deslocar(meses: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
 }
 
-// Quinzenas já emitidas do primeiro projeto: o avanço vai ficando para trás do plano
+// Meses já emitidos do primeiro projeto: o avanço vai ficando para trás do plano
 // e o custo sobe, que é o caso em que o gráfico precisa dizer alguma coisa.
 function historicoDeRetratos() {
   const hoje = new Date();
@@ -44,15 +44,16 @@ function historicoDeRetratos() {
   return serie.map((q, i) => {
     const inicio = new Date(hoje.getFullYear(), hoje.getMonth() - (serie.length - i), 1);
     const dia = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const ultimo = new Date(inicio.getFullYear(), inicio.getMonth() + 1, 0).getDate();
     return {
       id: 'h' + i,
       projetoId: 'p1',
       sigla: 'ERP',
       area: 'DTI',
       gerente: 'Cláudio Silva',
-      quinzenaInicio: `${dia(inicio)}-01`,
-      quinzenaFim: `${dia(inicio)}-15`,
-      emitidoEm: `${dia(inicio)}-16T09:00:00Z`,
+      periodoInicio: `${dia(inicio)}-01`,
+      periodoFim: `${dia(inicio)}-${ultimo}`,
+      emitidoEm: `${dia(inicio)}-${ultimo}T09:00:00Z`,
       autor: 'Paula Escritório',
       andamento: i === serie.length - 1 ? `${dia(inicio)}-10 · Ana: Homologação do módulo piloto concluída.` : null,
       pontoAtencao: 'Fornecedor atrasou a entrega do ambiente.',
@@ -272,16 +273,16 @@ export class ApiFalsa {
       return json(nova, 201);
     }
     if (caminho === '/api/retratos' || caminho === '/api/retratos/hoje') return json(metodo === 'GET' ? [] : {});
-    if (caminho === '/api/retratos-quinzenais/areas') {
+    if (caminho === '/api/retratos-mensais/areas') {
       return json([...new Set(this.retratos.map((r) => r.area as string))]);
     }
-    if (caminho === '/api/retratos-quinzenais/fatos' || caminho === '/api/retratos-quinzenais/fatos.csv') {
+    if (caminho === '/api/retratos-mensais/fatos' || caminho === '/api/retratos-mensais/fatos.csv') {
       const p = url.searchParams;
       const metricas = p.getAll('metrica');
       const linhas = this.retratos
         .filter((r) => !p.get('projeto') || r.projetoId === p.get('projeto'))
         .filter((r) => !p.get('area') || r.area === p.get('area'))
-        .filter((r) => !p.get('de') || (r.quinzenaInicio as string) >= p.get('de')!)
+        .filter((r) => !p.get('de') || (r.periodoInicio as string) >= p.get('de')!)
         .flatMap((r) =>
           (r.fatos as { metrica: string; valor: number | null; meta: number | null }[])
             .filter((f) => !metricas.length || metricas.includes(f.metrica))
@@ -290,8 +291,8 @@ export class ApiFalsa {
               sigla: r.sigla,
               area: r.area,
               gerente: r.gerente,
-              quinzenaInicio: r.quinzenaInicio,
-              quinzenaFim: r.quinzenaFim,
+              periodoInicio: r.periodoInicio,
+              periodoFim: r.periodoFim,
               emitidoEm: r.emitidoEm,
               metrica: f.metrica,
               valor: f.valor,
@@ -299,23 +300,24 @@ export class ApiFalsa {
             })),
         );
       if (caminho.endsWith('.csv')) {
-        const cabecalho = 'projeto_id,sigla,area,gerente,quinzena_inicio,quinzena_fim,emitido_em,metrica,valor,meta';
+        const cabecalho = 'projeto_id,sigla,area,gerente,periodo_inicio,periodo_fim,emitido_em,metrica,valor,meta';
         const corpo = linhas.map((l) => Object.values(l).join(',')).join('\n');
         return route.fulfill({ status: 200, contentType: 'text/csv', body: cabecalho + '\n' + corpo });
       }
       return json(linhas);
     }
-    if (caminho === '/api/retratos-quinzenais') {
+    if (caminho === '/api/retratos-mensais') {
       if (metodo === 'GET') return json(this.retratos.filter((r) => r.projetoId === url.searchParams.get('projeto')));
-      const inicio = url.searchParams.get('dia') ?? '';
+      const inicio = (url.searchParams.get('dia') ?? '').slice(0, 8) + '01';
+      const [ano, mes] = inicio.split('-').map(Number);
       const emitido = {
         id: 'r' + this.retratos.length,
         projetoId: url.searchParams.get('projeto'),
         sigla: 'CSD',
         area: 'TIC',
         gerente: 'Fernanda Lima',
-        quinzenaInicio: inicio,
-        quinzenaFim: inicio.slice(0, 8) + '15',
+        periodoInicio: inicio,
+        periodoFim: inicio.slice(0, 8) + new Date(ano, mes, 0).getDate(),
         emitidoEm: new Date().toISOString(),
         autor: CONTAS[this.loginAtual].nome,
         andamento: inicio + ' · Ana: Homologação do módulo piloto concluída.',

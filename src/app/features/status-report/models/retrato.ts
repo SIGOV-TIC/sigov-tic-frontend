@@ -1,4 +1,4 @@
-// Retrato de um projeto numa quinzena, como o backend o congelou na emissão.
+// Retrato de um projeto num mês, como o backend o congelou na emissão.
 export type Metrica =
   | 'PERCENTUAL_CONCLUIDO'
   | 'PERCENTUAL_ESPERADO'
@@ -23,8 +23,8 @@ export interface Retrato {
   sigla: string;
   area: string | null;
   gerente: string | null;
-  quinzenaInicio: string;
-  quinzenaFim: string;
+  periodoInicio: string;
+  periodoFim: string;
   emitidoEm: string;
   autor: string;
   andamento: string | null;
@@ -56,8 +56,8 @@ export interface LinhaFato {
   sigla: string;
   area: string | null;
   gerente: string | null;
-  quinzenaInicio: string;
-  quinzenaFim: string;
+  periodoInicio: string;
+  periodoFim: string;
   emitidoEm: string;
   metrica: Metrica;
   valor: number | null;

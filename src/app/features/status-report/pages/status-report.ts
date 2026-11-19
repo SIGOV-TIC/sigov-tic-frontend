@@ -15,9 +15,9 @@ import { RetratoService } from '../services/retrato.service';
 import { Metrica, Retrato, meta, valor } from '../models/retrato';
 import { GraficoTendencia, SerieGrafico } from '../../../shared/grafico/grafico-tendencia';
 
-// Quinzena do relatório: 1 a 15, ou 16 ao fim do mês.
-interface Quinzena {
-  chave: string; // 2026-10-2
+// Mês do relatório, do dia 1 ao último dia.
+interface Periodo {
+  chave: string; // 2026-10
   ini: string;
   fim: string;
   rotulo: string;
@@ -28,24 +28,31 @@ interface AtividadeNaFase {
   fase: string;
 }
 
-// Dias depois do fim da quinzena que entram em "próximas entregas".
-const HORIZONTE_DIAS = 15;
+// Dias depois do fim do mês que entram em "próximas entregas".
+const HORIZONTE_DIAS = 30;
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const MESES_EXTENSO = [
+  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+];
 
 function iso(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function quinzenaDe(ano: number, mes: number, metade: 1 | 2): Quinzena {
-  const ultimo = new Date(ano, mes + 1, 0).getDate();
-  const ini = new Date(ano, mes, metade === 1 ? 1 : 16);
-  const fim = new Date(ano, mes, metade === 1 ? 15 : ultimo);
+function periodoDe(ano: number, mes: number): Periodo {
+  const ini = new Date(ano, mes, 1);
   return {
-    chave: `${ano}-${mes + 1}-${metade}`,
+    chave: iso(ini).slice(0, 7),
     ini: iso(ini),
-    fim: iso(fim),
-    rotulo: `${ini.getDate()} a ${fim.getDate()} de ${MESES[mes]} ${ano}`,
+    fim: iso(new Date(ano, mes + 1, 0)),
+    rotulo: `${MESES_EXTENSO[mes]} de ${ano}`,
   };
+}
+
+// Mês (aaaa-mm) a que um retrato pertence; os da época quinzenal caem no mês em que começaram.
+function mesDo(retrato: Retrato): string {
+  return retrato.periodoInicio.slice(0, 7);
 }
 
 @Component({
@@ -62,31 +69,18 @@ export class StatusReport implements OnInit {
   carregando = true;
   erro = '';
 
-  // A quinzena atual e as cinco anteriores.
-  readonly quinzenas: Quinzena[] = (() => {
+  // O mês atual e os onze anteriores.
+  readonly periodos: Periodo[] = (() => {
     const hoje = new Date();
-    let ano = hoje.getFullYear();
-    let mes = hoje.getMonth();
-    let metade: 1 | 2 = hoje.getDate() > 15 ? 2 : 1;
-    const lista: Quinzena[] = [];
-    for (let i = 0; i < 6; i++) {
-      lista.push(quinzenaDe(ano, mes, metade));
-      if (metade === 2) metade = 1;
-      else {
-        metade = 2;
-        mes -= 1;
-        if (mes < 0) {
-          mes = 11;
-          ano -= 1;
-        }
-      }
-    }
-    return lista;
+    return Array.from({ length: 12 }, (_, i) => {
+      const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+      return periodoDe(d.getFullYear(), d.getMonth());
+    });
   })();
-  quinzena = this.quinzenas[0];
+  periodo = this.periodos[0];
   readonly emissao = iso(new Date());
 
-  // Retratos já emitidos do projeto; o da quinzena escolhida é o documento que vale.
+  // Retratos já emitidos do projeto; o do mês escolhido é o documento que vale.
   retratos: Retrato[] = [];
   emitindo = false;
   erroEmissao = '';
@@ -101,7 +95,7 @@ export class StatusReport implements OnInit {
 
   ngOnInit() {
     const params = this.route.snapshot.queryParamMap;
-    this.quinzena = this.quinzenas.find((q) => q.chave === params.get('quinzena')) ?? this.quinzenas[0];
+    this.periodo = this.periodos.find((p) => p.chave === params.get('mes')) ?? this.periodos[0];
     this.projetoService.seedSeNecessario();
     this.projetoService.listar(0, 100, 'todos').subscribe({
       next: (pagina) => {
@@ -146,13 +140,13 @@ export class StatusReport implements OnInit {
     });
   }
 
-  mudarQuinzena() {
+  mudarPeriodo() {
     this.gravarNaUrl();
   }
 
   private gravarNaUrl() {
     this.router.navigate([], {
-      queryParams: { projeto: this.projeto?.id, quinzena: this.quinzena.chave },
+      queryParams: { projeto: this.projeto?.id, mes: this.periodo.chave },
       replaceUrl: true,
     });
   }
@@ -169,7 +163,7 @@ export class StatusReport implements OnInit {
 
   estiloDeImpressao(): string {
     const esquerda = `${this.projeto?.sigla ?? ''} · ${this.projeto?.nome ?? ''}`;
-    const direita = `${this.emitido ? 'Status Report' : 'Prévia'} · ${this.quinzena.rotulo}`;
+    const direita = `${this.emitido ? 'Status Report' : 'Prévia'} · ${this.periodo.rotulo}`;
     const fonte = "font: 8pt 'Inter', sans-serif; color: #4F5D73;";
     return `@page {
       @top-left { content: ${JSON.stringify(esquerda)}; ${fonte} }
@@ -186,27 +180,36 @@ export class StatusReport implements OnInit {
     });
   }
 
-  // O documento emitido da quinzena escolhida; null enquanto ela é só prévia.
+  // O documento emitido do mês escolhido (o último, se houver mais de um); null enquanto ele é só prévia.
   get retrato(): Retrato | null {
-    return this.retratos.find((r) => r.quinzenaInicio === this.quinzena.ini) ?? null;
+    return this.vigentes.get(this.periodo.chave) ?? null;
+  }
+
+  // O retrato que vale em cada mês: o último emitido dentro dele.
+  private get vigentes(): Map<string, Retrato> {
+    const porMes = new Map<string, Retrato>();
+    for (const r of [...this.retratos].sort((a, b) => a.emitidoEm.localeCompare(b.emitidoEm))) {
+      porMes.set(mesDo(r), r);
+    }
+    return porMes;
   }
 
   get emitido(): boolean {
     return !!this.retrato;
   }
 
-  // Quinzenas que já têm documento emitido, para marcar na lista.
-  foiEmitida(q: Quinzena): boolean {
-    return this.retratos.some((r) => r.quinzenaInicio === q.ini);
+  // Meses que já têm documento emitido, para marcar na lista.
+  foiEmitido(p: Periodo): boolean {
+    return this.retratos.some((r) => mesDo(r) === p.chave);
   }
 
   get podeEmitir(): boolean {
-    // Aposentado: só as quinzenas que começaram até a data da aposentadoria.
+    // Aposentado: só os meses que começaram até a data da aposentadoria.
     const aposentadoEm = this.projeto?.aposentadoria?.data;
     return (
       (this.auth.ehEscritorio() || this.auth.ehAdmin()) &&
-      this.quinzena.ini <= this.emissao &&
-      (!aposentadoEm || this.quinzena.ini <= aposentadoEm)
+      this.periodo.ini <= this.emissao &&
+      (!aposentadoEm || this.periodo.ini <= aposentadoEm)
     );
   }
 
@@ -215,7 +218,7 @@ export class StatusReport implements OnInit {
     if (!id || this.emitindo) return;
     this.emitindo = true;
     this.erroEmissao = '';
-    this.retratoService.emitir(id, this.quinzena.ini).subscribe({
+    this.retratoService.emitir(id, this.periodo.ini).subscribe({
       next: (r) => {
         this.retratos = [r, ...this.retratos.filter((x) => x.id !== r.id)];
         this.emitindo = false;
@@ -227,22 +230,19 @@ export class StatusReport implements OnInit {
     });
   }
 
-  // Data de referência: o fim da quinzena, ou hoje se ela ainda não acabou.
+  // Data de referência: o fim do mês, ou hoje se ele ainda não acabou.
   private get referencia(): string {
-    return this.quinzena.fim < this.emissao ? this.quinzena.fim : this.emissao;
+    return this.periodo.fim < this.emissao ? this.periodo.fim : this.emissao;
   }
 
   // ---- Série histórica ----
-  // Os gráficos leem só o que foi emitido, em ordem de quinzena. Um ponto sozinho
-  // não é tendência: abaixo de duas quinzenas não há gráfico.
+  // Os gráficos leem só o que foi emitido, um ponto por mês. Um ponto sozinho
+  // não é tendência: abaixo de dois meses não há gráfico.
   private get serie(): Retrato[] {
-    const porQuinzena = new Map<string, Retrato>();
-    for (const r of [...this.retratos].sort((a, b) => a.emitidoEm.localeCompare(b.emitidoEm))) {
-      porQuinzena.set(r.quinzenaInicio, r);
-    }
-    return [...porQuinzena.values()]
-      .sort((a, b) => a.quinzenaInicio.localeCompare(b.quinzenaInicio))
-      .filter((r) => r.quinzenaInicio <= this.quinzena.ini);
+    return [...this.vigentes.entries()]
+      .filter(([mes]) => mes <= this.periodo.chave)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, r]) => r);
   }
 
   get temSerie(): boolean {
@@ -251,8 +251,8 @@ export class StatusReport implements OnInit {
 
   get rotulosSerie(): string[] {
     return this.serie.map((r) => {
-      const [, mes, dia] = r.quinzenaInicio.split('-');
-      return `${dia}/${mes}`;
+      const [ano, mes] = mesDo(r).split('-');
+      return `${MESES[Number(mes) - 1]}/${ano.slice(2)}`;
     });
   }
 
@@ -356,7 +356,7 @@ export class StatusReport implements OnInit {
     return this.baseARevisar(this.indices?.idp) || this.baseARevisar(this.indices?.idc);
   }
 
-  // Quinzenas emitidas com o mesmo avanço não desenham tendência: a linha seria reta
+  // Meses emitidos com o mesmo avanço não desenham tendência: a linha seria reta
   // por falta de história, não por estabilidade do projeto.
   get serieSemVariacao(): boolean {
     const avancos = this.daSerie('PERCENTUAL_CONCLUIDO').filter((v) => v != null);
@@ -378,17 +378,17 @@ export class StatusReport implements OnInit {
       });
     }
     if (this.emitido) return [];
-    return (this.projeto?.atualizacoes ?? []).filter((a) => a.data >= this.quinzena.ini && a.data <= this.quinzena.fim);
+    return (this.projeto?.atualizacoes ?? []).filter((a) => a.data >= this.periodo.ini && a.data <= this.periodo.fim);
   }
 
-  // Identificador curto do documento: projeto, quinzena e emissão.
+  // Identificador curto do documento: projeto, mês e emissão.
   get identificador(): string {
-    const quinzena = this.quinzena.ini.replaceAll('-', '');
+    const mes = this.periodo.chave.replace('-', '');
     const emissao = this.retrato ? this.retrato.id.slice(0, 6).toUpperCase() : 'PREVIA';
-    return `${this.projeto?.sigla ?? '—'}-${quinzena}-${emissao}`;
+    return `${this.projeto?.sigla ?? '—'}-${mes}-${emissao}`;
   }
 
-  // Quinzena sem nada registrado: uma linha resolve, três negativas não.
+  // Mês sem nada registrado: uma linha resolve, três negativas não.
   get semNarrativa(): boolean {
     return !this.atualizacoesDoPeriodo.length && !this.pontoAtencao && !this.recomendacao;
   }
