@@ -1,4 +1,14 @@
-import { ProjetoRequest, SituacaoFase } from '../models/projeto';
+import { Aposentadoria, ProjetoRequest, SituacaoFase } from '../models/projeto';
+
+// Data em que o projeto é lido: hoje, ou o dia da aposentadoria, quando ele parou de andar.
+export function dataReferencia(projeto?: ProjetoRequest | null): Date {
+  const data = (projeto as { aposentadoria?: Aposentadoria | null } | null | undefined)?.aposentadoria?.data;
+  if (data) {
+    const [a, m, d] = data.split('-').map(Number);
+    if (a && m && d) return new Date(a, m - 1, d);
+  }
+  return new Date();
+}
 
 // Cores por posição da fase; compartilhadas entre a visualização do projeto e o cronograma.
 export const CORES_FASE = [
@@ -48,7 +58,7 @@ export function situacaoFase(projeto: ProjetoRequest, indice: number): SituacaoF
   if (!projeto.fases?.some((f) => f.situacao)) {
     const janela = janelaFase(projeto, indice);
     if (janela) {
-      const hoje = new Date();
+      const hoje = dataReferencia(projeto);
       if (janela.fim < hoje) return 'CONCLUIDA';
       if (janela.ini <= hoje) return 'EM_ANDAMENTO';
       return 'PENDENTE';

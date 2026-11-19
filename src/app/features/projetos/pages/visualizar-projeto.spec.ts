@@ -124,6 +124,16 @@ describe('Tela do projeto', () => {
       expect(tela.podeEditar).toBe(true);
     });
 
+    it('prazo decorrido para no dia da aposentadoria', async () => {
+      const { tela } = await abrir('USER', 'u-leitor', {
+        ...aposentado(),
+        aposentadoria: { data: '2026-04-30', motivo: 'CANCELADO' as const, autor: 'Renata' },
+      });
+      expect(tela.percentualDecorrido).toBe(33);
+      expect(tela.mesesDecorridos).toBe(3);
+      expect(tela.mesesTotais).toBe(12);
+    });
+
     it('PO e visualizador não veem Aposentar nem Reativar', async () => {
       for (const [perfil, id] of [['GESTOR_PROJETO', 'u-po'], ['USER', 'u-leitor']] as const) {
         TestBed.resetTestingModule();

@@ -8,7 +8,7 @@ import { ProjetoResponse, rotuloMotivo, StatusProjeto } from '../models/projeto'
 import { ProjetoService } from '../services/projeto.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { moedaCompacta } from '../utils/moeda';
-import { calcularDesvio, Desvio, TOLERANCIA_DESVIO } from '../utils/desvio';
+import { calcularDesvio, Desvio, fracaoDecorrida, TOLERANCIA_DESVIO } from '../utils/desvio';
 import { fatia, Paginacao, paginaNaUrl } from '../../../shared/paginacao/paginacao';
 import { EstadoTela } from '../../../shared/estado/estado';
 import { mensagemDeErro } from '../../../shared/estado/erro-api';
@@ -144,11 +144,8 @@ export class Portfolio implements OnInit {
 
   percentualDecorrido(projeto: ProjetoResponse): number | null {
     if (!projeto.dataInicioPrevista || !projeto.dataConclusaoPrevista) return null;
-    const inicio = new Date(projeto.dataInicioPrevista).getTime();
-    const fim = new Date(projeto.dataConclusaoPrevista).getTime();
-    if (fim <= inicio) return 0;
-    const pct = ((Date.now() - inicio) / (fim - inicio)) * 100;
-    return Math.round(Math.min(100, Math.max(0, pct)));
+    const f = fracaoDecorrida(projeto);
+    return f == null ? 0 : Math.round(f * 100);
   }
 
   moeda(valor: number): string {

@@ -1,4 +1,5 @@
 import { ProjetoRequest } from '../models/projeto';
+import { dataReferencia } from './fase';
 import { progressoProjeto } from './saude';
 
 // Índices de desempenho pelo método do valor agregado (PMBOK).
@@ -28,7 +29,7 @@ function lerData(valor?: string): number | null {
 }
 
 // Fração do prazo já decorrida (0 a 1).
-export function fracaoDecorrida(p: ProjetoRequest, hoje: Date = new Date()): number | null {
+export function fracaoDecorrida(p: ProjetoRequest, hoje: Date = dataReferencia(p)): number | null {
   const ini = lerData(p.dataInicioPrevista);
   const fim = lerData(p.dataConclusaoPrevista);
   if (ini == null || fim == null || fim <= ini) return null;
@@ -41,7 +42,7 @@ export function avancoMensuravel(p: ProjetoRequest): boolean {
   return (p.fases?.length ?? 0) > 0 || p.prazoQuadrante === 'CONCLUIDO';
 }
 
-export function calcularDesvio(p: ProjetoRequest, hoje: Date = new Date()): Desvio {
+export function calcularDesvio(p: ProjetoRequest, hoje: Date = dataReferencia(p)): Desvio {
   const tempo = fracaoDecorrida(p, hoje);
   const fisico = progressoProjeto(p) / 100;
   const orcamento = p.orcamentoEstimado ?? 0;
