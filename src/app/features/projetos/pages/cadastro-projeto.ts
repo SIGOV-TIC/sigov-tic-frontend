@@ -9,12 +9,13 @@ import { PessoaResumo, ProjetoRequest, FaseProjeto, TipoProjeto, FaseCiclo, Quad
 import { ProjetoService } from '../services/projeto.service';
 import { UsuarioService } from '../../usuarios/services/usuario.service';
 import { janelaFase } from '../utils/fase';
+import { SomenteNumero } from '../../../shared/numero/somente-numero';
 
 @Component({
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-cadastro-projeto',
-  imports: [FormsModule, MatAutocompleteModule, MatIconModule, MatInputModule],
+  imports: [FormsModule, MatAutocompleteModule, MatIconModule, MatInputModule, SomenteNumero],
   templateUrl: './cadastro-projeto.html',
   styleUrl: './cadastro-projeto.scss',
 })

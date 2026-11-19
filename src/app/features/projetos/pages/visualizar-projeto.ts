@@ -22,6 +22,7 @@ import { dataReferencia, indiceFaseAtual, janelaFase, materializarSituacoes, sit
 import { MARGEM_RISCO_PONTOS } from '../utils/saude';
 import { EstadoTela } from '../../../shared/estado/estado';
 import { mensagemDeErro } from '../../../shared/estado/erro-api';
+import { SomenteNumero } from '../../../shared/numero/somente-numero';
 
 type CampoTexto = 'pontoAtencao' | 'recomendacao';
 
@@ -32,7 +33,7 @@ const DIAS_MES = 365.25 / 12;
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-visualizar-projeto',
-  imports: [RouterLink, FormsModule, MatIconModule, NgTemplateOutlet, EstadoTela],
+  imports: [RouterLink, FormsModule, MatIconModule, NgTemplateOutlet, EstadoTela, SomenteNumero],
   templateUrl: './visualizar-projeto.html',
   styleUrl: './visualizar-projeto.scss',
 })

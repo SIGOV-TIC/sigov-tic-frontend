@@ -79,6 +79,9 @@ export class Cronograma implements OnInit, AfterViewChecked {
     { valor: 'REJEITADO', label: 'Rejeitado' },
   ];
 
+  // Sem recorte escolhido, o período cobre todos os projetos.
+  private periodoTotal = { inicio: new Date().getFullYear(), fim: new Date().getFullYear() + 1 };
+
   // `rascunho` é o que o usuário edita; `filtros` é o que está aplicado à matriz.
   rascunho: Filtros = this.filtrosPadrao();
   filtros: Filtros = { ...this.rascunho };
@@ -181,8 +184,8 @@ export class Cronograma implements OnInit, AfterViewChecked {
   }
 
   private filtrosPadrao(): Filtros {
-    const ano = new Date().getFullYear();
-    return { area: '', status: '', anoInicio: ano, anoFim: ano + 1, escala: 'TRIMESTRE' };
+    const { inicio, fim } = this.periodoTotal;
+    return { area: '', status: '', anoInicio: inicio, anoFim: fim, escala: 'TRIMESTRE' };
   }
 
   private prepararOpcoes() {
@@ -197,6 +200,9 @@ export class Cronograma implements OnInit, AfterViewChecked {
     const max = Math.max(...anos);
     this.anosDisponiveis = Array.from({ length: max - min + 2 }, (_, i) => min + i);
     this.areasDisponiveis = [...new Set(this.projetos.map((p) => p.areaSolicitante || 'Sem área'))].sort();
+    this.periodoTotal = { inicio: min, fim: Math.max(max, min + 1) };
+    this.rascunho = this.filtrosPadrao();
+    this.filtros = { ...this.rascunho };
   }
 
   filtrar() {

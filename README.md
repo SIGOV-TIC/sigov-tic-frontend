@@ -144,3 +144,7 @@ O frontend fica na Vercel. O `vercel.json` gera o build, manda `/api/*` para a A
 ```bash
 npx vercel --prod
 ```
+
+## Créditos
+
+O SIGOV-TIC é uma parceria entre alunos da Residência Porto Digital (UCB) e a BBTS.

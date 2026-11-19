@@ -20,6 +20,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { fatia, Paginacao } from '../../../shared/paginacao/paginacao';
 import { EstadoTela } from '../../../shared/estado/estado';
 import { mensagemDeErro } from '../../../shared/estado/erro-api';
+import { SomenteNumero } from '../../../shared/numero/somente-numero';
 
 interface LinhaMeta {
   meta: Meta;
@@ -56,7 +57,7 @@ const SEM_OBJETIVO = 'Sem objetivo estratégico definido';
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-objetivos',
-  imports: [RouterLink, FormsModule, MatIconModule, Paginacao, EstadoTela],
+  imports: [RouterLink, FormsModule, MatIconModule, Paginacao, EstadoTela, SomenteNumero],
   templateUrl: './objetivos.html',
   styleUrl: './objetivos.scss',
 })
