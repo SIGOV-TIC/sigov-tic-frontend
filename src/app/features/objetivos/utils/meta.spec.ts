@@ -1,4 +1,4 @@
-import { avaliarMeta } from './meta';
+import { avaliarMeta, metaNoAno, prazoEfetivo, rotuloCiclo } from './meta';
 import { dia, meta } from '../../../testing/dados';
 
 describe('avaliação da meta', () => {
@@ -41,8 +41,18 @@ describe('avaliação da meta', () => {
     expect(a.valorEsperado).toBe(25);
   });
 
-  it('sem data de início, conta da criação', () => {
-    const a = avaliarMeta(meta({ dataInicio: null, createdAt: '2026-04-01T12:00:00' }), meioDoAno);
-    expect(a.esperado).toBeLessThan(50);
+  it('sem datas, a meta corre do começo ao fim do ano do plano', () => {
+    const a = avaliarMeta(meta({ dataInicio: null, prazo: null, ano: 2026 }), meioDoAno);
+    expect(a.esperado).toBeGreaterThanOrEqual(49);
+    expect(a.esperado).toBeLessThanOrEqual(51);
+    expect(prazoEfetivo(meta({ prazo: null, ano: 2026 }))).toBe('2026-12-31');
+  });
+
+  it('no ciclo quadrienal, o prazo padrão é o fim do quarto ano', () => {
+    const m = meta({ dataInicio: null, prazo: null, ano: 2027, ciclo: 'QUADRIENAL' });
+    expect(prazoEfetivo(m)).toBe('2030-12-31');
+    expect(rotuloCiclo(m)).toBe('2027–2030');
+    expect(rotuloCiclo(meta({ ano: 2027 }))).toBe('2027');
+    expect([2026, 2027, 2030, 2031].map((a) => metaNoAno(m, a))).toEqual([false, true, true, false]);
   });
 });

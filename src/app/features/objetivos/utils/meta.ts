@@ -18,10 +18,35 @@ function lerData(valor?: string | null): Date | null {
   return a && m && d ? new Date(a, m - 1, d) : null;
 }
 
+// Último ano coberto pela meta.
+export function anoFinal(m: Pick<Meta, 'ano' | 'ciclo'>): number {
+  return m.ano + (m.ciclo === 'QUADRIENAL' ? 3 : 0);
+}
+
+// '2027' ou '2027–2030'.
+export function rotuloCiclo(m: Pick<Meta, 'ano' | 'ciclo'>): string {
+  const fim = anoFinal(m);
+  return fim === m.ano ? `${m.ano}` : `${m.ano}–${fim}`;
+}
+
+// A meta vale no ano escolhido quando ele cai dentro do ciclo dela.
+export function metaNoAno(m: Pick<Meta, 'ano' | 'ciclo'>, ano: number): boolean {
+  return m.ano <= ano && ano <= anoFinal(m);
+}
+
+// Sem datas, a meta corre do início do ciclo ao último dia do ciclo.
+export function inicioEfetivo(m: Meta): string {
+  return m.dataInicio || (m.ano ? `${m.ano}-01-01` : m.createdAt.slice(0, 10));
+}
+
+export function prazoEfetivo(m: Meta): string {
+  return m.prazo || `${anoFinal(m)}-12-31`;
+}
+
 // Regra única da meta, usada por Objetivos e Dashboard: caminho percorrido contra o tempo decorrido até o prazo.
 export function avaliarMeta(m: Meta, hoje: Date = new Date()): AvaliacaoMeta {
-  const prazo = lerData(m.prazo)!;
-  const inicio = lerData(m.dataInicio) ?? new Date(m.createdAt);
+  const prazo = lerData(prazoEfetivo(m))!;
+  const inicio = lerData(inicioEfetivo(m))!;
   const total = prazo.getTime() - inicio.getTime();
   const esperado = total > 0 ? Math.min(100, Math.max(0, Math.round(((hoje.getTime() - inicio.getTime()) / total) * 100))) : 100;
   const valorEsperado = m.valorInicial + (esperado / 100) * (m.valorAlvo - m.valorInicial);

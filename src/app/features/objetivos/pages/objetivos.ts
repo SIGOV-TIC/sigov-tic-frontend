@@ -14,8 +14,9 @@ import {
   estadoProjeto,
   progressoProjeto,
 } from '../../projetos/utils/saude';
-import { Meta, MetaRequest, MetaService } from '../services/meta.service';
-import { avaliarMeta } from '../utils/meta';
+import { ItemFinanceiro, Meta, MetaRequest, MetaService } from '../services/meta.service';
+import { anoFinal, avaliarMeta, metaNoAno, rotuloCiclo } from '../utils/meta';
+import { moedaCompacta } from '../../projetos/utils/moeda';
 import { AuthService } from '../../../core/auth/auth.service';
 import { fatia, Paginacao } from '../../../shared/paginacao/paginacao';
 import { EstadoTela } from '../../../shared/estado/estado';
@@ -69,6 +70,9 @@ export class Objetivos implements OnInit {
 
   abertos = new Set<string>();
 
+  // Ano do plano escolhido; sem escolha, todos.
+  ano: number | null = null;
+
   readonly rotulo = ROTULO_ESTADO;
   readonly icone = ICONE_ESTADO;
 
@@ -121,20 +125,44 @@ export class Objetivos implements OnInit {
     return fatia(o.projetos, this.paginaDe('projetos:' + o.titulo), this.tamanhoProjetos);
   }
 
+  // ---- Ano do plano ----
+
+  get anos(): number[] {
+    const anos = new Set<number>([new Date().getFullYear()]);
+    this.metas.forEach((m) => {
+      for (let a = m.ano; a <= anoFinal(m); a++) anos.add(a);
+    });
+    return [...anos].sort();
+  }
+
+  private get metasDoAno(): Meta[] {
+    const ano = this.ano;
+    return ano == null ? this.metas : this.metas.filter((m) => metaNoAno(m, ano));
+  }
+
+  // Projeto entra no ano quando o período previsto o toca; sem datas, entra sempre.
+  private projetoNoAno(p: ProjetoResponse): boolean {
+    if (this.ano == null) return true;
+    const ini = Number(p.dataInicioPrevista?.slice(0, 4));
+    const fim = Number(p.dataConclusaoPrevista?.slice(0, 4));
+    if (!ini || !fim) return true;
+    return ini <= this.ano && this.ano <= fim;
+  }
+
   // ---- Montagem ----
 
   get objetivos(): Objetivo[] {
     const titulos = new Set<string>();
     const projetosPor = new Map<string, LinhaProjeto[]>();
     this.projetos
-      .filter((p) => p.status !== 'REJEITADO')
+      .filter((p) => p.status !== 'REJEITADO' && this.projetoNoAno(p))
       .forEach((p) => {
         const titulo = (p.objetivoEstrategico ?? '').trim() || SEM_OBJETIVO;
         titulos.add(titulo);
         projetosPor.set(titulo, [...(projetosPor.get(titulo) ?? []), { projeto: p, estado: estadoProjeto(p), avanco: progressoProjeto(p) }]);
       });
     const metasPor = new Map<string, LinhaMeta[]>();
-    this.metas.forEach((m) => {
+    this.metasDoAno.forEach((m) => {
       titulos.add(m.objetivo);
       metasPor.set(m.objetivo, [...(metasPor.get(m.objetivo) ?? []), this.linhaMeta(m)]);
     });
@@ -169,7 +197,7 @@ export class Objetivos implements OnInit {
   // ---- Resumo ----
 
   get totalMetas(): number {
-    return this.metas.length;
+    return this.metasDoAno.length;
   }
 
   get metasForaDoPrevisto(): number {
@@ -208,7 +236,6 @@ export class Objetivos implements OnInit {
   }
 
   novaMeta(objetivo = '') {
-    const ano = new Date().getFullYear();
     this.erroEdicao = '';
     this.edicao = {
       objetivo,
@@ -217,16 +244,50 @@ export class Objetivos implements OnInit {
       valorInicial: 0,
       valorAlvo: 100,
       valorAtual: null,
-      dataInicio: `${ano}-01-01`,
-      prazo: `${ano}-12-31`,
+      dataInicio: null,
+      prazo: null,
       responsavel: '',
+      ano: this.ano ?? new Date().getFullYear(),
+      ciclo: 'ANUAL',
+      itensFinanceiros: [],
     };
   }
 
   editar(m: Meta) {
     this.erroEdicao = '';
-    const { id, objetivo, indicador, unidade, valorInicial, valorAlvo, valorAtual, dataInicio, prazo, responsavel } = m;
-    this.edicao = { id, objetivo, indicador, unidade, valorInicial, valorAlvo, valorAtual, dataInicio, prazo, responsavel };
+    const { id, objetivo, indicador, unidade, valorInicial, valorAlvo, valorAtual, dataInicio, prazo, responsavel, ano, ciclo } = m;
+    const itensFinanceiros = (m.itensFinanceiros ?? []).map(({ quantidade, unidade, valorUnitario }) => ({ quantidade, unidade, valorUnitario }));
+    this.edicao = { id, objetivo, indicador, unidade, valorInicial, valorAlvo, valorAtual, dataInicio, prazo, responsavel, ano, ciclo, itensFinanceiros };
+  }
+
+  // ---- Meta financeira ----
+
+  adicionarItem() {
+    this.edicao?.itensFinanceiros.push({ quantidade: 1, unidade: '', valorUnitario: null as unknown as number });
+  }
+
+  removerItem(i: number) {
+    this.edicao?.itensFinanceiros.splice(i, 1);
+  }
+
+  totalItem(i: ItemFinanceiro): number {
+    return (Number(i.quantidade) || 0) * (Number(i.valorUnitario) || 0);
+  }
+
+  totalFinanceiro(itens: ItemFinanceiro[]): number {
+    return itens.reduce((s, i) => s + this.totalItem(i), 0);
+  }
+
+  descricaoFinanceira(m: Meta): string {
+    return (m.itensFinanceiros ?? []).map((i) => `${this.numero(i.quantidade)} ${i.unidade} × ${this.moeda(i.valorUnitario)}`).join(' · ');
+  }
+
+  moeda(v: number | null | undefined): string {
+    return v == null ? '—' : moedaCompacta(v);
+  }
+
+  rotuloCiclo(m: Meta): string {
+    return rotuloCiclo(m);
   }
 
   fecharEdicao() {
@@ -241,8 +302,13 @@ export class Objetivos implements OnInit {
   salvar() {
     const e = this.edicao;
     if (!e) return;
-    if (!e.objetivo.trim() || !e.indicador.trim() || !e.prazo || e.valorInicial == null || e.valorAlvo == null) {
-      this.erroEdicao = 'Preencha objetivo, indicador, valores inicial e alvo e prazo.';
+    if (!e.objetivo.trim() || !e.indicador.trim() || !e.ano || e.valorInicial == null || e.valorAlvo == null) {
+      this.erroEdicao = 'Preencha objetivo, indicador, ano e os valores inicial e alvo.';
+      return;
+    }
+    const itens = e.itensFinanceiros.filter((i) => i.unidade?.trim() || i.valorUnitario != null);
+    if (itens.some((i) => !(Number(i.quantidade) > 0) || !i.unidade?.trim() || i.valorUnitario == null || Number(i.valorUnitario) < 0)) {
+      this.erroEdicao = 'Complete quantidade, unidade e valor de cada linha financeira, ou remova a linha.';
       return;
     }
     if (Number(e.valorInicial) === Number(e.valorAlvo)) {
@@ -256,6 +322,9 @@ export class Objetivos implements OnInit {
       valorInicial: Number(dados.valorInicial),
       valorAlvo: Number(dados.valorAlvo),
       dataInicio: dados.dataInicio || null,
+      prazo: dados.prazo || null,
+      ano: Number(dados.ano),
+      itensFinanceiros: itens.map((i) => ({ quantidade: Number(i.quantidade), unidade: i.unidade.trim(), valorUnitario: Number(i.valorUnitario) })),
     };
     this.salvando = true;
     this.erroEdicao = '';

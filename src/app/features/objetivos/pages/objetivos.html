@@ -11,6 +11,17 @@
     <app-estado tipo="erro" [mensagem]="erro" (tentar)="recarregar()" />
 } @else {
     @let os = objetivos;
+    <div class="barra-filtro">
+        <label class="filtro">
+            <span>Ano</span>
+            <select name="ano" [(ngModel)]="ano">
+                <option [ngValue]="null">Todos os anos</option>
+                @for (a of anos; track a) {
+                    <option [ngValue]="a">{{ a }}</option>
+                }
+            </select>
+        </label>
+    </div>
     <div class="resumo">
         <span><b>{{ os.length }}</b> {{ os.length === 1 ? 'objetivo' : 'objetivos' }}</span>
         <span><b>{{ totalMetas }}</b> {{ totalMetas === 1 ? 'meta' : 'metas' }}</span>
@@ -58,7 +69,8 @@
                                             <th class="num">Atual</th>
                                             <th class="num"><span class="dica" title="Onde a meta deveria estar hoje, pelo tempo decorrido até o prazo">Hoje</span></th>
                                             <th class="num">Alvo</th>
-                                            <th>Prazo</th>
+                                            <th class="num">Financeiro</th>
+                                            <th>Ano</th>
                                             <th>Responsável</th>
                                             <th></th>
                                         </tr>
@@ -85,7 +97,8 @@
                                                 <td class="num atual">{{ numero(m.meta.valorAtual) }}</td>
                                                 <td class="num">{{ numero(m.valorEsperado) }}</td>
                                                 <td class="num">{{ numero(m.meta.valorAlvo) }}</td>
-                                                <td>{{ prazoCurto(m.meta.prazo) }}</td>
+                                                <td class="num" [title]="descricaoFinanceira(m.meta)">{{ m.meta.itensFinanceiros?.length ? moeda(m.meta.valorFinanceiroTotal) : '—' }}</td>
+                                                <td>{{ rotuloCiclo(m.meta) }}</td>
                                                 <td>{{ m.meta.responsavel || '—' }}</td>
                                                 <td class="acao">
                                                     @if (auth.pode('editarMetas')) {
@@ -154,9 +167,41 @@
                 <input name="valorAtual" type="number" step="any" [(ngModel)]="e.valorAtual" placeholder="Última medição">
             </label>
             <div class="form-linha">
-                <label>Início <input name="dataInicio" type="date" [(ngModel)]="e.dataInicio"></label>
-                <label>Prazo <input name="prazo" type="date" [(ngModel)]="e.prazo" required></label>
+                <label>Ano <input name="ano" type="number" min="2000" max="2100" [(ngModel)]="e.ano" required></label>
+                <label>Ciclo
+                    <select name="ciclo" [(ngModel)]="e.ciclo">
+                        <option value="ANUAL">Anual</option>
+                        <option value="QUADRIENAL">Quadrienal ({{ e.ano }}–{{ (e.ano || 0) + 3 }})</option>
+                    </select>
+                </label>
             </div>
+            <div class="form-linha">
+                <label>Início (opcional) <input name="dataInicio" type="date" [(ngModel)]="e.dataInicio"></label>
+                <label>Prazo (opcional) <input name="prazo" type="date" [(ngModel)]="e.prazo"></label>
+            </div>
+
+            <fieldset class="financeiro">
+                <legend>Meta financeira</legend>
+                @if (e.itensFinanceiros.length) {
+                    <div class="item-financeiro item-cabeca" aria-hidden="true">
+                        <span>Qtd.</span><span>Unidade</span><span>Valor unitário (R$)</span>
+                    </div>
+                }
+                @for (item of e.itensFinanceiros; track $index; let i = $index) {
+                    <div class="item-financeiro">
+                        <input [name]="'qtd' + i" type="number" min="0" step="any" [(ngModel)]="item.quantidade" [attr.aria-label]="'Quantidade da linha ' + (i + 1)">
+                        <input [name]="'unidade' + i" [(ngModel)]="item.unidade" maxlength="60" placeholder="contratos" [attr.aria-label]="'Unidade da linha ' + (i + 1)">
+                        <input [name]="'valor' + i" type="number" min="0" step="any" [(ngModel)]="item.valorUnitario" [attr.aria-label]="'Valor unitário da linha ' + (i + 1)">
+                        <button type="button" class="item-remover" (click)="removerItem(i)" [attr.aria-label]="'Remover linha ' + (i + 1)"><mat-icon>close</mat-icon></button>
+                    </div>
+                }
+                <div class="financeiro-rodape">
+                    <button type="button" class="link" (click)="adicionarItem()"><mat-icon>add</mat-icon>Adicionar linha</button>
+                    @if (e.itensFinanceiros.length) {
+                        <span class="financeiro-total">Total <b>{{ moeda(totalFinanceiro(e.itensFinanceiros)) }}</b></span>
+                    }
+                </div>
+            </fieldset>
             <label>Responsável
                 <input name="responsavel" [(ngModel)]="e.responsavel">
             </label>

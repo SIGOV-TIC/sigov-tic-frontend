@@ -2,7 +2,17 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-// Meta de um objetivo estratégico: indicador, valor e prazo.
+export type CicloMeta = 'ANUAL' | 'QUADRIENAL';
+
+// Linha da meta financeira: quantidade, unidade e valor de cada unidade (ex.: 2 contratos de R$ 500 mil).
+export interface ItemFinanceiro {
+  quantidade: number;
+  unidade: string;
+  valorUnitario: number;
+  total?: number;
+}
+
+// Meta de um objetivo estratégico: indicador e valor, lida pelo ano do plano.
 export interface Meta {
   id: string;
   objetivo: string;
@@ -12,13 +22,19 @@ export interface Meta {
   valorAlvo: number;
   valorAtual?: number | null;
   dataInicio?: string | null;
-  prazo: string;
+  // Opcional: sem prazo, a meta vence no fim do ciclo.
+  prazo?: string | null;
   responsavel?: string;
+  // Ano do plano; no ciclo quadrienal, o primeiro dos quatro anos.
+  ano: number;
+  ciclo: CicloMeta;
+  itensFinanceiros: ItemFinanceiro[];
+  valorFinanceiroTotal?: number;
   createdAt: string;
   updatedAt: string;
 }
 
-export type MetaRequest = Omit<Meta, 'id' | 'createdAt' | 'updatedAt'>;
+export type MetaRequest = Omit<Meta, 'id' | 'createdAt' | 'updatedAt' | 'valorFinanceiroTotal'>;
 
 @Injectable({ providedIn: 'root' })
 export class MetaService {

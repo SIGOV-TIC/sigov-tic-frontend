@@ -324,7 +324,7 @@
         color: var(--text-muted);
     }
 
-    input {
+    input, select {
         height: 36px;
         padding: 0 10px;
         font: inherit;
@@ -346,3 +346,72 @@
 
 @keyframes veu-surgir { from { opacity: 0; } }
 @keyframes painel-entrar { from { transform: translateX(24px); opacity: 0; } }
+
+.barra-filtro { margin-bottom: 16px; }
+
+.filtro {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2xs);
+
+    > span { font-size: var(--typescale-paragraph-x-small-size); color: var(--text-muted); }
+
+    select {
+        min-width: 160px;
+        min-height: 36px;
+        padding: 0 var(--spacing-sm);
+        font: inherit;
+        font-size: var(--typescale-paragraph-small-size);
+        color: var(--text-primary);
+        background-color: var(--bg-input);
+        border: 1px solid var(--border-main);
+        border-radius: var(--border-radius-md);
+        color-scheme: inherit;
+
+        &:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 1px; }
+    }
+}
+
+.financeiro {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 12px 0 0;
+    border: none;
+    border-top: 1px solid var(--fio);
+
+    legend { padding: 0; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+}
+
+.item-financeiro {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1fr) 28px;
+    gap: 8px;
+    align-items: center;
+}
+
+.item-cabeca {
+    margin-bottom: -4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.item-remover {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 36px;
+    border: none;
+    background: none;
+    color: var(--text-faint);
+    cursor: pointer;
+
+    mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    &:hover { color: var(--text-primary); }
+}
+
+.financeiro-rodape { display: flex; align-items: center; justify-content: space-between; }
+.financeiro-total { font-size: 13px; color: var(--text-muted); b { color: var(--text-primary); } }

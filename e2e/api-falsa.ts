@@ -130,7 +130,9 @@ function dadosIniciais() {
   ];
   const metas = [
     { id: 'm1', objetivo: 'Eficiência operacional', indicador: 'Processos digitalizados', unidade: '%', valorInicial: 0, valorAlvo: 100, valorAtual: 10,
-      dataInicio: deslocar(-6), prazo: deslocar(6), responsavel: 'Escritório', createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z' },
+      dataInicio: deslocar(-6), prazo: deslocar(6), responsavel: 'Escritório', ano: Number(deslocar(-6).slice(0, 4)), ciclo: 'QUADRIENAL',
+      itensFinanceiros: [{ quantidade: 2, unidade: 'contratos', valorUnitario: 500_000, total: 1_000_000 }], valorFinanceiroTotal: 1_000_000,
+      createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z' },
   ];
   const usuarios = Object.entries(CONTAS).map(([login, c]) => ({ id: c.id, login, nome: c.nome, perfil: c.perfil, ativo: true }));
   return { projetos, metas, usuarios };
