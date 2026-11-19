@@ -352,7 +352,12 @@
                 <label class="cf-largo"><span>Nome da fase</span><input type="text" [(ngModel)]="r.nome" [disabled]="!podeEditar"></label>
                 <label><span>Data de início</span><input type="date" [(ngModel)]="r.dataInicio"></label>
                 <label><span>Data de fim</span><input type="date" [(ngModel)]="r.dataFim" required></label>
-                <label><span>Concluído (%)</span><input type="number" min="0" max="100" [(ngModel)]="r.percentual" (blur)="ajustarPercentual(r)"></label>
+                <div class="cf-largo cf-campo"><span id="pct-fase">Concluído (%)</span>
+                    <div class="cf-pct">
+                        <input type="range" min="0" max="100" step="5" [(ngModel)]="r.percentual" aria-labelledby="pct-fase">
+                        <input type="number" min="0" max="100" [(ngModel)]="r.percentual" (blur)="ajustarPercentual(r)" aria-labelledby="pct-fase">
+                    </div>
+                </div>
                 <label><span>Situação</span>
                     <select [(ngModel)]="r.situacao">
                         <option value="PENDENTE">Pendente</option>
@@ -444,7 +449,12 @@
                 </select>
             </label>
             @if (r.situacao === 'EM_ANDAMENTO') {
-                <label><span>Concluído (%)</span><input type="number" min="0" max="99" [(ngModel)]="r.percentual"></label>
+                <div class="cf-largo cf-campo"><span id="pct-atividade">Concluído (%)</span>
+                    <div class="cf-pct">
+                        <input type="range" min="0" max="99" [(ngModel)]="r.percentual" aria-labelledby="pct-atividade">
+                        <input type="number" min="0" max="99" [(ngModel)]="r.percentual" aria-labelledby="pct-atividade">
+                    </div>
+                </div>
             }
             <div class="cf-largo cf-atv-form-acoes">
                 <button type="button" class="cf-btn" (click)="rascunhoAtividade = null">Cancelar</button>

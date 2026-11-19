@@ -490,9 +490,18 @@
     gap: 14px;
     margin-top: 20px;
 
-    label { display: flex; flex-direction: column; gap: 6px; }
-    label > span { font-size: 12px; color: var(--text-faint); }
+    label, .cf-campo { display: flex; flex-direction: column; gap: 6px; }
+    label > span, .cf-campo > span { font-size: 12px; color: var(--text-faint); }
     .cf-largo { grid-column: 1 / -1; }
+
+    .cf-pct {
+        display: grid;
+        grid-template-columns: 1fr 72px;
+        align-items: center;
+        gap: 12px;
+
+        input[type='range'] { height: auto; padding: 0; border: 0; background: none; accent-color: var(--accent-blue); }
+    }
 
     input, select {
         height: 36px;

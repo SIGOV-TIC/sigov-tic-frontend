@@ -16,13 +16,13 @@ const lista: ProjetoResponse[] = [
   projeto({ id: 'd', sigla: 'SEM', areaSolicitante: 'Infra', dataInicioPrevista: undefined }),
 ];
 
-async function abrir() {
+async function abrir(projetos = lista) {
   entrarComo('ESCRITORIO');
   TestBed.configureTestingModule({ imports: [Cronograma], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
   const fixture = TestBed.createComponent(Cronograma);
   const api = TestBed.inject(HttpTestingController);
   await fixture.whenStable();
-  responderListagem(api, lista);
+  responderListagem(api, projetos);
   await redesenhar(fixture);
   return { tela: fixture.componentInstance, el: fixture.nativeElement as HTMLElement, fixture };
 }
@@ -52,6 +52,16 @@ describe('Cronograma', () => {
     const { tela } = await abrir();
     expect(tela.areasDisponiveis).toEqual(['Infra', 'Sistemas']);
     expect(tela.anosDisponiveis).toEqual([2026, 2027, 2028]);
+  });
+
+  it('sem filtro escolhido, o período cobre todos os projetos', async () => {
+    const antigo = projeto({ id: 'e', sigla: 'OLD', dataInicioPrevista: '2024-03-01', dataConclusaoPrevista: '2029-06-30' });
+    const { tela } = await abrir([...lista, antigo]);
+    expect([tela.filtros.anoInicio, tela.filtros.anoFim]).toEqual([2024, 2029]);
+    tela.rascunho.anoInicio = 2026;
+    tela.filtrar();
+    tela.limpar();
+    expect([tela.filtros.anoInicio, tela.filtros.anoFim]).toEqual([2024, 2029]);
   });
 
   it('filtra por área e status; fim antes do início é corrigido', async () => {
