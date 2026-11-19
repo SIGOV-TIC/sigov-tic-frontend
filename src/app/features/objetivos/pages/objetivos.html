@@ -149,12 +149,8 @@
         <h3>{{ e.id ? 'Atualizar meta' : 'Nova meta' }}</h3>
 
         <form class="form" (ngSubmit)="salvar()">
-            <label>Objetivo
-                <input name="objetivo" [(ngModel)]="e.objetivo" list="lista-objetivos" required>
-                <datalist id="lista-objetivos">
-                    @for (t of titulosObjetivos; track t) { <option [value]="t"></option> }
-                </datalist>
-            </label>
+            <label for="meta-objetivo">Objetivo</label>
+            <app-escolha campoId="meta-objetivo" name="objetivo" [(ngModel)]="e.objetivo" [opcoes]="opcoesObjetivos" />
             <label>Indicador
                 <input name="indicador" [(ngModel)]="e.indicador" required>
             </label>
@@ -202,9 +198,8 @@
                     }
                 </div>
             </fieldset>
-            <label>Responsável
-                <input name="responsavel" [(ngModel)]="e.responsavel">
-            </label>
+            <label for="meta-responsavel">Responsável</label>
+            <app-escolha campoId="meta-responsavel" name="responsavel" [(ngModel)]="e.responsavel" [opcoes]="opcoes.pessoas" />
 
             @if (erroEdicao) {
                 <p class="form-erro" role="alert">{{ erroEdicao }}</p>

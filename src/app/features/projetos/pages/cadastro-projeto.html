@@ -48,60 +48,23 @@
                 <div class="field col-8">
                     <label for="nome">Nome do Projeto <span class="required">*</span></label>
                     <input id="nome" type="text" [class.invalid]="invalido('Nome do Projeto', projeto.nome)" [(ngModel)]="projeto.nome" name="nome"
-                           [class.filled]="projeto.nome"
-                           placeholder="Digite ou selecione..."
-                           (input)="filtrarNomes($any($event.target).value)"
-                           (focus)="filtrarNomes($any($event.target).value)"
-                           [matAutocomplete]="autoNome" required>
-                    <mat-autocomplete #autoNome="matAutocomplete">
-                        @for (n of nomesFiltrados; track n) {
-                            <mat-option [value]="n">{{ n }}</mat-option>
-                        }
-                    </mat-autocomplete>
+                           [class.filled]="projeto.nome" required>
                 </div>
                 <div class="field col-4">
                     <label for="sigla">Sigla <span class="required">*</span></label>
                     <input id="sigla" type="text" [class.invalid]="invalido('Sigla', projeto.sigla)" [(ngModel)]="projeto.sigla" name="sigla"
-                           [class.filled]="projeto.sigla"
-                           placeholder="Digite ou selecione..."
-                           (input)="filtrarSiglas($any($event.target).value)"
-                           (focus)="filtrarSiglas($any($event.target).value)"
-                           [matAutocomplete]="autoSigla" required>
-                    <mat-autocomplete #autoSigla="matAutocomplete">
-                        @for (s of siglasFiltradas; track s) {
-                            <mat-option [value]="s">{{ s }}</mat-option>
-                        }
-                    </mat-autocomplete>
+                           [class.filled]="projeto.sigla" required>
                 </div>
             </div>
             <div class="field-row">
                 <div class="field">
                     <label for="areaSolicitante">Área Solicitante <span class="required">*</span></label>
-                    <input id="areaSolicitante" type="text" [class.invalid]="invalido('Área Solicitante', projeto.areaSolicitante)" [(ngModel)]="projeto.areaSolicitante" name="areaSolicitante"
-                           [class.filled]="projeto.areaSolicitante"
-                           placeholder="Digite ou selecione..."
-                           (input)="filtrarAreas($any($event.target).value)"
-                           (focus)="filtrarAreas($any($event.target).value)"
-                           [matAutocomplete]="autoArea">
-                    <mat-autocomplete #autoArea="matAutocomplete">
-                        @for (a of areasFiltradas; track a) {
-                            <mat-option [value]="a">{{ a }}</mat-option>
-                        }
-                    </mat-autocomplete>
+                    <app-escolha campoId="areaSolicitante" name="areaSolicitante" [(ngModel)]="projeto.areaSolicitante"
+                                 [opcoes]="opcoes.areasSolicitantes" [invalido]="invalido('Área Solicitante', projeto.areaSolicitante)" />
                 </div>
                 <div class="field">
                 <label for="areaExecutora">Área Executora</label>
-                <input id="areaExecutora" type="text" [(ngModel)]="projeto.areaExecutora" name="areaExecutora"
-                       [class.filled]="projeto.areaExecutora"
-                       placeholder="Digite ou selecione..."
-                       (input)="filtrarUnidades($any($event.target).value)"
-                       (focus)="filtrarUnidades($any($event.target).value)"
-                       [matAutocomplete]="autoUnidade">
-                <mat-autocomplete #autoUnidade="matAutocomplete">
-                    @for (u of unidadesFiltradas; track u) {
-                        <mat-option [value]="u">{{ u }}</mat-option>
-                    }
-                </mat-autocomplete>
+                <app-escolha campoId="areaExecutora" name="areaExecutora" [(ngModel)]="projeto.areaExecutora" [opcoes]="opcoes.areasExecutoras" />
             </div>
             </div>
             <div class="field-row">
@@ -162,31 +125,11 @@
             <div class="field-row">
                 <div class="field">
                     <label for="patrocinador">Patrocinador</label>
-                    <input id="patrocinador" type="text" [(ngModel)]="projeto.patrocinador" name="patrocinador"
-                           [class.filled]="projeto.patrocinador"
-                           placeholder="Digite ou selecione..."
-                           (input)="filtrarPessoas($any($event.target).value)"
-                           (focus)="filtrarPessoas($any($event.target).value)"
-                           [matAutocomplete]="autoPatrocinador">
-                    <mat-autocomplete #autoPatrocinador="matAutocomplete">
-                        @for (p of pessoasFiltradas; track p) {
-                            <mat-option [value]="p">{{ p }}</mat-option>
-                        }
-                    </mat-autocomplete>
+                    <app-escolha campoId="patrocinador" name="patrocinador" [(ngModel)]="projeto.patrocinador" [opcoes]="opcoes.pessoas" />
                 </div>
                 <div class="field">
                     <label for="gerenteResponsavel">Gerente Responsável</label>
-                    <input id="gerenteResponsavel" type="text" [(ngModel)]="projeto.gerenteResponsavel" name="gerenteResponsavel"
-                           [class.filled]="projeto.gerenteResponsavel"
-                           placeholder="Digite ou selecione..."
-                           (input)="filtrarPessoas($any($event.target).value)"
-                           (focus)="filtrarPessoas($any($event.target).value)"
-                           [matAutocomplete]="autoGerente">
-                    <mat-autocomplete #autoGerente="matAutocomplete">
-                        @for (p of pessoasFiltradas; track p) {
-                            <mat-option [value]="p">{{ p }}</mat-option>
-                        }
-                    </mat-autocomplete>
+                    <app-escolha campoId="gerenteResponsavel" name="gerenteResponsavel" [(ngModel)]="projeto.gerenteResponsavel" [opcoes]="opcoes.pessoas" />
                 </div>
             </div>
         }
@@ -400,46 +343,16 @@
             <div class="field-row">
                 <div class="field">
                 <label for="objetivoEstrategico">Objetivo Estratégico</label>
-                <input id="objetivoEstrategico" type="text" [(ngModel)]="projeto.objetivoEstrategico" name="objetivoEstrategico"
-                       [class.filled]="projeto.objetivoEstrategico"
-                       placeholder="Digite ou selecione..."
-                       (input)="filtrarObjetivos($any($event.target).value)"
-                       (focus)="filtrarObjetivos($any($event.target).value)"
-                       [matAutocomplete]="autoObj">
-                <mat-autocomplete #autoObj="matAutocomplete">
-                    @for (o of objetivosFiltrados; track o) {
-                        <mat-option [value]="o">{{ o }}</mat-option>
-                    }
-                </mat-autocomplete>
+                <app-escolha campoId="objetivoEstrategico" name="objetivoEstrategico" [(ngModel)]="projeto.objetivoEstrategico" [opcoes]="opcoes.objetivos" />
             </div>
                 <div class="field">
                 <label for="iniciativaEstrategica">Iniciativa Estratégica</label>
-                <input id="iniciativaEstrategica" type="text" [(ngModel)]="projeto.iniciativaEstrategica" name="iniciativaEstrategica"
-                       [class.filled]="projeto.iniciativaEstrategica"
-                       placeholder="Digite ou selecione..."
-                       (input)="filtrarIniciativas($any($event.target).value)"
-                       (focus)="filtrarIniciativas($any($event.target).value)"
-                       [matAutocomplete]="autoInic">
-                <mat-autocomplete #autoInic="matAutocomplete">
-                    @for (i of iniciativasFiltradas; track i) {
-                        <mat-option [value]="i">{{ i }}</mat-option>
-                    }
-                </mat-autocomplete>
+                <app-escolha campoId="iniciativaEstrategica" name="iniciativaEstrategica" [(ngModel)]="projeto.iniciativaEstrategica" [opcoes]="opcoes.iniciativas" />
             </div>
             </div>
             <div class="field">
                 <label for="indicadorEstrategico">Indicador Estratégico</label>
-                <input id="indicadorEstrategico" type="text" [(ngModel)]="projeto.indicadorEstrategico" name="indicadorEstrategico"
-                       [class.filled]="projeto.indicadorEstrategico"
-                       placeholder="Digite ou selecione..."
-                       (input)="filtrarIndicadores($any($event.target).value)"
-                       (focus)="filtrarIndicadores($any($event.target).value)"
-                       [matAutocomplete]="autoInd">
-                <mat-autocomplete #autoInd="matAutocomplete">
-                    @for (ind of indicadoresFiltrados; track ind) {
-                        <mat-option [value]="ind">{{ ind }}</mat-option>
-                    }
-                </mat-autocomplete>
+                <app-escolha campoId="indicadorEstrategico" name="indicadorEstrategico" [(ngModel)]="projeto.indicadorEstrategico" [opcoes]="opcoes.indicadores" />
             </div>
         }
 

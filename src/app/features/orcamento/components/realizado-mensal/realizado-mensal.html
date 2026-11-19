@@ -19,13 +19,10 @@
         <label><span>Valor (R$)</span>
             <input name="valor" type="number" min="0" step="any" [(ngModel)]="r.valor" required>
         </label>
-        <label class="largo"><span>Origem</span>
-            <input name="origem" list="origens-gasto" [(ngModel)]="r.origem" maxlength="200" required
-                   placeholder="Contrato, nota de empenho, fonte do recurso">
-            <datalist id="origens-gasto">
-                @for (o of origens(); track o) { <option [value]="o"></option> }
-            </datalist>
-        </label>
+        <div class="largo campo"><label for="origem-gasto">Origem</label>
+            <app-escolha campoId="origem-gasto" name="origem" [(ngModel)]="r.origem" [opcoes]="origens()" [maxlength]="200"
+                         vazio="Contrato, nota de empenho, fonte do recurso" />
+        </div>
         <label class="largo"><span>Motivo</span>
             <textarea name="motivo" rows="2" [(ngModel)]="r.motivo" required></textarea>
         </label>

@@ -37,8 +37,9 @@
     gap: 12px;
     margin-bottom: 18px;
 
-    label { display: flex; flex-direction: column; gap: 6px; }
-    label > span { font-size: 12px; color: var(--text-faint); }
+    label, .campo { display: flex; flex-direction: column; gap: 6px; }
+    label > span, .campo > label { font-size: 12px; color: var(--text-faint); }
+    app-escolha { --escolha-altura: 36px; --escolha-fonte: 14px; }
     .largo { grid-column: 1 / -1; }
 
     input, select, textarea {

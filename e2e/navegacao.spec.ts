@@ -41,6 +41,8 @@ test.describe('Navegação', () => {
     // A tela chega sob demanda; o atalho só vale depois que ela abriu.
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await page.keyboard.press('Control+k');
+    // O campo recebe o foco logo depois de abrir; digitar antes perde letras.
+    await expect(page.locator('app-busca-global input')).toBeFocused();
     await page.keyboard.type('modernizacao');
     await expect(page.locator('.busca-item.ativo')).toContainText('Modernização da Rede');
     await page.keyboard.press('Enter');

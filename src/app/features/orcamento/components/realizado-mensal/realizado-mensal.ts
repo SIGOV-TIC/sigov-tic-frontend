@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { ProjetoResponse } from '../../../projetos/models/projeto';
 import { GraficoTendencia, SerieGrafico } from '../../../../shared/grafico/grafico-tendencia';
 import { SomenteNumero } from '../../../../shared/numero/somente-numero';
+import { Escolha } from '../../../../shared/escolha/escolha';
 import { mensagemDeErro } from '../../../../shared/estado/erro-api';
 import { Gasto, GastoRequest } from '../../models/gasto';
 import { GastoService } from '../../services/gasto.service';
@@ -19,7 +20,7 @@ const MESES_PARA_TRAS = 24;
 @Component({
   selector: 'app-realizado-mensal',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, MatIconModule, GraficoTendencia, SomenteNumero],
+  imports: [FormsModule, MatIconModule, GraficoTendencia, SomenteNumero, Escolha],
   templateUrl: './realizado-mensal.html',
   styleUrl: './realizado-mensal.scss',
 })
@@ -117,7 +118,7 @@ export class RealizadoMensal implements OnChanges {
   }
 
   completo(r: Rascunho): boolean {
-    return !!r.mes && Number(r.valor) > 0 && !!r.motivo.trim() && !!r.origem.trim();
+    return !!r.mes && Number(r.valor) > 0 && !!r.motivo?.trim() && !!r.origem?.trim();
   }
 
   salvar() {

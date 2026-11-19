@@ -22,6 +22,8 @@ import { fatia, Paginacao } from '../../../shared/paginacao/paginacao';
 import { EstadoTela } from '../../../shared/estado/estado';
 import { mensagemDeErro } from '../../../shared/estado/erro-api';
 import { SomenteNumero } from '../../../shared/numero/somente-numero';
+import { Escolha } from '../../../shared/escolha/escolha';
+import { Opcoes, OpcoesService } from '../../../shared/escolha/opcoes.service';
 
 interface LinhaMeta {
   meta: Meta;
@@ -58,7 +60,7 @@ const SEM_OBJETIVO = 'Sem objetivo estratégico definido';
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-objetivos',
-  imports: [RouterLink, FormsModule, MatIconModule, Paginacao, EstadoTela, SomenteNumero],
+  imports: [RouterLink, FormsModule, MatIconModule, Paginacao, EstadoTela, SomenteNumero, Escolha],
   templateUrl: './objetivos.html',
   styleUrl: './objetivos.scss',
 })
@@ -81,9 +83,18 @@ export class Objetivos implements OnInit {
     private metaService: MetaService,
     private route: ActivatedRoute,
     readonly auth: AuthService,
+    private opcoesService: OpcoesService,
   ) {}
 
+  opcoes: Pick<Opcoes, 'objetivos' | 'pessoas'> = { objetivos: [], pessoas: [] };
+
+  // Objetivos já usados em metas e projetos: a meta nova se liga a um deles pela mesma grafia.
+  get opcoesObjetivos(): string[] {
+    return [...new Set([...this.opcoes.objetivos, ...this.titulosObjetivos])].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }
+
   ngOnInit() {
+    this.opcoesService.carregar().subscribe((o) => (this.opcoes = o));
     this.projetoService.seedSeNecessario();
     forkJoin({ projetos: this.projetoService.listar(0, 200), metas: this.metaService.listar() }).subscribe({
       next: ({ projetos, metas }) => {
@@ -302,7 +313,7 @@ export class Objetivos implements OnInit {
   salvar() {
     const e = this.edicao;
     if (!e) return;
-    if (!e.objetivo.trim() || !e.indicador.trim() || !e.ano || e.valorInicial == null || e.valorAlvo == null) {
+    if (!e.objetivo?.trim() || !e.indicador.trim() || !e.ano || e.valorInicial == null || e.valorAlvo == null) {
       this.erroEdicao = 'Preencha objetivo, indicador, ano e os valores inicial e alvo.';
       return;
     }

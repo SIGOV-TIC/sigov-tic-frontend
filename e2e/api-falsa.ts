@@ -267,6 +267,17 @@ export class ApiFalsa {
       fase.atividades = fase.atividades.filter((a) => a !== atv);
       return vazio();
     }
+    if (caminho === '/api/opcoes') {
+      return json({
+        areasSolicitantes: [...new Set(projetos.map((p) => p.areaSolicitante))].sort(),
+        areasExecutoras: [...new Set(projetos.map((p) => p.areaExecutora).filter(Boolean))].sort(),
+        pessoas: [...new Set(projetos.map((p) => p.gerenteResponsavel).filter(Boolean))].sort(),
+        objetivos: [...new Set([...metas.map((m) => m.objetivo), ...projetos.map((p) => p.objetivoEstrategico).filter(Boolean)])].sort(),
+        iniciativas: [],
+        indicadores: [],
+        origensDeGasto: [...new Set(this.gastos.map((g) => g.origem))].sort(),
+      });
+    }
     if (caminho === '/api/gastos') return json(this.gastos);
     if (caminho === '/api/gastos/origens') return json([...new Set(this.gastos.map((g) => g.origem))].sort());
     if ((m = caminho.match(/^\/api\/projetos\/([^/]+)\/gastos(?:\/([^/]+))?$/))) {

@@ -415,3 +415,6 @@
 
 .financeiro-rodape { display: flex; align-items: center; justify-content: space-between; }
 .financeiro-total { font-size: 13px; color: var(--text-muted); b { color: var(--text-primary); } }
+
+.form app-escolha { --escolha-altura: 36px; --escolha-fonte: 13px; --escolha-raio: 6px; margin-top: -8px; }
+.form label[for] { margin-bottom: 0; }

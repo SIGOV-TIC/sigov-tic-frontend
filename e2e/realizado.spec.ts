@@ -9,7 +9,7 @@ test.describe('Realizado mês a mês', () => {
 
     await cartao.getByRole('button', { name: 'Registrar gasto' }).click();
     await cartao.getByLabel('Valor (R$)').fill('250000');
-    await cartao.getByLabel('Origem').fill('Contrato 15/2026');
+    await cartao.getByLabel('Origem').selectOption('Contrato 15/2026');
     await cartao.getByLabel('Motivo').fill('Segunda parcela do treinamento.');
     await cartao.getByRole('button', { name: 'Registrar', exact: true }).click();
 
