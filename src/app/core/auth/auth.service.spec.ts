@@ -30,7 +30,7 @@ describe('AuthService', () => {
   describe('quem pode o quê (mesma regra da API)', () => {
     const casos: [keyof typeof sessoes, Record<string, boolean>][] = [
       ['admin', { gerenciarUsuarios: true, criarProjeto: false, editarProjeto: false, acompanharProjeto: false, editarMetas: false }],
-      ['escritorio', { gerenciarUsuarios: false, criarProjeto: true, editarProjeto: true, acompanharProjeto: true, editarMetas: true }],
+      ['escritorio', { gerenciarUsuarios: true, criarProjeto: true, editarProjeto: true, acompanharProjeto: true, editarMetas: true }],
       ['po', { gerenciarUsuarios: false, criarProjeto: false, editarProjeto: false, acompanharProjeto: true, editarMetas: false }],
       ['sm', { gerenciarUsuarios: false, criarProjeto: false, editarProjeto: false, acompanharProjeto: true, editarMetas: false }],
       ['outro', { gerenciarUsuarios: false, criarProjeto: false, editarProjeto: false, acompanharProjeto: false, editarMetas: false }],

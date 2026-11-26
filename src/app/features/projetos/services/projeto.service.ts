@@ -13,6 +13,7 @@ import {
   SituacaoPortfolio,
 } from '../models/projeto';
 import { PROJETOS_EXEMPLO } from './projetos-exemplo';
+import { AuthService } from '../../../core/auth/auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class ProjetoService {
@@ -22,7 +23,10 @@ export class ProjetoService {
   // Concluído quando o banco já tem projetos (ou depois de gravar os de exemplo).
   private pronto$: Observable<void> = ProjetoService.inicial;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private auth: AuthService,
+  ) {}
 
   criar(projeto: ProjetoRequest): Observable<ProjetoResponse> {
     return this.http.post<ProjetoResponse>(this.url, projeto);
@@ -80,7 +84,8 @@ export class ProjetoService {
     if (this.pronto$ !== ProjetoService.inicial) return;
     this.pronto$ = defer(() => this.http.get<ProjetoPageResponse>(this.url, { params: { size: 1, situacao: 'todos' } })).pipe(
       switchMap((res) =>
-        res.totalElements > 0
+        // Só quem cria projeto grava os exemplos; para os demais a API recusaria e a sessão cairia.
+        res.totalElements > 0 || !this.auth.pode('criarProjeto')
           ? of(undefined)
           : concat(...PROJETOS_EXEMPLO.map((p) => this.criar(p))).pipe(last(), map(() => undefined)),
       ),

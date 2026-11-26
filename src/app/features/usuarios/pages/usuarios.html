@@ -33,7 +33,9 @@
                     <td>{{ rotuloPerfil(u.perfil) }}</td>
                     <td>{{ u.ativo ? 'Ativa' : 'Inativa' }}</td>
                     <td class="acao">
-                        <button type="button" class="editar" (click)="editar(u)" [attr.aria-label]="'Editar ' + u.nome"><mat-icon>edit</mat-icon></button>
+                        @if (podeEditar(u)) {
+                            <button type="button" class="editar" (click)="editar(u)" [attr.aria-label]="'Editar ' + u.nome"><mat-icon>edit</mat-icon></button>
+                        }
                     </td>
                 </tr>
             } @empty {

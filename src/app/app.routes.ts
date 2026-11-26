@@ -20,6 +20,7 @@ export const routes: Routes = [
       { path: 'projeto/:id', loadComponent: () => import('./features/projetos/pages/visualizar-projeto').then((m) => m.VisualizarProjeto) },
       { path: 'projeto/:id/editar', loadComponent: () => import('./features/projetos/pages/cadastro-projeto').then((m) => m.CadastroProjeto), canActivate: [edicaoProjetoGuard] },
       { path: 'configuracoes', loadComponent: () => import('./features/configuracoes/pages/configuracoes').then((m) => m.Configuracoes) },
+      { path: 'solicitacoes', loadComponent: () => import('./features/solicitacoes/pages/solicitacoes').then((m) => m.Solicitacoes) },
       { path: 'usuarios', loadComponent: () => import('./features/usuarios/pages/usuarios').then((m) => m.Usuarios), canActivate: [adminGuard] },
     ],
   },

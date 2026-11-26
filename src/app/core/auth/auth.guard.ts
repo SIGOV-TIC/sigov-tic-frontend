@@ -27,9 +27,9 @@ export function destinoSeguro(voltar: string | null): string {
     : '/dashboard';
 }
 
-// Páginas de administração: quem não é admin volta ao Dashboard.
+// Gestão de contas: admin e Escritório; os demais voltam ao Dashboard.
 export const adminGuard: CanActivateFn = () => {
-  if (inject(AuthService).ehAdmin()) return true;
+  if (inject(AuthService).pode('gerenciarUsuarios')) return true;
   return inject(Router).createUrlTree(['/dashboard']);
 };
 

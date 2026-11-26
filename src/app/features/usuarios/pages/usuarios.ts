@@ -23,7 +23,14 @@ export class Usuarios implements OnInit {
   carregando = true;
   erro = '';
 
-  readonly perfis = PERFIS;
+  // Só um admin cria, altera ou remove conta de admin.
+  get perfis() {
+    return this.auth.ehAdmin() ? PERFIS : PERFIS.filter((p) => p.valor !== 'ADMIN');
+  }
+
+  podeEditar(u: Usuario): boolean {
+    return this.auth.ehAdmin() || u.perfil !== 'ADMIN';
+  }
 
   constructor(
     private usuarioService: UsuarioService,

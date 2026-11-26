@@ -1,0 +1,80 @@
+<div class="page-header">
+    <h1>Solicitações</h1>
+</div>
+
+<form class="nova" (ngSubmit)="abrir()">
+    <label>Título
+        <input name="titulo" [(ngModel)]="titulo" maxlength="200" required>
+    </label>
+    <label>Descrição
+        <textarea name="descricao" [(ngModel)]="descricao" rows="3" maxlength="4000" required></textarea>
+    </label>
+    @if (erroEnvio) {
+        <p class="form-erro" role="alert">{{ erroEnvio }}</p>
+    }
+    <div class="form-acoes">
+        <button type="submit" class="btn-acao" [disabled]="enviando"><mat-icon>send</mat-icon>{{ enviando ? 'Enviando…' : 'Enviar ao PMO' }}</button>
+    </div>
+</form>
+
+@if (carregando) {
+    <div class="estado-vazio"><p>Carregando solicitações...</p></div>
+} @else if (erro) {
+    <div class="estado-vazio">
+        <p class="falha-api">Não foi possível carregar as solicitações. Verifique a conexão e tente de novo.</p>
+        <button class="falha-tentar" (click)="recarregar()">Tentar novamente</button>
+    </div>
+} @else {
+    @if (decide) {
+        <h2>Para decidir <span class="contagem">{{ pendentes.length }}</span></h2>
+        @if (erroDecisao) {
+            <p class="form-erro" role="alert">{{ erroDecisao }}</p>
+        }
+        <ul class="lista">
+            @for (s of pendentes; track s.id) {
+                <li class="item">
+                    <div class="item-topo">
+                        <span class="item-titulo">{{ s.titulo }}</span>
+                        <span class="item-meta">{{ s.solicitante }} · {{ s.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                    </div>
+                    <p class="item-desc">{{ s.descricao }}</p>
+                    <div class="decisao">
+                        <input [name]="'just-' + s.id" [(ngModel)]="justificativas[s.id]" placeholder="Justificativa" aria-label="Justificativa">
+                        <button type="button" class="btn-acao" [disabled]="decidindo === s.id" (click)="decidir(s, true)">Aprovar</button>
+                        <button type="button" class="btn-sec" [disabled]="decidindo === s.id" (click)="decidir(s, false)">Recusar</button>
+                    </div>
+                </li>
+            } @empty {
+                <li class="vazio">Nenhuma solicitação pendente.</li>
+            }
+        </ul>
+    }
+
+    <h2>Minhas solicitações</h2>
+    <table class="tabela">
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>Aberta em</th>
+                <th>Situação</th>
+                <th>Decisão</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (s of minhas; track s.id) {
+                <tr>
+                    <td class="titulo">{{ s.titulo }}</td>
+                    <td>{{ s.createdAt | date: 'dd/MM/yyyy' }}</td>
+                    <td><span class="status" [attr.data-status]="s.status">{{ rotuloStatus(s.status) }}</span></td>
+                    <td class="decisao-txt">
+                        @if (s.decididoPor) {
+                            {{ s.decididoPor }}@if (s.justificativa) { — {{ s.justificativa }} }
+                        }
+                    </td>
+                </tr>
+            } @empty {
+                <tr><td colspan="4" class="vazio">Nenhuma solicitação aberta.</td></tr>
+            }
+        </tbody>
+    </table>
+}
