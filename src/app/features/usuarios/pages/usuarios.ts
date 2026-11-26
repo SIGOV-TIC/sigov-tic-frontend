@@ -80,13 +80,13 @@ export class Usuarios implements OnInit {
 
   novaConta() {
     this.erroEdicao = '';
-    this.edicao = { nome: '', login: '', perfil: 'GESTOR_PROJETO', ativo: true, senha: '' };
+    this.edicao = { nome: '', login: '', perfil: 'GESTOR_PROJETO', ativo: true, cargo: '', senha: '' };
   }
 
   editar(u: Usuario) {
     this.erroEdicao = '';
-    const { id, nome, login, perfil, ativo } = u;
-    this.edicao = { id, nome, login, perfil, ativo, senha: '' };
+    const { id, nome, login, perfil, ativo, cargo } = u;
+    this.edicao = { id, nome, login, perfil, ativo, cargo: cargo ?? '', senha: '' };
   }
 
   fecharEdicao() {
@@ -115,7 +115,7 @@ export class Usuarios implements OnInit {
       return;
     }
     const { id, ...dados } = e;
-    const corpo: UsuarioRequest = { ...dados, nome: dados.nome.trim(), login: dados.login.trim(), senha: senha || undefined };
+    const corpo: UsuarioRequest = { ...dados, nome: dados.nome.trim(), login: dados.login.trim(), cargo: dados.cargo?.trim() || null, senha: senha || undefined };
     this.salvando = true;
     this.erroEdicao = '';
     (id ? this.usuarioService.atualizar(id, corpo) : this.usuarioService.criar(corpo)).subscribe({

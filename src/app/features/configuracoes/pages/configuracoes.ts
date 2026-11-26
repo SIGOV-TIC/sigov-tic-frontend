@@ -132,7 +132,7 @@ export class Configuracoes implements OnInit {
     this.erro.set('');
     this.salvando.set(true);
     this.auth
-      .atualizarPerfil({ nome: this.nome.trim(), cargo: this.cargo.trim() || null, foto: this.foto() || null })
+      .atualizarPerfil({ nome: this.nome.trim(), foto: this.foto() || null })
       .subscribe({
         next: () => {
           this.salvando.set(false);

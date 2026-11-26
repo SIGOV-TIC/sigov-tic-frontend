@@ -25,11 +25,9 @@
     <label class="campo">Nome
         <input name="nome" [(ngModel)]="nome" maxlength="120" autocomplete="name">
     </label>
-    <label class="campo">Cargo
-        <input name="cargo" [(ngModel)]="cargo" maxlength="120" autocomplete="organization-title">
-    </label>
-
     <dl class="fixos">
+        <dt>Cargo</dt>
+        <dd>{{ cargo || '—' }}</dd>
         <dt>Login</dt>
         <dd>{{ login }}</dd>
         <dt>Perfil</dt>

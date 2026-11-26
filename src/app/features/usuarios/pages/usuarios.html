@@ -28,7 +28,7 @@
                 <tr [class.inativa]="!u.ativo">
                     <td class="conta">
                         <span class="conta-nome">{{ u.nome }}@if (ehVoce(u)) { <span class="voce">você</span> }</span>
-                        <span class="conta-login">{{ u.login }}</span>
+                        <span class="conta-login">{{ u.login }}@if (u.cargo) { · {{ u.cargo }} }</span>
                     </td>
                     <td>{{ rotuloPerfil(u.perfil) }}</td>
                     <td>{{ u.ativo ? 'Ativa' : 'Inativa' }}</td>
@@ -58,6 +58,9 @@
             </label>
             <label>Login
                 <input name="login" [(ngModel)]="e.login" autocomplete="off" required [readonly]="propria">
+            </label>
+            <label>Cargo
+                <input name="cargo" [(ngModel)]="e.cargo" maxlength="120" autocomplete="off">
             </label>
             <label>{{ e.id ? 'Nova senha' : 'Senha inicial' }}
                 <input name="senha" type="password" [(ngModel)]="e.senha" autocomplete="new-password"
