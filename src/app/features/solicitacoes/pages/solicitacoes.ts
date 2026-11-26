@@ -1,9 +1,12 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Solicitacao, SolicitacaoService, StatusSolicitacao } from '../services/solicitacao.service';
+
+type Aba = 'decidir' | 'minhas';
+type Filtro = 'TODAS' | StatusSolicitacao;
 
 const ROTULO_STATUS: Record<StatusSolicitacao, string> = {
   PENDENTE: 'Aguardando PMO',
@@ -25,86 +28,129 @@ export class Solicitacoes implements OnInit {
   carregando = true;
   erro = false;
 
-  titulo = '';
-  descricao = '';
-  enviando = false;
-  erroEnvio = '';
-
-  // Justificativa digitada por pedido pendente.
-  justificativas: Record<string, string> = {};
-  decidindo: string | null = null;
-  erroDecisao = '';
-
   readonly decide: boolean;
+  aba: Aba;
+  filtro: Filtro = 'TODAS';
+  readonly filtros: { valor: Filtro; rotulo: string }[] = [
+    { valor: 'TODAS', rotulo: 'Todas' },
+    { valor: 'PENDENTE', rotulo: 'Aguardando' },
+    { valor: 'APROVADA', rotulo: 'Aprovadas' },
+    { valor: 'RECUSADA', rotulo: 'Recusadas' },
+  ];
 
   constructor(
     private service: SolicitacaoService,
     auth: AuthService,
   ) {
     this.decide = auth.pode('decidirSolicitacoes');
+    this.aba = this.decide ? 'decidir' : 'minhas';
   }
 
   ngOnInit() {
-    this.service.minhas().subscribe({
-      next: (s) => {
-        this.minhas = s;
-        this.carregando = false;
-      },
-      error: () => {
-        this.carregando = false;
-        this.erro = true;
-      },
-    });
-    if (this.decide) {
-      this.service.pendentes().subscribe({ next: (s) => (this.pendentes = s), error: () => (this.erro = true) });
-    }
+    this.carregar();
+  }
+
+  carregar() {
+    this.carregando = true;
+    this.erro = false;
+    let faltam = this.decide ? 2 : 1;
+    const fim = () => {
+      if (--faltam === 0) this.carregando = false;
+    };
+    const falha = () => {
+      this.erro = true;
+      fim();
+    };
+    this.service.minhas().subscribe({ next: (s) => ((this.minhas = s), fim()), error: falha });
+    if (this.decide) this.service.pendentes().subscribe({ next: (s) => ((this.pendentes = s), fim()), error: falha });
+  }
+
+  get lista(): Solicitacao[] {
+    if (this.aba === 'decidir') return this.pendentes;
+    return this.filtro === 'TODAS' ? this.minhas : this.minhas.filter((s) => s.status === this.filtro);
+  }
+
+  contar(f: Filtro): number {
+    return f === 'TODAS' ? this.minhas.length : this.minhas.filter((s) => s.status === f).length;
   }
 
   rotuloStatus(s: StatusSolicitacao): string {
     return ROTULO_STATUS[s];
   }
 
-  abrir() {
-    const titulo = this.titulo.trim();
-    const descricao = this.descricao.trim();
+  // ---- Painel: nova solicitação ou detalhe ----
+
+  nova: { titulo: string; descricao: string } | null = null;
+  aberta: Solicitacao | null = null;
+  enviando = false;
+  erroPainel = '';
+  justificativa = '';
+
+  abrirNova() {
+    this.fechar();
+    this.nova = { titulo: '', descricao: '' };
+  }
+
+  abrirDetalhe(s: Solicitacao) {
+    this.fechar();
+    this.aberta = s;
+  }
+
+  @HostListener('document:keydown.escape')
+  fechar() {
+    this.nova = null;
+    this.aberta = null;
+    this.erroPainel = '';
+    this.justificativa = '';
+  }
+
+  get podeDecidirAberta(): boolean {
+    return this.decide && this.aberta?.status === 'PENDENTE';
+  }
+
+  enviar() {
+    const n = this.nova;
+    if (!n) return;
+    const titulo = n.titulo.trim();
+    const descricao = n.descricao.trim();
     if (!titulo || !descricao) {
-      this.erroEnvio = 'Preencha título e descrição.';
+      this.erroPainel = 'Preencha título e descrição.';
       return;
     }
     this.enviando = true;
-    this.erroEnvio = '';
+    this.erroPainel = '';
     this.service.abrir(titulo, descricao).subscribe({
       next: (s) => {
         this.minhas = [s, ...this.minhas];
         if (this.decide) this.pendentes = [...this.pendentes, s];
-        this.titulo = '';
-        this.descricao = '';
         this.enviando = false;
+        this.aba = 'minhas';
+        this.filtro = 'TODAS';
+        this.fechar();
       },
       error: () => {
         this.enviando = false;
-        this.erroEnvio = 'Não foi possível enviar a solicitação. Tente de novo.';
+        this.erroPainel = 'Não foi possível enviar a solicitação. Tente de novo.';
       },
     });
   }
 
-  decidir(s: Solicitacao, aprovada: boolean) {
-    this.decidindo = s.id;
-    this.erroDecisao = '';
-    this.service.decidir(s.id, aprovada, (this.justificativas[s.id] ?? '').trim()).subscribe({
+  decidir(aprovada: boolean) {
+    const s = this.aberta;
+    if (!s) return;
+    this.enviando = true;
+    this.erroPainel = '';
+    this.service.decidir(s.id, aprovada, this.justificativa.trim()).subscribe({
       next: (d) => {
         this.pendentes = this.pendentes.filter((p) => p.id !== d.id);
         this.minhas = this.minhas.map((m) => (m.id === d.id ? d : m));
-        this.decidindo = null;
+        this.enviando = false;
+        this.fechar();
       },
       error: () => {
-        this.decidindo = null;
-        this.erroDecisao = 'Não foi possível registrar a decisão. Recarregue a página e tente de novo.';
+        this.enviando = false;
+        this.erroPainel = 'Não foi possível registrar a decisão. Recarregue a página e tente de novo.';
       },
     });
-  }
-
-  recarregar() {
-    location.reload();
   }
 }
