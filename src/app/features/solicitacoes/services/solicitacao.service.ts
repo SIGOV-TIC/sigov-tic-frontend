@@ -4,8 +4,34 @@ import { Observable } from 'rxjs';
 
 export type StatusSolicitacao = 'PENDENTE' | 'APROVADA' | 'RECUSADA';
 
+export type TipoSolicitacao = 'NOVO_PROJETO' | 'ALTERACAO_PROJETO' | 'ACESSO' | 'OUTRO';
+
+export const TIPOS: { valor: TipoSolicitacao; rotulo: string }[] = [
+  { valor: 'NOVO_PROJETO', rotulo: 'Novo projeto' },
+  { valor: 'ALTERACAO_PROJETO', rotulo: 'Alteração de projeto' },
+  { valor: 'ACESSO', rotulo: 'Acesso' },
+  { valor: 'OUTRO', rotulo: 'Outro' },
+];
+
+export interface NovaSolicitacao {
+  tipo: TipoSolicitacao;
+  titulo: string;
+  descricao: string;
+  areaDemandante?: string | null;
+  objetivoEstrategico?: string | null;
+  poSugerido?: string | null;
+  prazoMeses?: number | null;
+  custoEstimado?: number | null;
+}
+
 export interface Solicitacao {
   id: string;
+  tipo?: TipoSolicitacao | null;
+  areaDemandante?: string | null;
+  objetivoEstrategico?: string | null;
+  poSugerido?: string | null;
+  prazoMeses?: number | null;
+  custoEstimado?: number | null;
   titulo: string;
   descricao: string;
   solicitante: string;
@@ -22,8 +48,8 @@ export class SolicitacaoService {
 
   constructor(private http: HttpClient) {}
 
-  abrir(titulo: string, descricao: string): Observable<Solicitacao> {
-    return this.http.post<Solicitacao>(this.url, { titulo, descricao });
+  abrir(pedido: NovaSolicitacao): Observable<Solicitacao> {
+    return this.http.post<Solicitacao>(this.url, pedido);
   }
 
   minhas(): Observable<Solicitacao[]> {
