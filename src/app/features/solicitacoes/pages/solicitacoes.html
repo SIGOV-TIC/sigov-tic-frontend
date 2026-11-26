@@ -1,80 +1,130 @@
 <div class="page-header">
     <h1>Solicitações</h1>
+    <button type="button" class="btn-acao" (click)="abrirNova()"><mat-icon>add</mat-icon>Nova solicitação</button>
 </div>
 
-<form class="nova" (ngSubmit)="abrir()">
-    <label>Título
-        <input name="titulo" [(ngModel)]="titulo" maxlength="200" required>
-    </label>
-    <label>Descrição
-        <textarea name="descricao" [(ngModel)]="descricao" rows="3" maxlength="4000" required></textarea>
-    </label>
-    @if (erroEnvio) {
-        <p class="form-erro" role="alert">{{ erroEnvio }}</p>
-    }
-    <div class="form-acoes">
-        <button type="submit" class="btn-acao" [disabled]="enviando"><mat-icon>send</mat-icon>{{ enviando ? 'Enviando…' : 'Enviar ao PMO' }}</button>
-    </div>
-</form>
-
 @if (carregando) {
-    <div class="estado-vazio"><p>Carregando solicitações...</p></div>
+    <p class="estado">Carregando solicitações…</p>
 } @else if (erro) {
-    <div class="estado-vazio">
-        <p class="falha-api">Não foi possível carregar as solicitações. Verifique a conexão e tente de novo.</p>
-        <button class="falha-tentar" (click)="recarregar()">Tentar novamente</button>
+    <div class="estado">
+        <p>Não foi possível carregar as solicitações.</p>
+        <button type="button" class="btn-sec" (click)="carregar()"><mat-icon>refresh</mat-icon>Tentar novamente</button>
     </div>
 } @else {
-    @if (decide) {
-        <h2>Para decidir <span class="contagem">{{ pendentes.length }}</span></h2>
-        @if (erroDecisao) {
-            <p class="form-erro" role="alert">{{ erroDecisao }}</p>
+    <div class="barra">
+        @if (decide) {
+            <div class="abas" role="tablist">
+                <button type="button" role="tab" [attr.aria-selected]="aba === 'decidir'" [class.ativa]="aba === 'decidir'" (click)="aba = 'decidir'">
+                    Para decidir <span class="n">{{ pendentes.length }}</span>
+                </button>
+                <button type="button" role="tab" [attr.aria-selected]="aba === 'minhas'" [class.ativa]="aba === 'minhas'" (click)="aba = 'minhas'">
+                    Minhas <span class="n">{{ minhas.length }}</span>
+                </button>
+            </div>
         }
-        <ul class="lista">
-            @for (s of pendentes; track s.id) {
-                <li class="item">
-                    <div class="item-topo">
-                        <span class="item-titulo">{{ s.titulo }}</span>
-                        <span class="item-meta">{{ s.solicitante }} · {{ s.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
-                    </div>
-                    <p class="item-desc">{{ s.descricao }}</p>
-                    <div class="decisao">
-                        <input [name]="'just-' + s.id" [(ngModel)]="justificativas[s.id]" placeholder="Justificativa" aria-label="Justificativa">
-                        <button type="button" class="btn-acao" [disabled]="decidindo === s.id" (click)="decidir(s, true)">Aprovar</button>
-                        <button type="button" class="btn-sec" [disabled]="decidindo === s.id" (click)="decidir(s, false)">Recusar</button>
-                    </div>
-                </li>
-            } @empty {
-                <li class="vazio">Nenhuma solicitação pendente.</li>
-            }
-        </ul>
-    }
+        @if (aba === 'minhas') {
+            <div class="filtros" role="group" aria-label="Situação">
+                @for (f of filtros; track f.valor) {
+                    <button type="button" [class.ativo]="filtro === f.valor" [attr.aria-pressed]="filtro === f.valor" (click)="filtro = f.valor">
+                        {{ f.rotulo }} <span class="n">{{ contar(f.valor) }}</span>
+                    </button>
+                }
+            </div>
+        }
+    </div>
 
-    <h2>Minhas solicitações</h2>
-    <table class="tabela">
-        <thead>
-            <tr>
-                <th>Título</th>
-                <th>Aberta em</th>
-                <th>Situação</th>
-                <th>Decisão</th>
-            </tr>
-        </thead>
-        <tbody>
-            @for (s of minhas; track s.id) {
+    @if (lista.length) {
+        <table class="tabela">
+            <thead>
                 <tr>
-                    <td class="titulo">{{ s.titulo }}</td>
-                    <td>{{ s.createdAt | date: 'dd/MM/yyyy' }}</td>
-                    <td><span class="status" [attr.data-status]="s.status">{{ rotuloStatus(s.status) }}</span></td>
-                    <td class="decisao-txt">
-                        @if (s.decididoPor) {
-                            {{ s.decididoPor }}@if (s.justificativa) { — {{ s.justificativa }} }
-                        }
-                    </td>
+                    <th>Solicitação</th>
+                    @if (aba === 'decidir') { <th>Solicitante</th> }
+                    <th>Aberta em</th>
+                    <th>Situação</th>
+                    <th class="seta"><span class="sr-only">Abrir</span></th>
                 </tr>
-            } @empty {
-                <tr><td colspan="4" class="vazio">Nenhuma solicitação aberta.</td></tr>
+            </thead>
+            <tbody>
+                @for (s of lista; track s.id) {
+                    <tr (click)="abrirDetalhe(s)" (keydown.enter)="abrirDetalhe(s)" tabindex="0">
+                        <td class="principal">
+                            <span class="titulo">{{ s.titulo }}</span>
+                            <span class="resumo">{{ s.descricao }}</span>
+                        </td>
+                        @if (aba === 'decidir') { <td class="nowrap">{{ s.solicitante }}</td> }
+                        <td class="nowrap">{{ s.createdAt | date: 'dd/MM/yyyy' }}</td>
+                        <td class="nowrap"><span class="status" [attr.data-status]="s.status">{{ rotuloStatus(s.status) }}</span></td>
+                        <td class="seta"><mat-icon>chevron_right</mat-icon></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    } @else {
+        <div class="estado">
+            @if (aba === 'decidir') {
+                <p>Nenhuma solicitação aguardando decisão.</p>
+            } @else if (filtro !== 'TODAS') {
+                <p>Nenhuma solicitação nesta situação.</p>
+            } @else {
+                <p>Você ainda não abriu solicitações.</p>
+                <button type="button" class="btn-acao" (click)="abrirNova()"><mat-icon>add</mat-icon>Nova solicitação</button>
             }
-        </tbody>
-    </table>
+        </div>
+    }
+}
+
+@if (nova || aberta) {
+    <div class="painel-fundo" (click)="fechar()"></div>
+    <aside class="painel" role="dialog" [attr.aria-label]="nova ? 'Nova solicitação' : 'Solicitação'">
+        <button type="button" class="painel-fechar" (click)="fechar()" aria-label="Fechar"><mat-icon>close</mat-icon></button>
+
+        @if (nova; as n) {
+            <h3>Nova solicitação</h3>
+            <form class="form" (ngSubmit)="enviar()">
+                <label>Título
+                    <input name="titulo" [(ngModel)]="n.titulo" maxlength="200" required>
+                </label>
+                <label>Descrição
+                    <textarea name="descricao" [(ngModel)]="n.descricao" rows="8" maxlength="4000" required></textarea>
+                </label>
+                @if (erroPainel) { <p class="form-erro" role="alert">{{ erroPainel }}</p> }
+                <div class="form-acoes">
+                    <button type="button" class="btn-sec" (click)="fechar()">Cancelar</button>
+                    <button type="submit" class="btn-acao" [disabled]="enviando">{{ enviando ? 'Enviando…' : 'Enviar ao PMO' }}</button>
+                </div>
+            </form>
+        }
+
+        @if (aberta; as s) {
+            <span class="status" [attr.data-status]="s.status">{{ rotuloStatus(s.status) }}</span>
+            <h3>{{ s.titulo }}</h3>
+            <dl class="meta">
+                <div><dt>Solicitante</dt><dd>{{ s.solicitante }}</dd></div>
+                <div><dt>Aberta em</dt><dd>{{ s.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
+                @if (s.decididoPor) {
+                    <div><dt>Decidida por</dt><dd>{{ s.decididoPor }}</dd></div>
+                    <div><dt>Em</dt><dd>{{ s.decididoEm | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
+                }
+            </dl>
+            <p class="descricao">{{ s.descricao }}</p>
+
+            @if (s.justificativa) {
+                <h4>Justificativa</h4>
+                <p class="descricao">{{ s.justificativa }}</p>
+            }
+
+            @if (podeDecidirAberta) {
+                <form class="form decisao" (ngSubmit)="decidir(true)">
+                    <label>Justificativa
+                        <textarea name="justificativa" [(ngModel)]="justificativa" rows="3" maxlength="2000"></textarea>
+                    </label>
+                    @if (erroPainel) { <p class="form-erro" role="alert">{{ erroPainel }}</p> }
+                    <div class="form-acoes">
+                        <button type="button" class="btn-sec" [disabled]="enviando" (click)="decidir(false)">Recusar</button>
+                        <button type="submit" class="btn-acao" [disabled]="enviando">Aprovar</button>
+                    </div>
+                </form>
+            }
+        }
+    </aside>
 }
