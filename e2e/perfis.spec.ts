@@ -47,8 +47,8 @@ test.describe('O que cada perfil vê e pode fazer', () => {
     expect(api.escritasEm('/api/users')[0].corpo).toMatchObject({ login: 'thales', perfil: 'GESTOR_PROJETO' });
   });
 
-  test('quem não é admin não abre a tela de usuários', async ({ page, api }) => {
-    await api.entrarComo('pmo');
+  test('gestor de projeto não abre a tela de usuários', async ({ page, api }) => {
+    await api.entrarComo('outro.gestor');
     await page.goto('/usuarios');
     await expect(page).toHaveURL(/\/dashboard/);
   });

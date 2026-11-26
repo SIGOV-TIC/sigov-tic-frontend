@@ -32,6 +32,10 @@
                 <mat-icon class="nav-icon">summarize</mat-icon>
                 Status Report
             </a>
+            <a class="nav-item" routerLink="/dados" routerLinkActive="active">
+                <mat-icon class="nav-icon">table</mat-icon>
+                Dados
+            </a>
             <a class="nav-item" routerLink="/solicitacoes" routerLinkActive="active">
                 <mat-icon class="nav-icon">assignment</mat-icon>
                 Solicitações
@@ -90,6 +94,8 @@
                     <span class="breadcrumb-current">Orçamento</span>
                 } @else if (estaNoStatusReport) {
                     <span class="breadcrumb-current">Status Report</span>
+                } @else if (estaNosDados) {
+                    <span class="breadcrumb-current">Dados</span>
                 } @else if (estaNosObjetivos) {
                     <span class="breadcrumb-current">Objetivos Estratégicos</span>
                 } @else if (estaNoDashboard) {
@@ -109,10 +115,6 @@
         <main class="main-content">
             <ng-content />
         </main>
-
-        <footer class="footer">
-            SIGOV-TIC | Gestão do Portfólio de TIC
-        </footer>
 
     </div>
 

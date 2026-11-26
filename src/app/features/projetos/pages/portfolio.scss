@@ -15,7 +15,7 @@
     gap: 6px;
     padding: 9px 18px;
     background-color: var(--accent-yellow);
-    color: #0A1628;
+    color: var(--estado-texto);
     border: none;
     border-radius: 6px;
     font-size: 14px;
@@ -41,6 +41,31 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
+}
+
+.toolbar { gap: 16px; justify-content: flex-start; }
+
+// Ativos x aposentados: duas opções lado a lado, a marcada em destaque.
+.situacao {
+    display: inline-flex;
+    padding: 2px;
+    border: 1px solid var(--fio-forte);
+    border-radius: 8px;
+
+    button {
+        height: 30px;
+        padding: 0 14px;
+        border: none;
+        border-radius: 6px;
+        background: none;
+        color: var(--text-muted);
+        font: inherit;
+        font-size: 13px;
+        cursor: pointer;
+
+        &:hover { color: var(--text-primary); }
+        &.marcada { background-color: var(--fio); color: var(--text-primary); font-weight: 600; }
+    }
 }
 
 .search-box {
@@ -81,6 +106,7 @@
 }
 
 .total-count {
+    margin-left: auto;
     font-size: 13px;
     color: var(--text-faint);
 }
@@ -204,56 +230,6 @@ tfoot .row-total td {
     color: var(--badge-rejeitado-text);
 }
 
-.estado-vazio {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 24px;
-    background-color: var(--bg-card);
-    border: 1px solid var(--fio-forte);
-    border-radius: var(--raio-cartao);
-
-    .estado-icon {
-        font-size: 48px;
-        width: 48px;
-        height: 48px;
-        color: var(--border-main);
-        margin-bottom: 12px;
-    }
-
-    p {
-        font-size: 15px;
-        color: var(--text-faint);
-    }
-
-    &.estado-erro {
-        .estado-icon {
-            color: var(--accent-red);
-        }
-
-        p {
-            color: #FCA5A5;
-        }
-    }
-}
-
-.btn-tentar {
-    margin-top: 12px;
-    background: none;
-    border: 1px solid var(--border-main);
-    color: var(--text-muted);
-    font-size: 13px;
-    padding: 6px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-
-    &:hover {
-        border-color: var(--accent-blue);
-        color: var(--text-primary);
-    }
-}
 
 .btn-novo-inline {
     margin-top: 12px;
@@ -265,4 +241,11 @@ tfoot .row-total td {
     &:hover {
         text-decoration: underline;
     }
+}
+
+.linha2.obs {
+    max-width: 40ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }

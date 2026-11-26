@@ -56,4 +56,14 @@ describe('authInterceptor', () => {
     expect(status).toBe(500);
     expect(auth.sessao()).not.toBeNull();
   });
+
+  it('senha temporária não encerra a sessão: marca a troca e leva ao primeiro acesso', () => {
+    http.get('/api/projetos').subscribe({ error: () => undefined });
+    api.expectOne('/api/projetos').flush(
+      { status: 403, message: 'Troque a senha temporaria para continuar.', codigo: 'TROCA_SENHA_OBRIGATORIA' },
+      { status: 403, statusText: 'Forbidden' },
+    );
+    expect(auth.sessao()?.trocaSenhaObrigatoria).toBe(true);
+    expect(router.navigate).toHaveBeenCalledWith(['/primeiro-acesso'], expect.objectContaining({ queryParams: expect.any(Object) }));
+  });
 });

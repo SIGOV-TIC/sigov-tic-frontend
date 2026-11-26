@@ -16,13 +16,13 @@ const lista: ProjetoResponse[] = [
   projeto({ id: 'd', sigla: 'SEM', areaSolicitante: 'Infra', dataInicioPrevista: undefined }),
 ];
 
-async function abrir() {
+async function abrir(projetos = lista) {
   entrarComo('ESCRITORIO');
   TestBed.configureTestingModule({ imports: [Cronograma], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
   const fixture = TestBed.createComponent(Cronograma);
   const api = TestBed.inject(HttpTestingController);
   await fixture.whenStable();
-  responderListagem(api, lista);
+  responderListagem(api, projetos);
   await redesenhar(fixture);
   return { tela: fixture.componentInstance, el: fixture.nativeElement as HTMLElement, fixture };
 }
@@ -52,6 +52,16 @@ describe('Cronograma', () => {
     const { tela } = await abrir();
     expect(tela.areasDisponiveis).toEqual(['Infra', 'Sistemas']);
     expect(tela.anosDisponiveis).toEqual([2026, 2027, 2028]);
+  });
+
+  it('sem filtro escolhido, o período cobre todos os projetos', async () => {
+    const antigo = projeto({ id: 'e', sigla: 'OLD', dataInicioPrevista: '2024-03-01', dataConclusaoPrevista: '2029-06-30' });
+    const { tela } = await abrir([...lista, antigo]);
+    expect([tela.filtros.anoInicio, tela.filtros.anoFim]).toEqual([2024, 2029]);
+    tela.rascunho.anoInicio = 2026;
+    tela.filtrar();
+    tela.limpar();
+    expect([tela.filtros.anoInicio, tela.filtros.anoFim]).toEqual([2024, 2029]);
   });
 
   it('filtra por área e status; fim antes do início é corrigido', async () => {
@@ -138,5 +148,75 @@ describe('Cronograma', () => {
     expect(linhas[1]).toContain('"Execução"');
     expect(linhas[4]).toContain('"Sem cronograma"');
     expect(nome).toMatch(/^SIGOV-TIC_Cronograma-Geral_2026-2027_\d{4}-\d{2}-\d{2}\.csv$/);
+  });
+
+  describe('arrastar a matriz', () => {
+    const mouse = (clientX: number, extra: Partial<PointerEvent> = {}) =>
+      ({ pointerType: 'mouse', button: 0, clientX, ...extra }) as PointerEvent;
+    const mover = (x: number) => document.dispatchEvent(new MouseEvent('pointermove', { clientX: x }));
+    const soltar = () => document.dispatchEvent(new MouseEvent('pointerup'));
+
+    async function preparar() {
+      const aberta = await abrir();
+      if (!aberta.tela.todosAbertos) aberta.tela.alternarTodos();
+      await redesenhar(aberta.fixture);
+      const rolagem = aberta.el.querySelector<HTMLElement>('.tl')!;
+      rolagem.scrollLeft = 300;
+      return { ...aberta, rolagem };
+    }
+
+    afterEach(() => soltar());
+
+    it('arrastar para a esquerda rola a linha do tempo para a direita, e vice-versa', async () => {
+      const { tela, rolagem } = await preparar();
+      tela.iniciarArraste(mouse(400));
+      mover(340);
+      expect(tela.arrastando).toBe(true);
+      expect(rolagem.scrollLeft).toBe(360);
+      mover(450);
+      expect(rolagem.scrollLeft).toBe(250);
+      soltar();
+      expect(tela.arrastando).toBe(false);
+    });
+
+    it('movimento de poucos pixels não é arraste', async () => {
+      const { tela, rolagem } = await preparar();
+      tela.iniciarArraste(mouse(400));
+      mover(397);
+      expect(tela.arrastando).toBe(false);
+      expect(rolagem.scrollLeft).toBe(300);
+    });
+
+    it('só o botão esquerdo do mouse arrasta; toque e outros botões seguem o padrão do navegador', async () => {
+      const { tela, rolagem } = await preparar();
+      tela.iniciarArraste(mouse(400, { button: 2 }));
+      tela.iniciarArraste(mouse(400, { pointerType: 'touch' }));
+      mover(300);
+      expect(tela.arrastando).toBe(false);
+      expect(rolagem.scrollLeft).toBe(300);
+    });
+
+    it('o clique que termina um arraste não abre o painel; o clique seguinte abre', async () => {
+      const { tela, el, fixture } = await preparar();
+      const barra = el.querySelector<HTMLElement>('.tl-barra')!;
+      tela.iniciarArraste(mouse(400));
+      mover(300);
+      soltar();
+      barra.click();
+      expect(tela.selecionado).toBeNull();
+      await new Promise((r) => setTimeout(r));
+      barra.click();
+      await redesenhar(fixture);
+      expect(tela.selecionado).not.toBeNull();
+    });
+
+    it('sem arraste o clique segue normal', async () => {
+      const { tela, el } = await preparar();
+      tela.iniciarArraste(mouse(400));
+      mover(401);
+      soltar();
+      el.querySelector<HTMLElement>('.tl-barra')!.click();
+      expect(tela.selecionado).not.toBeNull();
+    });
   });
 });

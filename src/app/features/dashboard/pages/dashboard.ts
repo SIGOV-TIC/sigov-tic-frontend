@@ -8,10 +8,12 @@ import { analisarProjeto } from '../../projetos/utils/saude';
 import { analisarCusto } from '../../projetos/utils/custo';
 import { moedaCompacta } from '../../projetos/utils/moeda';
 import { Meta, MetaService } from '../../objetivos/services/meta.service';
-import { avaliarMeta } from '../../objetivos/utils/meta';
+import { avaliarMeta, prazoEfetivo } from '../../objetivos/utils/meta';
 import { situacaoFase } from '../../projetos/utils/fase';
 import { Retrato, RetratoService } from '../services/retrato.service';
 import { fatia, Paginacao, paginaNaUrl } from '../../../shared/paginacao/paginacao';
+import { EstadoTela } from '../../../shared/estado/estado';
+import { mensagemDeErro } from '../../../shared/estado/erro-api';
 
 type Gravidade = 'grave' | 'atencao';
 
@@ -58,7 +60,7 @@ const MESES = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'O
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-dashboard',
-  imports: [RouterLink, MatIconModule, Paginacao],
+  imports: [RouterLink, MatIconModule, Paginacao, EstadoTela],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -66,7 +68,7 @@ export class Dashboard implements OnInit {
   projetos: ProjetoResponse[] = [];
   metas: Meta[] = [];
   carregando = true;
-  erro = false;
+  erro = '';
 
   readonly hoje = new Date();
 
@@ -88,9 +90,9 @@ export class Dashboard implements OnInit {
         this.carregando = false;
         this.registrarRetrato();
       },
-      error: () => {
+      error: (e) => {
         this.carregando = false;
-        this.erro = true;
+        this.erro = mensagemDeErro(e, 'o dashboard');
       },
     });
   }
@@ -211,7 +213,7 @@ export class Dashboard implements OnInit {
         titulo: m.indicador,
         contexto: m.objetivo,
         situacao: pct ? `${n(m.valorAtual!)} realizado` : `Atual ${n(m.valorAtual!)}`,
-        referencia: av.estado === 'ATRASADO' ? `prazo venceu em ${this.dia(this.lerData(m.prazo))}` : `${n(av.valorEsperado)} esperado`,
+        referencia: av.estado === 'ATRASADO' ? `prazo venceu em ${this.dia(this.lerData(prazoEfetivo(m)))}` : `${n(av.valorEsperado)} esperado`,
         responsavel: m.responsavel,
         link: ['/objetivos'],
         query: { abrir: m.objetivo },
@@ -296,7 +298,7 @@ export class Dashboard implements OnInit {
     });
 
     this.metas.forEach((m) => {
-      const prazo = this.lerData(m.prazo);
+      const prazo = this.lerData(prazoEfetivo(m));
       if (prazo >= inicio && prazo <= limite && avaliarMeta(m).estado !== 'CONCLUIDO') {
         lista.push({ data: prazo, marco: m.indicador, dono: 'Meta', sub: m.objetivo, link: ['/objetivos'], query: { abrir: m.objetivo } });
       }

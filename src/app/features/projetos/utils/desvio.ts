@@ -1,4 +1,5 @@
 import { ProjetoRequest } from '../models/projeto';
+import { dataReferencia } from './fase';
 import { progressoProjeto } from './saude';
 
 // Índices de desempenho pelo método do valor agregado (PMBOK).
@@ -28,21 +29,28 @@ function lerData(valor?: string): number | null {
 }
 
 // Fração do prazo já decorrida (0 a 1).
-export function fracaoDecorrida(p: ProjetoRequest, hoje: Date = new Date()): number | null {
+export function fracaoDecorrida(p: ProjetoRequest, hoje: Date = dataReferencia(p)): number | null {
   const ini = lerData(p.dataInicioPrevista);
   const fim = lerData(p.dataConclusaoPrevista);
   if (ini == null || fim == null || fim <= ini) return null;
   return Math.min(1, Math.max(0, (hoje.getTime() - ini) / (fim - ini)));
 }
 
-export function calcularDesvio(p: ProjetoRequest, hoje: Date = new Date()): Desvio {
+// Sem fases cadastradas não há avanço físico apurado: o projeto não é "zero por cento
+// entregue", é não medido. Índice calculado sobre isso diria 0,00 e seria mentira.
+export function avancoMensuravel(p: ProjetoRequest): boolean {
+  return (p.fases?.length ?? 0) > 0 || p.prazoQuadrante === 'CONCLUIDO';
+}
+
+export function calcularDesvio(p: ProjetoRequest, hoje: Date = dataReferencia(p)): Desvio {
   const tempo = fracaoDecorrida(p, hoje);
   const fisico = progressoProjeto(p) / 100;
   const orcamento = p.orcamentoEstimado ?? 0;
   const gasto = p.custoRealizado ?? 0;
+  const medivel = avancoMensuravel(p);
 
-  const idp = tempo ? fisico / tempo : null;
-  const idc = orcamento > 0 && gasto > 0 ? (orcamento * fisico) / gasto : null;
+  const idp = tempo && medivel ? fisico / tempo : null;
+  const idc = medivel && orcamento > 0 && gasto > 0 ? (orcamento * fisico) / gasto : null;
   const indiceCritico = idp != null && idc != null ? idp * idc : null;
   const desvioReal = indiceCritico != null ? (indiceCritico - 1) * 100 : null;
   const limite = 1 - TOLERANCIA_DESVIO / 100;
@@ -55,4 +63,14 @@ export function calcularDesvio(p: ProjetoRequest, hoje: Date = new Date()): Desv
     noPrazo: idp != null ? idp >= limite : null,
     dentro: desvioReal != null ? Math.abs(desvioReal) <= TOLERANCIA_DESVIO : null,
   };
+}
+
+// Faixa em que um índice de desempenho ainda se explica pela execução.
+// Fora dela (metade ou o dobro do plano) a causa quase sempre é a linha de base:
+// datas largas demais, orçamento desatualizado ou percentual de fase inflado.
+export const INDICE_MINIMO_PLAUSIVEL = 0.5;
+export const INDICE_MAXIMO_PLAUSIVEL = 2;
+
+export function basePlausivel(indice: number | null | undefined): boolean {
+  return indice == null || (indice >= INDICE_MINIMO_PLAUSIVEL && indice <= INDICE_MAXIMO_PLAUSIVEL);
 }

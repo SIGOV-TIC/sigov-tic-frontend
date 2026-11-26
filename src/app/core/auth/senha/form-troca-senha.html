@@ -1,0 +1,27 @@
+<form class="troca" (ngSubmit)="enviar()" novalidate>
+    <label class="campo">{{ rotuloAtual() }}
+        <input #primeiro name="senhaAtual" type="password" autocomplete="current-password" [(ngModel)]="senhaAtual">
+    </label>
+    <div class="campo-com-regra">
+        <label class="campo">Nova senha
+            <input name="novaSenha" type="password" autocomplete="new-password" aria-describedby="regra-senha" [(ngModel)]="novaSenha">
+        </label>
+        <span id="regra-senha" class="regra">8 a 72 caracteres, com letras e números.</span>
+    </div>
+    <label class="campo">Confirmar nova senha
+        <input name="confirmacao" type="password" autocomplete="new-password" [(ngModel)]="confirmacao">
+    </label>
+
+    @if (erro()) {
+        <p class="form-erro" role="alert">{{ erro() }}</p>
+    }
+    @if (concluida()) {
+        <p class="form-ok" role="status">Senha trocada.</p>
+    }
+
+    <div class="form-acoes">
+        <button type="submit" class="btn-acao" [disabled]="enviando() || bloqueada()">
+            {{ enviando() ? 'Trocando…' : rotuloBotao() }}
+        </button>
+    </div>
+</form>

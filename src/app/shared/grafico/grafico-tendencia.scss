@@ -1,0 +1,155 @@
+:host {
+    --grafico-plano: var(--text-faint);
+    --grafico-grade: var(--fio);
+    --grafico-superficie: var(--bg-card);
+
+    display: block;
+    position: relative;
+}
+
+.grafico {
+    margin: 0;
+}
+
+figcaption {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 4px;
+
+    h4 {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+}
+
+.legenda {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 12px;
+    color: var(--text-faint);
+
+    span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+    i {
+        width: 12px;
+        height: 2px;
+        border-radius: 1px;
+
+        &.plano { height: 0; border-top: 2px dotted currentColor; background: none !important; }
+    }
+}
+
+.ver-dados {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--text-faint);
+    font: inherit;
+    font-size: 12px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+
+    &:hover { color: var(--text-primary); }
+}
+
+svg {
+    display: block;
+    overflow: visible;
+}
+
+.grade,
+.referencia,
+.cruz {
+    stroke: var(--grafico-grade);
+    stroke-width: 1;
+}
+
+// A referência (o plano, a meta) é mais firme que a grade: é contra ela que se lê.
+.referencia {
+    stroke: var(--text-faint);
+    stroke-width: 1.5;
+}
+
+.cruz { stroke: var(--text-faint); }
+
+.faixa {
+    fill: var(--grafico-grade);
+    opacity: 0.3;
+}
+
+.linha {
+    fill: none;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+
+    // Planejado é contorno: traço fino, sem peso de tinta.
+    &.plano {
+        stroke-width: 1.5;
+        stroke-dasharray: 5 4;
+    }
+}
+
+.ponta {
+    stroke: var(--grafico-superficie);
+    stroke-width: 2;
+}
+
+.rotulo-eixo {
+    fill: var(--text-faint);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+
+.rotulo-ponta {
+    fill: var(--text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.fatia {
+    fill: transparent;
+}
+
+.dica {
+    position: absolute;
+    bottom: 36px;
+    transform: translateX(-50%);
+    padding: 8px 10px;
+    border: 1px solid var(--fio-forte);
+    border-radius: 8px;
+    background-color: var(--vidro, var(--bg-card));
+    backdrop-filter: blur(6px);
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    pointer-events: none;
+
+    b { color: var(--text-primary); }
+    span { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+    i { width: 10px; height: 2px; border-radius: 1px; }
+}
+
+.tabela-dados {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th, td {
+        padding: 6px 8px;
+        border-bottom: 1px solid var(--fio);
+        text-align: left;
+        color: var(--text-secondary);
+    }
+    th { color: var(--text-faint); font-weight: 500; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    tr:last-child td { border-bottom: none; }
+}

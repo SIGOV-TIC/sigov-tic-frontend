@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, ElementRef, HostListener, output } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../auth/auth.service';
 
@@ -6,7 +7,7 @@ import { AuthService } from '../auth/auth.service';
   // Segue o padrão Eager das demais partes do layout.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-menu-usuario',
-  imports: [MatIconModule],
+  imports: [MatIconModule, RouterLink],
   templateUrl: './menu-usuario.html',
   styleUrl: './menu-usuario.scss',
 })
@@ -26,6 +27,10 @@ export class MenuUsuario {
 
   get iniciais(): string {
     return this.nome.slice(0, 2).toUpperCase();
+  }
+
+  get foto(): string {
+    return this.auth.sessao()?.foto ?? '';
   }
 
   get perfil(): string {

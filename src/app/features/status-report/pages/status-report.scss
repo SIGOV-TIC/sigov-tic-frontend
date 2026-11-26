@@ -37,6 +37,7 @@
     }
 }
 
+.btn-emitir,
 .btn-exportar {
     display: inline-flex;
     align-items: center;
@@ -57,7 +58,41 @@
     &:disabled { opacity: 0.5; cursor: default; }
 }
 
-.estado-vazio { padding: 48px 0; text-align: center; color: var(--text-faint); }
+// Emitir é o ato que fecha o mês: é a ação principal da tela.
+.btn-emitir {
+    background-color: var(--accent-blue);
+    color: var(--estado-texto);
+    border-color: transparent;
+
+    &:hover:not(:disabled) { background-color: color-mix(in srgb, var(--accent-blue) 85%, #000); }
+}
+
+.aviso-emissao {
+    margin: 0 0 12px;
+    color: var(--accent-red);
+    font-size: 13px;
+}
+
+// Contagens do documento emitido, no mesmo desenho dos indicadores do topo.
+.rel-contagens {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    > div + div { padding-left: 24px; border-left: 1px solid var(--fio); }
+    small { display: block; font-size: 12px; color: var(--text-faint); }
+    b {
+        display: block;
+        margin-top: 4px;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-primary);
+        font-variant-numeric: tabular-nums;
+
+        span { font-size: 13px; font-weight: 500; color: var(--text-faint); }
+        &.atencao { color: var(--accent-red); }
+    }
+}
+
 
 // O relatório é uma folha só: fios separam as partes, sem caixas dentro de caixas.
 .relatorio {
@@ -197,16 +232,128 @@ time { font-size: 13px; line-height: 1.6; color: var(--text-faint); font-variant
     th.num { text-align: right; }
 }
 
+// Blocos que só existem no documento impresso.
+.so-print { display: none; }
+
 @media print {
+    .so-print { display: block; }
+
     .relatorio { padding: 0; border: none; }
     .relatorio > section, .relatorio > .rel-colunas { padding-top: 12px; margin-top: 12px; }
     .rel-indicadores b { font-size: 20px; }
     .rel-tabela td { padding-top: 5px; padding-bottom: 5px; }
-    .rel-colunas, .rel-tabela tr { break-inside: avoid; }
+
+    // Nada de gráfico separado do título, nem tabela partida ao meio.
+    .rel-colunas,
+    .rel-tabela tr,
+    .rel-graficos app-grafico-tendencia,
+    .rel-contagens,
+    .rel-responsaveis,
+    section { break-inside: avoid; }
+    h3 { break-after: avoid; }
+
+
+
+    // O bloco de identificação já diz título, período e emissão: o topo da tela não se repete.
+    .rel-tipo,
+    .rel-emissao,
+    .rel-topo h2 { display: none; }
+    .rel-topo { padding-bottom: 0; border: none; }
+
+    .rel-identificacao {
+        margin-bottom: 14px;
+        padding-bottom: 12px;
+        border-bottom: 1.5px solid #0F1D32;
+    }
+
+    .rel-id-topo {
+        display: flex;
+        justify-content: space-between;
+        font-size: 8.5pt;
+        color: #3D5068;
+    }
+
+    .rel-id-classificacao { font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+
+    .rel-id-titulo {
+        margin: 6px 0 10px;
+        font-size: 15pt;
+        font-weight: 700;
+        color: #0F1D32;
+    }
+
+    .rel-id-campos {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px 20px;
+        margin: 0;
+
+        dt { font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.04em; color: #4F5D73; }
+        dd { margin: 2px 0 0; font-size: 9.5pt; color: #0F1D32; }
+    }
+
+    // Seções numeradas, como em documento de governança.
+    .relatorio { counter-reset: secao; }
+    .relatorio h3::before {
+        counter-increment: secao;
+        content: counter(secao) '. ';
+        color: #4F5D73;
+    }
+
+    .rel-responsaveis {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 18px;
+        padding-top: 14px;
+        border-top: 1px solid #C5CCD8;
+
+        span { display: block; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.04em; color: #4F5D73; }
+        b { display: block; margin-top: 10px; padding-top: 4px; border-top: 1px solid #3D5068; font-size: 9.5pt; color: #0F1D32; }
+    }
 }
 
-@media (max-width: 900px) {
+@media screen and (max-width: 900px) {
     .rel-indicadores { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 16px; }
     .rel-indicadores > div:nth-child(3) { padding-left: 0; border-left: none; }
     .rel-colunas { grid-template-columns: 1fr; gap: 20px; }
+}
+
+// Os gráficos ficam acima das contagens: tendência primeiro, número depois.
+.rel-graficos {
+    display: grid;
+    gap: 28px;
+    grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+}
+
+.ir-dados {
+    grid-column: 1 / -1;
+    justify-self: start;
+    font-size: 13px;
+    color: var(--text-muted);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+
+    &:hover { color: var(--text-primary); }
+}
+
+// Avisos sobre o próprio dado: aparecem no documento, inclusive impresso.
+.aviso {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 10px 0;
+    font-size: 13px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--fio);
+
+    mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--estado-risco); }
+}
+
+.rel-indicadores .revisar {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--estado-risco);
 }

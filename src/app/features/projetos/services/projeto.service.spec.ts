@@ -58,7 +58,32 @@ describe('ProjetoService', () => {
     expect(api.expectOne('/api/projetos/p1/fases/f2/atividades/t1').request.method).toBe('DELETE');
   });
 
+  it('lista só os ativos por padrão e pede os aposentados quando informado', () => {
+    service.listar().subscribe();
+    expect(api.expectOne((r) => r.url === '/api/projetos').request.params.get('situacao')).toBe('ativos');
+    service.listar(0, 20, 'aposentados').subscribe();
+    expect(api.expectOne((r) => r.url === '/api/projetos').request.params.get('situacao')).toBe('aposentados');
+  });
+
+  it('aposenta e reativa pelo recurso de aposentadoria', () => {
+    service.aposentar('p1', { motivo: 'CANCELADO', observacao: 'Custo alto' }).subscribe();
+    const req = api.expectOne('/api/projetos/p1/aposentadoria');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ motivo: 'CANCELADO', observacao: 'Custo alto' });
+    service.reativar('p1').subscribe();
+    expect(api.expectOne('/api/projetos/p1/aposentadoria').request.method).toBe('DELETE');
+  });
+
   describe('projetos de exemplo', () => {
+    it('conta também os aposentados antes de decidir gravar exemplos', () => {
+      service.seedSeNecessario();
+      service.listar().subscribe();
+      const req = api.expectOne((r) => r.params.get('size') === '1');
+      expect(req.request.params.get('situacao')).toBe('todos');
+      req.flush({ content: [], page: 0, size: 1, totalElements: 2, totalPages: 1 });
+      api.expectOne((r) => r.params.get('size') === '20').flush({ content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 });
+    });
+
     const pagina = (total: number) => ({ content: [], page: 0, size: 1, totalElements: total, totalPages: 1 });
 
     it('banco com projetos: não grava nada e lista uma vez só', () => {

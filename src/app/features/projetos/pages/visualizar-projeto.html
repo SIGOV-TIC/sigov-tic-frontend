@@ -1,12 +1,7 @@
 @if (carregando) {
-    <div class="estado-vazio">
-        <p>Carregando projeto...</p>
-    </div>
+    <app-estado tipo="carregando" mensagem="Carregando projeto..." />
 } @else if (erro) {
-    <div class="estado-vazio">
-        <p class="falha-api">Não foi possível carregar os dados. Verifique a conexão e tente de novo.</p>
-        <button class="falha-tentar" (click)="recarregar()">Tentar novamente</button>
-    </div>
+    <app-estado tipo="erro" [mensagem]="erro" (tentar)="recarregar()" />
 } @else {
 
 <div class="projeto-header">
@@ -14,15 +9,34 @@
         <div class="projeto-titulo-row">
             <h1>{{ projeto.nome }}</h1>
             <span class="sigla-badge">{{ projeto.sigla }}</span>
-            <span class="status-badge" [class]="statusClasse(projeto.status)">{{ statusLabel(projeto.status) }}</span>
+            @if (aposentado) {
+                <span class="status-badge status-aposentado">Aposentado</span>
+            } @else {
+                <span class="status-badge" [class]="statusClasse(projeto.status)">{{ statusLabel(projeto.status) }}</span>
+            }
         </div>
         <p class="projeto-area">{{ projeto.areaSolicitante || '—' }} · {{ projeto.areaExecutora || '—' }}</p>
+        @if (projeto.aposentadoria; as a) {
+            <p class="aposentadoria">{{ leituraAposentadoria }}</p>
+            @if (a.observacao) { <p class="aposentadoria-obs">{{ a.observacao }}</p> }
+        }
     </div>
     <div class="projeto-header-acoes">
         @if (podeEditar) {
             <a [routerLink]="['/projeto', projeto.id, 'editar']" class="btn-voltar">
                 <mat-icon>edit</mat-icon> Editar
             </a>
+        }
+        @if (podeAposentar) {
+            @if (aposentado) {
+                <button type="button" class="btn-voltar" (click)="reativar()">
+                    <mat-icon>unarchive</mat-icon> Reativar
+                </button>
+            } @else {
+                <button type="button" class="btn-voltar" (click)="abrirAposentadoria()">
+                    <mat-icon>inventory_2</mat-icon> Aposentar
+                </button>
+            }
         }
         <a routerLink="/portfolio" class="btn-voltar">
             <mat-icon>arrow_back</mat-icon> Portfólio
@@ -227,6 +241,10 @@
             </div>
         </div>
 
+        <div class="card">
+            <app-realizado-mensal [projeto]="projeto" [podeEditar]="podeEditar" (realizado)="atualizarRealizado($event)" />
+        </div>
+
         <!-- Ponto de Atenção -->
         <div class="card">
             <ng-container *ngTemplateOutlet="campoEditavel; context: { chave: 'pontoAtencao', titulo: 'Ponto de Atenção', vazio: 'Nenhum ponto de atenção registrado.' }"></ng-container>
@@ -338,7 +356,12 @@
                 <label class="cf-largo"><span>Nome da fase</span><input type="text" [(ngModel)]="r.nome" [disabled]="!podeEditar"></label>
                 <label><span>Data de início</span><input type="date" [(ngModel)]="r.dataInicio"></label>
                 <label><span>Data de fim</span><input type="date" [(ngModel)]="r.dataFim" required></label>
-                <label><span>Concluído (%)</span><input type="number" min="0" max="100" [(ngModel)]="r.percentual" (blur)="ajustarPercentual(r)"></label>
+                <div class="cf-largo cf-campo"><span id="pct-fase">Concluído (%)</span>
+                    <div class="cf-pct">
+                        <input type="range" min="0" max="100" step="5" [(ngModel)]="r.percentual" aria-labelledby="pct-fase">
+                        <input type="number" min="0" max="100" [(ngModel)]="r.percentual" (blur)="ajustarPercentual(r)" aria-labelledby="pct-fase">
+                    </div>
+                </div>
                 <label><span>Situação</span>
                     <select [(ngModel)]="r.situacao">
                         <option value="PENDENTE">Pendente</option>
@@ -377,6 +400,44 @@
     </section>
 }
 
+@if (rascunhoAposentadoria; as r) {
+    <div class="camada-fundo" (click)="fecharAposentadoria()"></div>
+    <form class="camada-fase camada-aposentar" role="dialog" aria-modal="true" aria-labelledby="titulo-aposentar"
+          (ngSubmit)="aposentar()">
+        <h2 id="titulo-aposentar" class="cf-titulo">Aposentar {{ projeto.sigla }}</h2>
+        <p class="ap-efeito">Sai dos totais e das telas a partir da data. Histórico e relatórios emitidos ficam.</p>
+
+        <fieldset class="ap-motivos">
+            <legend>Motivo</legend>
+            @for (m of motivos; track m.valor) {
+                <label class="ap-motivo">
+                    <input type="radio" name="motivo" [value]="m.valor" [(ngModel)]="r.motivo">
+                    {{ m.rotulo }}
+                </label>
+            }
+        </fieldset>
+
+        <label class="ap-campo">
+            <span>Data</span>
+            <input type="date" name="data" class="campo-edicao ap-data" [(ngModel)]="r.data" [max]="hoje" required>
+        </label>
+
+        <label class="ap-campo">
+            <span>Observação</span>
+            <textarea name="observacao" rows="3" class="campo-edicao" [(ngModel)]="r.observacao" maxlength="2000"></textarea>
+        </label>
+
+        @if (erroAposentadoria) {
+            <p class="ap-erro" role="alert">{{ erroAposentadoria }}</p>
+        }
+
+        <div class="cf-acoes ap-acoes">
+            <button type="button" class="cf-btn" (click)="fecharAposentadoria()">Cancelar</button>
+            <button type="submit" class="cf-btn cf-primario" [disabled]="gravandoAposentadoria || !r.data">Aposentar</button>
+        </div>
+    </form>
+}
+
 <!-- Formulário de atividade, dentro da fase aberta -->
 <ng-template #formAtividade>
     @if (rascunhoAtividade; as r) {
@@ -392,7 +453,12 @@
                 </select>
             </label>
             @if (r.situacao === 'EM_ANDAMENTO') {
-                <label><span>Concluído (%)</span><input type="number" min="0" max="99" [(ngModel)]="r.percentual"></label>
+                <div class="cf-largo cf-campo"><span id="pct-atividade">Concluído (%)</span>
+                    <div class="cf-pct">
+                        <input type="range" min="0" max="99" [(ngModel)]="r.percentual" aria-labelledby="pct-atividade">
+                        <input type="number" min="0" max="99" [(ngModel)]="r.percentual" aria-labelledby="pct-atividade">
+                    </div>
+                </div>
             }
             <div class="cf-largo cf-atv-form-acoes">
                 <button type="button" class="cf-btn" (click)="rascunhoAtividade = null">Cancelar</button>

@@ -8,6 +8,12 @@ import { MARGEM_RISCO_PONTOS } from '../../projetos/utils/saude';
 import { moedaCompacta } from '../../projetos/utils/moeda';
 import { analisarCusto, ORDEM_CUSTO, SituacaoCusto, situacaoCusto } from '../../projetos/utils/custo';
 import { fatia, Paginacao, paginaNaUrl } from '../../../shared/paginacao/paginacao';
+import { EstadoTela } from '../../../shared/estado/estado';
+import { mensagemDeErro } from '../../../shared/estado/erro-api';
+import { GraficoTendencia, SerieGrafico } from '../../../shared/grafico/grafico-tendencia';
+import { Gasto } from '../models/gasto';
+import { GastoService } from '../services/gasto.service';
+import { linhaDoTempo, MesRealizado, mesAtual, rotuloMes } from '../utils/linha-do-tempo';
 
 interface LinhaOrcamento {
   projeto: ProjetoResponse;
@@ -34,14 +40,14 @@ interface LinhaArea {
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-orcamento',
-  imports: [RouterLink, FormsModule, MatIconModule, Paginacao],
+  imports: [RouterLink, FormsModule, MatIconModule, Paginacao, EstadoTela, GraficoTendencia],
   templateUrl: './orcamento.html',
   styleUrl: './orcamento.scss',
 })
 export class Orcamento implements OnInit {
   projetos: ProjetoResponse[] = [];
   carregando = true;
-  erro = false;
+  erro = '';
   area = '';
 
   // Áreas abertas na tabela. As que têm projeto fora do previsto abrem sozinhas na primeira carga.
@@ -61,9 +67,20 @@ export class Orcamento implements OnInit {
     OK: 'check_circle',
   };
 
-  constructor(private projetoService: ProjetoService) {}
+  gastos: Gasto[] = [];
+  // A seção abre no mês corrente; o histórico mostra o gráfico e os meses anteriores.
+  verHistorico = false;
+
+  // Meses mostrados na tabela do realizado; o gráfico leva a série inteira.
+  readonly mesesNaTabela = 12;
+
+  constructor(
+    private projetoService: ProjetoService,
+    private gastoService: GastoService,
+  ) {}
 
   ngOnInit() {
+    this.gastoService.todos().subscribe({ next: (g) => (this.gastos = g), error: () => (this.gastos = []) });
     this.projetoService.seedSeNecessario();
     this.projetoService.listar(0, 200).subscribe({
       next: (res) => {
@@ -71,9 +88,9 @@ export class Orcamento implements OnInit {
         this.porArea.filter((a) => a.linhas.some((l) => l.situacao !== 'OK')).forEach((a) => this.abertas.add(a.area));
         this.carregando = false;
       },
-      error: () => {
+      error: (e) => {
         this.carregando = false;
-        this.erro = true;
+        this.erro = mensagemDeErro(e, 'o orçamento');
       },
     });
   }
@@ -89,6 +106,36 @@ export class Orcamento implements OnInit {
     );
   }
 
+  // Realizado do portfólio mês a mês, com os mesmos projetos dos totais acima.
+  get realizadoMensal(): MesRealizado[] {
+    const ids = new Set(this.comOrcamento.map((p) => p.id));
+    return linhaDoTempo(this.gastos.filter((g) => ids.has(g.projetoId)), mesAtual());
+  }
+
+  realizadoRecente(linhas: MesRealizado[]): MesRealizado[] {
+    return linhas.slice(-this.mesesNaTabela).reverse();
+  }
+
+  rotulosRealizado(linhas: MesRealizado[]): string[] {
+    return linhas.map((l) => rotuloMes(l.mes, true));
+  }
+
+  seriesRealizado(linhas: MesRealizado[]): SerieGrafico[] {
+    const orcado = this.totalOrcado;
+    return [
+      { nome: 'Realizado acumulado', cor: 1, estilo: 'realizado', valores: linhas.map((l) => l.acumulado) },
+      { nome: 'Orçado', cor: 'neutra', estilo: 'planejado', valores: linhas.map(() => orcado) },
+    ];
+  }
+
+  rotuloMes(mes: string): string {
+    return rotuloMes(mes);
+  }
+
+  pctDoOrcado(valor: number): number {
+    return this.totalOrcado > 0 ? Math.round((valor / this.totalOrcado) * 100) : 0;
+  }
+
   get semOrcamento(): number {
     return this.projetos.filter(
       (p) => !((p.orcamentoEstimado ?? 0) > 0) && (!this.area || (p.areaSolicitante || 'Sem área') === this.area),
@@ -99,6 +146,15 @@ export class Orcamento implements OnInit {
     return this.comOrcamento
       .map((p) => this.montar(p))
       .sort((a, b) => ORDEM_CUSTO.indexOf(a.situacao) - ORDEM_CUSTO.indexOf(b.situacao) || b.orcado - a.orcado);
+  }
+
+  // Os maiores orçamentos. Com poucos projetos a lista repetiria a tabela, então só aparece quando há mais que o limite.
+  readonly tamanhoMaiores = 5;
+
+  get maiores(): LinhaOrcamento[] {
+    const ls = this.linhas;
+    if (ls.length <= this.tamanhoMaiores) return [];
+    return [...ls].sort((a, b) => b.orcado - a.orcado).slice(0, this.tamanhoMaiores);
   }
 
   get atencao(): LinhaOrcamento[] {

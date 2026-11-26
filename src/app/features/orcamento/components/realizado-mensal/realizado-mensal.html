@@ -1,0 +1,95 @@
+<div class="card-titulo">
+    <h3>Realizado por mês</h3>
+    @if (podeEditar && !rascunho()) {
+        <button type="button" class="btn-icone" (click)="novo()" aria-label="Registrar gasto" title="Registrar gasto">
+            <mat-icon>add</mat-icon>
+        </button>
+    }
+</div>
+
+@if (rascunho(); as r) {
+    <form class="gasto-form" (ngSubmit)="salvar()">
+        <label><span>Mês</span>
+            <select name="mes" [(ngModel)]="r.mes" required>
+                @for (m of mesesDisponiveis; track m) {
+                    <option [value]="m">{{ rotulo(m) }}</option>
+                }
+            </select>
+        </label>
+        <label><span>Valor (R$)</span>
+            <input name="valor" type="number" min="0" step="any" [(ngModel)]="r.valor" required>
+        </label>
+        <div class="largo campo"><label for="origem-gasto">Origem</label>
+            <app-escolha campoId="origem-gasto" name="origem" [(ngModel)]="r.origem" [opcoes]="origens()" [maxlength]="200"
+                         vazio="Contrato, nota de empenho, fonte do recurso" />
+        </div>
+        <label class="largo"><span>Motivo</span>
+            <textarea name="motivo" rows="2" [(ngModel)]="r.motivo" required></textarea>
+        </label>
+        @if (erro()) { <p class="erro largo" role="alert">{{ erro() }}</p> }
+        <div class="acoes largo">
+            <button type="button" class="btn-texto" (click)="cancelar()">Cancelar</button>
+            <button type="submit" class="btn-salvar" [disabled]="!completo(r) || salvando()">{{ r.id ? 'Salvar' : 'Registrar' }}</button>
+        </div>
+    </form>
+}
+
+@if (carregando()) {
+    <p class="vazio">Carregando…</p>
+} @else if (mesesComGasto().length === 0) {
+    @if (!rascunho()) { <p class="vazio">Nenhum gasto registrado.</p> }
+} @else {
+    @if (atual(); as a) {
+        <dl class="agora">
+            <div><dt>Acumulado</dt><dd>{{ moeda(a.acumulado) }}</dd></div>
+            <div><dt>Em {{ rotulo(a.mes) }}</dt><dd>{{ moeda(a.noMes) }}</dd></div>
+            @if (pctDoOrcado(a.acumulado); as pct) {
+                <div><dt>Do orçado</dt><dd>{{ pct }}%</dd></div>
+            }
+        </dl>
+    }
+    @if (erro() && !rascunho()) { <p class="erro" role="alert">{{ erro() }}</p> }
+    @if (verHistorico() && linhas().length >= 2) {
+        <app-grafico-tendencia titulo="Realizado acumulado" [rotulos]="rotulos()" [series]="series()" formato="moeda" />
+    }
+    @if (mesesVisiveis().length) {
+        <div class="colunas-cabeca" aria-hidden="true">
+            <span>Mês</span><span class="num">No mês</span><span class="num">Acumulado</span>
+        </div>
+    }
+    <ol class="meses">
+        @for (l of mesesVisiveis(); track l.mes) {
+            <li>
+                <div class="mes-cabeca">
+                    <b>{{ rotulo(l.mes) }}</b>
+                    <span class="num">{{ moeda(l.noMes) }}</span>
+                    <span class="num acumulado">{{ moeda(l.acumulado) }}</span>
+                </div>
+                <ul class="gastos">
+                    @for (g of l.gastos; track g.id) {
+                        <li>
+                            <div class="gasto-texto">
+                                <span class="origem">{{ g.origem }}</span>
+                                <p>{{ g.motivo }}</p>
+                                @if (g.autor) { <small>{{ g.autor }}</small> }
+                            </div>
+                            <span class="num">{{ moeda(g.valor) }}</span>
+                            @if (podeEditar) {
+                                <span class="gasto-acoes">
+                                    <button type="button" class="btn-icone" (click)="editar(g)" [attr.aria-label]="'Editar gasto ' + g.origem" title="Editar"><mat-icon>edit</mat-icon></button>
+                                    <button type="button" class="btn-icone" (click)="remover(g)" [attr.aria-label]="'Remover gasto ' + g.origem" title="Remover"><mat-icon>delete</mat-icon></button>
+                                </span>
+                            }
+                        </li>
+                    }
+                </ul>
+            </li>
+        }
+    </ol>
+    @if (mesesAnteriores() > 0) {
+        <button type="button" class="historico" (click)="verHistorico.set(!verHistorico())" [attr.aria-expanded]="verHistorico()">
+            <mat-icon>{{ verHistorico() ? 'expand_less' : 'history' }}</mat-icon>
+            {{ verHistorico() ? 'Ocultar histórico' : 'Histórico · ' + mesesAnteriores() + (mesesAnteriores() === 1 ? ' mês' : ' meses') }}
+        </button>
+    }
+}

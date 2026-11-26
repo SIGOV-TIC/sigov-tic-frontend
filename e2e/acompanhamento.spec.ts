@@ -44,7 +44,8 @@ test.describe('PO acompanha o projeto', () => {
 
   test('edita o ponto de atenção', async ({ page, api }) => {
     await page.getByRole('button', { name: 'Editar Ponto de Atenção' }).click();
-    await page.getByLabel('Ponto de Atenção').fill('Risco de atraso na migração.');
+    // "Ponto de Atenção" também é parte do rótulo do botão de editar: o campo é pedido pelo papel.
+    await page.getByRole('textbox', { name: 'Ponto de Atenção', exact: true }).fill('Risco de atraso na migração.');
     await page.getByRole('button', { name: 'Salvar' }).click();
     await expect(page.getByText('Risco de atraso na migração.')).toBeVisible();
     expect((api.escritasEm('/acompanhamento')[0].corpo as { pontoAtencao: string }).pontoAtencao).toBe('Risco de atraso na migração.');

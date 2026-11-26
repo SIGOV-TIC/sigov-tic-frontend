@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../core/auth/auth.service';
+import { destinoSeguro } from '../../core/auth/auth.guard';
 
 @Component({
   selector: 'app-login',
@@ -46,8 +47,12 @@ export class Login {
       : this.auth.login(this.usuario.trim(), this.senha);
     pedido.subscribe({
       next: () => {
-        const voltar = this.route.snapshot.queryParamMap.get('voltar');
-        this.router.navigateByUrl(voltar && voltar.startsWith('/') && !voltar.startsWith('/login') ? voltar : '/dashboard');
+        const destino = destinoSeguro(this.route.snapshot.queryParamMap.get('voltar'));
+        if (this.auth.sessao()?.trocaSenhaObrigatoria) {
+          this.router.navigate(['/primeiro-acesso'], { queryParams: destino === '/dashboard' ? {} : { voltar: destino } });
+        } else {
+          this.router.navigateByUrl(destino);
+        }
       },
       error: (e: HttpErrorResponse) => {
         this.erro.set(this.mensagemErro(e, cadastro));

@@ -1,0 +1,12 @@
+<div class="estado" [class.erro]="tipo() === 'erro'" [attr.role]="tipo() === 'erro' ? 'alert' : 'status'">
+    @if (icone() && tipo() !== 'carregando') {
+        <mat-icon class="estado-icone">{{ icone() }}</mat-icon>
+    }
+    <p class="estado-texto">{{ mensagem() || (tipo() === 'carregando' ? 'Carregando...' : '') }}</p>
+    @if (tipo() === 'erro') {
+        <button type="button" class="estado-tentar" (click)="tentar.emit()">Tentar novamente</button>
+    }
+    @if (tipo() === 'vazio') {
+        <ng-content />
+    }
+</div>

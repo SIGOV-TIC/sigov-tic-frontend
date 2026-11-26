@@ -5,38 +5,64 @@
             <span>Projeto</span>
             <select [ngModel]="projeto?.id" (ngModelChange)="selecionar($event)" [disabled]="!projetos.length">
                 @for (p of projetos; track p.id) {
-                    <option [value]="p.id">{{ p.sigla }} · {{ p.nome }}</option>
+                    <option [value]="p.id">{{ p.sigla }} · {{ p.nome }}{{ p.aposentadoria ? ' · aposentado' : '' }}</option>
                 }
             </select>
         </label>
         <label class="filtro">
-            <span>Quinzena</span>
-            <select [(ngModel)]="quinzena" (ngModelChange)="mudarQuinzena()">
-                @for (q of quinzenas; track q.chave) {
-                    <option [ngValue]="q">{{ q.rotulo }}</option>
+            <span>Mês</span>
+            <select [(ngModel)]="periodo" (ngModelChange)="mudarPeriodo()">
+                @for (p of periodos; track p.chave) {
+                    <option [ngValue]="p">{{ p.rotulo }}{{ foiEmitido(p) ? ' · emitido' : '' }}</option>
                 }
             </select>
         </label>
-        <button type="button" class="btn-exportar" (click)="imprimir()" [disabled]="!projeto">
+        @if (podeEmitir) {
+            <button type="button" class="btn-emitir" (click)="emitir()" [disabled]="!projeto || emitindo">
+                <mat-icon>draft</mat-icon> {{ emitido ? 'Emitir novamente' : 'Emitir' }}
+            </button>
+        }
+        <button type="button" class="btn-exportar" (click)="imprimir()" [disabled]="!projeto"
+                title="Na janela de impressão, desmarque &quot;Cabeçalhos e rodapés&quot; para o PDF sair limpo.">
             <mat-icon>picture_as_pdf</mat-icon> Exportar PDF
         </button>
     </div>
 </div>
 
+@if (erroEmissao) {
+    <p class="aviso-emissao no-print">{{ erroEmissao }}</p>
+}
+
 @if (erro) {
-    <p class="estado-vazio">Não foi possível carregar os dados. Verifique a conexão e tente de novo.</p>
+    <app-estado tipo="erro" [mensagem]="erro" (tentar)="tentarNovamente()" />
 } @else if (carregando && !projeto) {
-    <p class="estado-vazio">Carregando...</p>
+    <app-estado tipo="carregando" mensagem="Carregando relatório..." />
 } @else if (!projeto) {
-    <p class="estado-vazio">Nenhum projeto cadastrado.</p>
+    <app-estado tipo="vazio" mensagem="Nenhum projeto cadastrado." />
 } @else {
     @let p = projeto;
     @let ind = indices;
     <article class="relatorio" [class.atualizando]="carregando">
 
+        <section class="rel-identificacao so-print">
+            <div class="rel-id-topo">
+                <span class="rel-id-sistema">SIGOV-TIC · Gestão do Portfólio de TIC</span>
+                <span class="rel-id-classificacao">Uso interno</span>
+            </div>
+            <h1 class="rel-id-titulo">Relatório de Acompanhamento de Projeto</h1>
+            <dl class="rel-id-campos">
+                <div><dt>Projeto</dt><dd>{{ p.sigla }} · {{ p.nome }}</dd></div>
+                <div><dt>Período</dt><dd>{{ periodo.rotulo }}</dd></div>
+                <div><dt>Situação do documento</dt><dd>{{ emitido ? 'Emitido' : 'Prévia — não emitido' }}</dd></div>
+                <div><dt>Emitido em</dt><dd>{{ retrato ? data(retrato.emitidoEm.slice(0, 10)) : '—' }}</dd></div>
+                <div><dt>Emitido por</dt><dd>{{ retrato?.autor || '—' }}</dd></div>
+                <div><dt>Identificador</dt><dd>{{ identificador }}</dd></div>
+            </dl>
+        </section>
+
         <header class="rel-topo">
             <div>
-                <span class="rel-tipo">Status Report · {{ quinzena.rotulo }}</span>
+                <span class="rel-tipo">{{ emitido ? 'Status Report' : 'Prévia' }} · {{ periodo.rotulo }}</span>
                 <h2><a [routerLink]="['/projeto', p.id]">{{ p.nome }}</a> <span class="sigla">{{ p.sigla }}</span></h2>
                 <p class="rel-meta">
                     @if (p.gerenteResponsavel) { <span>Gerente <b>{{ p.gerenteResponsavel }}</b></span> }
@@ -44,7 +70,11 @@
                     @if (p.scrumMaster) { <span>Scrum Master <b>{{ p.scrumMaster.nome }}</b></span> }
                 </p>
             </div>
-            <span class="rel-emissao">Emitido em {{ data(emissao) }}</span>
+            @if (retrato; as r) {
+                <span class="rel-emissao">Emitido em {{ data(r.emitidoEm.slice(0, 10)) }} por {{ r.autor }}</span>
+            } @else {
+                <span class="rel-emissao">Situação em {{ data(emissao) }}</span>
+            }
         </header>
 
         <section class="rel-indicadores">
@@ -58,18 +88,27 @@
                 @if (esperado !== null) { <span>esperado pelo prazo: {{ esperado }}%</span> }
             </div>
             <div>
-                <small>IDP · prazo</small>
+                <small title="Índice de desempenho de prazo (SPI): avanço entregue dividido pelo prazo decorrido. 1,00 é o plano.">IDP · prazo</small>
                 <b [class.atencao]="abaixo(ind?.idp)">{{ indice(ind?.idp) }}</b>
+                @if (baseARevisar(ind?.idp)) { <span class="revisar">linha de base a revisar</span> }
             </div>
             <div>
-                <small>IDC · custo</small>
+                <small title="Índice de desempenho de custo (CPI): valor entregue dividido pelo custo realizado. 1,00 é o plano.">IDC · custo</small>
                 <b [class.atencao]="abaixo(ind?.idc)">{{ indice(ind?.idc) }}</b>
+                @if (baseARevisar(ind?.idc)) { <span class="revisar">linha de base a revisar</span> }
             </div>
         </section>
 
+        @if (semNarrativa) {
+            <section class="rel-sem-registro">
+                <h3>Andamento no mês</h3>
+                <p class="vazio">Sem registros no período.</p>
+            </section>
+        } @else {
+
         <div class="rel-colunas">
             <section>
-                <h3>Andamento na quinzena</h3>
+                <h3>Andamento no mês</h3>
                 @if (atualizacoesDoPeriodo.length) {
                     <ol class="rel-atualizacoes">
                         @for (a of atualizacoesDoPeriodo; track a.id) {
@@ -80,16 +119,69 @@
                         }
                     </ol>
                 } @else {
-                    <p class="vazio">Nenhuma atualização registrada na quinzena.</p>
+                    <p class="vazio">Nenhuma atualização registrada no mês.</p>
                 }
             </section>
             <section>
                 <h3>Ponto de atenção</h3>
-                <p [class.vazio]="!p.pontoAtencao">{{ p.pontoAtencao || 'Nenhum ponto de atenção registrado.' }}</p>
+                <p [class.vazio]="!pontoAtencao">{{ pontoAtencao || 'Nenhum ponto de atenção registrado.' }}</p>
                 <h3>Recomendação do Escritório de Projetos</h3>
-                <p [class.vazio]="!p.recomendacao">{{ p.recomendacao || 'Nenhuma recomendação registrada.' }}</p>
+                <p [class.vazio]="!recomendacao">{{ recomendacao || 'Nenhuma recomendação registrada.' }}</p>
             </section>
         </div>
+
+        }
+
+        @if (algumIndiceImplausivel) {
+            <p class="aviso">
+                <mat-icon>warning</mat-icon>
+                Índice muito fora do plano: confira as datas e o orçamento do projeto antes de usar este relatório.
+            </p>
+        }
+
+        @if (temSerie && serieSemVariacao) {
+            <p class="aviso">
+                <mat-icon>info</mat-icon>
+                Os meses emitidos têm o mesmo avanço. Sem variação entre eles não há tendência para desenhar.
+            </p>
+        }
+
+        @if (temSerie && !serieSemVariacao) {
+            <section class="rel-graficos">
+                <app-grafico-tendencia
+                    [titulo]="'Avanço acumulado · % · ' + periodoSerie"
+                    [rotulos]="rotulosSerie" [series]="serieAvanco" formato="percentual" />
+                <app-grafico-tendencia
+                    [titulo]="'Desempenho de prazo e de custo · índice · ' + periodoSerie"
+                    [rotulos]="rotulosSerie" [series]="serieIndices" [faixa]="faixaIndices" [referencia]="1"
+                    formato="indice" />
+                @if (temOrcamento) {
+                    <app-grafico-tendencia
+                        [titulo]="'Orçamento acumulado · R$ · ' + periodoSerie"
+                        [rotulos]="rotulosSerie" [series]="serieOrcamento" formato="moeda" />
+                }
+                <a class="ir-dados no-print" [routerLink]="['/dados']" [queryParams]="{ projeto: p.id }">
+                    Ver todos os dados deste projeto
+                </a>
+            </section>
+        }
+
+        @if (emitido) {
+            <section class="rel-contagens">
+                <div>
+                    <small>Fases concluídas</small>
+                    <b>{{ fasesConcluidas }} <span>de {{ fasesTotal }}</span></b>
+                </div>
+                <div>
+                    <small>Atividades abertas</small>
+                    <b>{{ atividadesAbertas }}</b>
+                </div>
+                <div>
+                    <small>Atividades atrasadas</small>
+                    <b [class.atencao]="(atividadesAtrasadas ?? 0) > 0">{{ atividadesAtrasadas }}</b>
+                </div>
+            </section>
+        } @else {
 
         <section>
             <h3>Fases</h3>
@@ -131,6 +223,15 @@
                 <ng-container *ngTemplateOutlet="listaAtividades; context: { $implicit: proximas, vazio: 'Nenhuma entrega prevista nos próximos ' + horizonte + ' dias.', atraso: false }"></ng-container>
             </section>
         </div>
+
+        }
+
+        <section class="rel-responsaveis so-print">
+            <div><span>Gerente do projeto</span><b>{{ p.gerenteResponsavel || '—' }}</b></div>
+            <div><span>Product Owner</span><b>{{ p.po?.nome || '—' }}</b></div>
+            <div><span>Scrum Master</span><b>{{ p.scrumMaster?.nome || '—' }}</b></div>
+            <div><span>Emitido por</span><b>{{ retrato?.autor || '—' }}</b></div>
+        </section>
     </article>
 }
 

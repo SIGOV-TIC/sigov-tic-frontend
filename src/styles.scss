@@ -27,6 +27,11 @@
   --accent-yellow: #FACC15;
   --accent-yellow-hover: #EAB308;
   --accent-blue: #3B82F6;
+
+  // Séries dos gráficos: conferidas contra esta superfície (banda de luminosidade,
+  // chroma, separação para daltonismo e contraste).
+  --grafico-serie-1: #3B82F6;
+  --grafico-serie-2: #D95926;
   --accent-green: #22C55E;
   --accent-green-hover: #16A34A;
   --accent-red: #EF4444;
@@ -101,6 +106,9 @@
   --accent-yellow: #2F5BB5;
   --accent-yellow-hover: #2B55AD;
   --accent-blue: #2F5BB5;
+
+  --grafico-serie-1: #2F5BB5;
+  --grafico-serie-2: #C24D1F;
   --accent-green: #16A34A;
   --accent-green-hover: #15803D;
   --accent-red: #DC2626;
@@ -220,7 +228,8 @@ html, body {
 // Impressão: só o conteúdo da página, em A4 paisagem, sempre no tema claro e em tinta de papel.
 @page {
   size: A4 landscape;
-  margin: 12mm 12mm 16mm;
+  // A folga de cima abriga o cabeçalho corrido das telas que o imprimem.
+  margin: 18mm 12mm 16mm;
 
   @bottom-left {
     content: 'SIGOV-TIC · Governança do PDTIC';
@@ -252,6 +261,8 @@ html, body {
     --text-dim: #6B7F96;
     --accent-yellow: #2563EB;
     --accent-blue: #2563EB;
+    --grafico-serie-1: #2F5BB5;
+    --grafico-serie-2: #C24D1F;
     --accent-green: #16A34A;
     --accent-red: #DC2626;
     --estado-concluido: #15803D;
@@ -275,15 +286,18 @@ html, body {
   .sidebar,
   .header,
   .footer,
+  app-feedback-botao,
   .no-print {
     display: none !important;
   }
 
+  app-root,
   .layout,
   .main-wrapper,
   .main-content {
     display: block !important;
     height: auto !important;
+    min-height: 0 !important;
     overflow: visible !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -312,27 +326,6 @@ html, body {
   .mdc-button__label {
     font-family: 'Inter', sans-serif;
     font-weight: 600;
-  }
-}
-
-// Falha ao buscar dados da API (mesma mensagem em todas as telas).
-.falha-api {
-  color: var(--accent-red);
-}
-
-.falha-tentar {
-  margin-top: 12px;
-  padding: 6px 16px;
-  font: inherit;
-  font-size: 13px;
-  color: var(--text-secondary);
-  background: none;
-  border: 1px solid var(--border-main);
-  border-radius: 6px;
-  cursor: pointer;
-
-  &:hover {
-    color: var(--text-primary);
   }
 }
 

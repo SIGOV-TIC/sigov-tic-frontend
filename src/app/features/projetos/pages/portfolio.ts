@@ -1,19 +1,23 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { distinctUntilChanged, map } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { ProjetoResponse, StatusProjeto } from '../models/projeto';
+import { ProjetoResponse, rotuloMotivo, StatusProjeto } from '../models/projeto';
 import { ProjetoService } from '../services/projeto.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { moedaCompacta } from '../utils/moeda';
-import { calcularDesvio, Desvio, TOLERANCIA_DESVIO } from '../utils/desvio';
+import { calcularDesvio, Desvio, fracaoDecorrida, TOLERANCIA_DESVIO } from '../utils/desvio';
 import { fatia, Paginacao, paginaNaUrl } from '../../../shared/paginacao/paginacao';
+import { EstadoTela } from '../../../shared/estado/estado';
+import { mensagemDeErro } from '../../../shared/estado/erro-api';
 
 @Component({
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-portfolio',
-  imports: [FormsModule, RouterLink, MatIconModule, Paginacao],
+  imports: [FormsModule, RouterLink, MatIconModule, Paginacao, EstadoTela],
   templateUrl: './portfolio.html',
   styleUrl: './portfolio.scss',
 })
@@ -28,27 +32,58 @@ export class Portfolio implements OnInit {
   readonly tamanhoPagina = 10;
   readonly pagina = paginaNaUrl();
 
+  // Ativos entram nos totais; aposentados ficam numa lista à parte, só para consulta.
+  aposentados = false;
+
   constructor(
     private projetoService: ProjetoService,
     readonly auth: AuthService,
   ) {}
 
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+
+  // A situação vem da URL: o link do menu volta para os ativos, e o endereço pode ser compartilhado.
+  private readonly situacaoNaUrl = this.route.queryParamMap.pipe(
+    map((q) => q.get('situacao') === 'aposentados'),
+    distinctUntilChanged(),
+    takeUntilDestroyed(),
+  );
+
   ngOnInit() {
     this.projetoService.seedSeNecessario();
-    this.carregar();
+    this.situacaoNaUrl.subscribe((aposentados) => {
+      this.aposentados = aposentados;
+      this.carregar();
+    });
+  }
+
+  verAposentados(sim: boolean) {
+    if (sim === this.aposentados) return;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { situacao: sim ? 'aposentados' : null, pagina: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  motivo(projeto: ProjetoResponse): string {
+    return rotuloMotivo(projeto.aposentadoria?.motivo);
   }
 
   carregar() {
     this.carregando = true;
     this.erro = '';
-    this.projetoService.listar(0, 100).subscribe({
+    this.projetos = [];
+    this.projetoService.listar(0, 100, this.aposentados ? 'aposentados' : 'ativos').subscribe({
       next: (res) => {
         this.projetos = res.content;
         this.aplicarBusca();
         this.carregando = false;
       },
-      error: () => {
-        this.erro = 'Não foi possível carregar os projetos.';
+      error: (e) => {
+        this.erro = mensagemDeErro(e, 'os projetos');
         this.carregando = false;
       },
     });
@@ -109,11 +144,8 @@ export class Portfolio implements OnInit {
 
   percentualDecorrido(projeto: ProjetoResponse): number | null {
     if (!projeto.dataInicioPrevista || !projeto.dataConclusaoPrevista) return null;
-    const inicio = new Date(projeto.dataInicioPrevista).getTime();
-    const fim = new Date(projeto.dataConclusaoPrevista).getTime();
-    if (fim <= inicio) return 0;
-    const pct = ((Date.now() - inicio) / (fim - inicio)) * 100;
-    return Math.round(Math.min(100, Math.max(0, pct)));
+    const f = fracaoDecorrida(projeto);
+    return f == null ? 0 : Math.round(f * 100);
   }
 
   moeda(valor: number): string {

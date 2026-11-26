@@ -1,4 +1,4 @@
-import { calcularDesvio, fracaoDecorrida, TOLERANCIA_DESVIO } from './desvio';
+import { avancoMensuravel, calcularDesvio, fracaoDecorrida, TOLERANCIA_DESVIO } from './desvio';
 import { dia, projeto } from '../../../testing/dados';
 
 describe('índices de desempenho (valor agregado)', () => {
@@ -17,6 +17,15 @@ describe('índices de desempenho (valor agregado)', () => {
     expect(d.idc).toBeCloseTo(1.25, 3); // 50% de 1 mi entregues por 400 mil
     expect(d.indiceCritico).toBeCloseTo(d.idp! * d.idc!, 6);
     expect(d.noPrazo).toBe(true);
+  });
+
+  it('aposentado é lido no dia da aposentadoria, não hoje', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(dia('2026-11-19'));
+    const p = projeto({ aposentadoria: { data: '2026-04-30', motivo: 'CANCELADO', autor: 'Renata' } });
+    expect(fracaoDecorrida(p)).toBeCloseTo(fracaoDecorrida(projeto(), new Date(2026, 3, 30))!, 6);
+    expect(calcularDesvio(p).idp).toBeCloseTo(calcularDesvio(projeto(), new Date(2026, 3, 30)).idp!, 6);
+    vi.useRealTimers();
   });
 
   it('projeto atrasado e caro sai da tolerância', () => {
@@ -39,5 +48,21 @@ describe('índices de desempenho (valor agregado)', () => {
 
   it('antes do início o IDP não é calculado', () => {
     expect(calcularDesvio(projeto(), dia('2025-12-01')).idp).toBeNull();
+  });
+
+  it('projeto sem fases não tem avanço apurado, então não tem índice', () => {
+    const semFases = projeto({ fases: [], custoRealizado: 50000 });
+    expect(avancoMensuravel(semFases)).toBe(false);
+    const d = calcularDesvio(semFases, meioDoAno);
+    // Sem fases o avanço é desconhecido; 0,00 diria que a equipe não entregou nada.
+    expect(d.idp).toBeNull();
+    expect(d.idc).toBeNull();
+    expect(d.desvioReal).toBeNull();
+  });
+
+  it('projeto concluído sem fases ainda é mensurável', () => {
+    const concluido = projeto({ fases: [], prazoQuadrante: 'CONCLUIDO', custoRealizado: 50000 });
+    expect(avancoMensuravel(concluido)).toBe(true);
+    expect(calcularDesvio(concluido, meioDoAno).idc).not.toBeNull();
   });
 });

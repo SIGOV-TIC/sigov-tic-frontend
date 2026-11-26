@@ -1,0 +1,140 @@
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 8px 0 20px;
+
+    h1 { margin: 0; font-size: 22px; font-weight: 700; color: var(--text-primary); }
+}
+
+.btn-csv {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 14px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--estado-texto);
+    background-color: var(--accent-blue);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+
+    mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    &:disabled { opacity: 0.5; cursor: default; }
+}
+
+.filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px 16px;
+    margin-bottom: 12px;
+}
+
+.filtro {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-muted);
+
+    select, input {
+        height: 36px;
+        min-width: 160px;
+        padding: 0 10px;
+        font: inherit;
+        font-size: 13px;
+        color: var(--text-primary);
+        background-color: var(--bg-input);
+        border: 1px solid var(--border-main);
+        border-radius: 6px;
+    }
+    select { min-width: 220px; }
+}
+
+.limpar {
+    height: 36px;
+    padding: 0 4px;
+    font: inherit;
+    font-size: 13px;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+
+    &:hover { color: var(--text-primary); }
+}
+
+// Métricas como filtro de ligar e desligar: nenhuma marcada quer dizer todas.
+.metricas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 20px;
+}
+
+.pilula {
+    padding: 5px 12px;
+    font: inherit;
+    font-size: 12px;
+    color: var(--text-muted);
+    background-color: transparent;
+    border: 1px solid var(--fio-forte);
+    border-radius: 999px;
+    cursor: pointer;
+
+    &:hover { color: var(--text-primary); }
+    &.marcada {
+        color: var(--estado-texto);
+        background-color: var(--accent-blue);
+        border-color: transparent;
+    }
+}
+
+.resumo {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.tabela {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    color: var(--text-secondary);
+    background-color: var(--bg-card);
+    border: 1px solid var(--fio-forte);
+    border-radius: var(--raio-cartao);
+
+    th {
+        padding: 10px 16px 8px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--fio-forte);
+        white-space: nowrap;
+    }
+
+    td {
+        padding: 9px 16px;
+        border-bottom: 1px solid var(--fio);
+        white-space: nowrap;
+    }
+
+    b { color: var(--text-primary); }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody.atualizando { opacity: 0.6; }
+
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .meta { color: var(--text-faint); }
+}
+
+app-paginacao { display: block; margin-top: 16px; }

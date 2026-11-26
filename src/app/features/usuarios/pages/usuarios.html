@@ -4,12 +4,9 @@
 </div>
 
 @if (carregando) {
-    <div class="estado-vazio"><p>Carregando contas...</p></div>
+    <app-estado tipo="carregando" mensagem="Carregando contas..." />
 } @else if (erro) {
-    <div class="estado-vazio">
-        <p class="falha-api">Não foi possível carregar as contas. Verifique a conexão e tente de novo.</p>
-        <button class="falha-tentar" (click)="recarregar()">Tentar novamente</button>
-    </div>
+    <app-estado tipo="erro" [mensagem]="erro" (tentar)="recarregar()" />
 } @else {
     <div class="resumo">
         <span><b>{{ usuarios.length }}</b> {{ usuarios.length === 1 ? 'conta' : 'contas' }}</span>

@@ -1,5 +1,5 @@
 import { ProjetoRequest } from '../models/projeto';
-import { indiceFaseAtual, situacaoFase } from './fase';
+import { dataReferencia, indiceFaseAtual, situacaoFase } from './fase';
 
 // Regra única de saúde do projeto, usada por Dashboard, Cronograma, Orçamento e Objetivos.
 // O sistema só mostra; quem decide o que fazer é o gestor.
@@ -101,7 +101,7 @@ function estadoDoProjeto(
 }
 
 // Janelas e estados de cada fase, mais o estado do projeto. Null se o projeto não tem datas válidas.
-export function analisarProjeto(p: ProjetoRequest, hoje: Date = new Date()): Analise | null {
+export function analisarProjeto(p: ProjetoRequest, hoje: Date = dataReferencia(p)): Analise | null {
   const inicio = lerData(p.dataInicioPrevista);
   const fim = lerData(p.dataConclusaoPrevista);
   if (!inicio || !fim || fim < inicio) return null;
@@ -134,7 +134,7 @@ export function analisarProjeto(p: ProjetoRequest, hoje: Date = new Date()): Ana
 }
 
 // Estado do projeto; "A_INICIAR" quando não há datas para avaliar.
-export function estadoProjeto(p: ProjetoRequest, hoje: Date = new Date()): Estado {
+export function estadoProjeto(p: ProjetoRequest, hoje: Date = dataReferencia(p)): Estado {
   return analisarProjeto(p, hoje)?.estado ?? 'A_INICIAR';
 }
 

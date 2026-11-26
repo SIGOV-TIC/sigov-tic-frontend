@@ -85,12 +85,42 @@ export interface PessoaResumo {
   nome: string;
 }
 
+export type MotivoAposentadoria = 'CONCLUIDO' | 'CANCELADO' | 'INCORPORADO';
+
+export const MOTIVOS_APOSENTADORIA: { valor: MotivoAposentadoria; rotulo: string }[] = [
+  { valor: 'CONCLUIDO', rotulo: 'Concluído' },
+  { valor: 'CANCELADO', rotulo: 'Cancelado' },
+  { valor: 'INCORPORADO', rotulo: 'Incorporado a outro projeto' },
+];
+
+export function rotuloMotivo(motivo?: MotivoAposentadoria | null): string {
+  return MOTIVOS_APOSENTADORIA.find((m) => m.valor === motivo)?.rotulo ?? '—';
+}
+
+// Projeto aposentado: fica no histórico, fora do portfólio ativo e só para leitura.
+export interface Aposentadoria {
+  data: string;
+  motivo: MotivoAposentadoria;
+  observacao?: string | null;
+  autor?: string | null;
+}
+
+export interface AposentadoriaRequest {
+  motivo: MotivoAposentadoria;
+  data?: string | null;
+  observacao?: string | null;
+}
+
+// Ativos entram nos totais e nas telas; aposentados só no histórico.
+export type SituacaoPortfolio = 'ativos' | 'aposentados' | 'todos';
+
 export interface ProjetoResponse extends ProjetoRequest {
   id: string;
   po?: PessoaResumo | null;
   scrumMaster?: PessoaResumo | null;
   // Mais recente primeiro.
   atualizacoes?: Atualizacao[];
+  aposentadoria?: Aposentadoria | null;
   createdAt: string;
   updatedAt: string;
 }

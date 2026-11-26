@@ -3,12 +3,9 @@
 </div>
 
 @if (carregando) {
-    <div class="estado-vazio"><p>Carregando orçamento...</p></div>
+    <app-estado tipo="carregando" mensagem="Carregando orçamento..." />
 } @else if (erro) {
-    <div class="estado-vazio">
-        <p class="falha-api">Não foi possível carregar os dados. Verifique a conexão e tente de novo.</p>
-        <button class="falha-tentar" (click)="recarregar()">Tentar novamente</button>
-    </div>
+    <app-estado tipo="erro" [mensagem]="erro" (tentar)="recarregar()" />
 } @else {
     <div class="barra-filtro">
         <label class="filtro">
@@ -138,6 +135,88 @@
         </table>
     </div>
     <app-paginacao [total]="areasLinhas.length" [pagina]="pagA.atual" [tamanho]="tamanhoAreas" (mudar)="pagina.ir($event)" />
+    @let realizado = realizadoMensal;
+    @if (realizado.length > 0) {
+        <div class="secao-topo">
+            <h2 class="secao">Realizado mês a mês</h2>
+            @if (realizado.length > 1) {
+                <button type="button" class="resumo-abrir" (click)="verHistorico = !verHistorico" [attr.aria-expanded]="verHistorico">
+                    <mat-icon>{{ verHistorico ? 'expand_less' : 'history' }}</mat-icon>
+                    {{ verHistorico ? 'Ocultar histórico' : 'Histórico' }}
+                </button>
+            }
+        </div>
+        @if (verHistorico && realizado.length >= 2) {
+            <app-grafico-tendencia titulo="Realizado acumulado do portfólio" [rotulos]="rotulosRealizado(realizado)"
+                                   [series]="seriesRealizado(realizado)" formato="moeda" />
+        }
+        <div class="tabela-rolagem">
+            <table class="tabela realizado">
+                <thead>
+                    <tr>
+                        <th>Mês</th>
+                        <th class="num">No mês</th>
+                        <th class="num">Acumulado</th>
+                        <th class="num">Do orçado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (l of (verHistorico ? realizadoRecente(realizado) : realizado.slice(-1)); track l.mes) {
+                        <tr>
+                            <td>{{ rotuloMes(l.mes) }}</td>
+                            <td class="num">{{ l.noMes ? moeda(l.noMes) : '—' }}</td>
+                            <td class="num">{{ moeda(l.acumulado) }}</td>
+                            <td class="num">{{ pctDoOrcado(l.acumulado) }}%</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    @let top = maiores;
+    @if (top.length > 0) {
+        <h2 class="secao">Maiores investimentos</h2>
+        <div class="tabela-rolagem">
+            <table class="tabela maiores">
+                <thead>
+                    <tr>
+                        <th class="col-posicao"><span class="sr-only">Posição</span></th>
+                        <th>Projeto</th>
+                        <th>Área</th>
+                        <th class="num">Orçado</th>
+                        <th class="col-trilho">Gasto / avanço</th>
+                        <th class="col-situacao">Situação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (l of top; track l.projeto.id; let i = $index) {
+                        <tr class="situacao-{{ l.situacao }}">
+                            <td class="col-posicao">{{ i + 1 }}</td>
+                            <td>
+                                <a [routerLink]="['/projeto', l.projeto.id]" class="proj" [title]="l.motivo">
+                                    <b>{{ l.projeto.sigla }}</b> <span>{{ l.projeto.nome }}</span>
+                                </a>
+                            </td>
+                            <td>{{ l.projeto.areaSolicitante || 'Sem área' }}</td>
+                            <td class="num">{{ moeda(l.orcado) }}</td>
+                            <td class="col-trilho">
+                                <span class="trilho" role="img" [attr.aria-label]="'Gasto ' + l.pctGasto + '%, avanço ' + l.avanco + '%'">
+                                    <span class="trilho-gasto" [style.width.%]="largura(l.pctGasto)"></span>
+                                    <span class="trilho-marca" [style.left.%]="largura(l.avanco)"></span>
+                                </span>
+                                <span class="par">{{ l.pctGasto }}% / {{ l.avanco }}%</span>
+                            </td>
+                            <td class="col-situacao">
+                                @if (l.situacao !== 'OK') {
+                                    <span class="situacao"><mat-icon>{{ icones[l.situacao] }}</mat-icon>{{ rotulos[l.situacao] }}</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
     @if (semOrcamento > 0) {
         <p class="rodape">{{ semOrcamento }} {{ semOrcamento === 1 ? 'projeto sem orçamento informado não aparece' : 'projetos sem orçamento informado não aparecem' }} aqui.</p>
     }

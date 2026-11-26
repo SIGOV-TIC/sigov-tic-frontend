@@ -66,6 +66,24 @@
     color: var(--badge-rejeitado-text);
 }
 
+.status-aposentado {
+    background-color: var(--fio);
+    color: var(--text-secondary);
+}
+
+.aposentadoria {
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.aposentadoria-obs {
+    margin: 2px 0 0;
+    max-width: 72ch;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
 .projeto-area {
     color: var(--text-muted);
     font-size: 14px;
@@ -74,6 +92,8 @@
 
 .btn-voltar {
     display: flex;
+    background: none;
+    cursor: pointer;
     align-items: center;
     gap: 6px;
     color: var(--text-secondary);
@@ -102,13 +122,15 @@
 .projeto-grid {
     // Fios fracos no lugar das bordas cheias: marcam o limite sem disputar com o conteúdo.
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    // minmax(0, …): conteúdo largo (gráfico, tabela) não empurra a outra coluna.
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 20px;
     align-items: start;
 }
 
 .col-esquerda,
 .col-direita {
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -470,9 +492,18 @@
     gap: 14px;
     margin-top: 20px;
 
-    label { display: flex; flex-direction: column; gap: 6px; }
-    label > span { font-size: 12px; color: var(--text-faint); }
+    label, .cf-campo { display: flex; flex-direction: column; gap: 6px; }
+    label > span, .cf-campo > span { font-size: 12px; color: var(--text-faint); }
     .cf-largo { grid-column: 1 / -1; }
+
+    .cf-pct {
+        display: grid;
+        grid-template-columns: 1fr 72px;
+        align-items: center;
+        gap: 12px;
+
+        input[type='range'] { height: auto; padding: 0; border: 0; background: none; accent-color: var(--accent-blue); }
+    }
 
     input, select {
         height: 36px;
@@ -541,7 +572,7 @@
 .cf-primario {
     border-color: var(--accent-yellow);
     background-color: var(--accent-yellow);
-    color: #0A1628;
+    color: var(--estado-texto);
     font-weight: 600;
 
     &:hover { background-color: var(--accent-yellow-hover); }
@@ -725,12 +756,6 @@
     &.ritmo-atencao mat-icon { color: var(--estado-atrasado-fg); }
 }
 
-.estado-vazio {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-faint);
-    font-size: 14px;
-}
 
 .projeto-header-acoes {
   display: flex;
@@ -832,3 +857,49 @@
 
 .cf-atv-form { margin-top: 8px; }
 .cf-atv-form-acoes { display: flex; justify-content: flex-end; gap: 8px; }
+
+// ---- Aposentar projeto: mesma camada de vidro da fase ----
+
+.camada-aposentar {
+    width: 440px;
+    animation: surgir 0.2s ease-out;
+
+    .ap-efeito { margin: 6px 0 18px; font-size: 13px; color: var(--text-muted); }
+}
+
+.ap-motivos {
+    margin: 0 0 16px;
+    padding: 0;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    legend { margin-bottom: 8px; padding: 0; font-size: 12px; color: var(--text-muted); }
+}
+
+.ap-motivo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-primary);
+    cursor: pointer;
+
+    input { margin: 0; accent-color: var(--accent-blue); }
+}
+
+.ap-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+
+    > span { font-size: 12px; color: var(--text-muted); }
+}
+
+.ap-data { width: auto; align-self: flex-start; }
+
+.ap-erro { margin: 0 0 12px; font-size: 13px; color: var(--accent-red); }
+
+.ap-acoes { justify-content: flex-end; margin-top: 6px; }

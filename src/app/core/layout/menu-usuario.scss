@@ -37,6 +37,13 @@
     font-size: 12px;
     font-weight: 600;
     color: #ffffff;
+    overflow: hidden;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 }
 
 .menu-seta {
@@ -96,6 +103,7 @@
     font-size: 13px;
     color: var(--text-secondary);
     text-align: left;
+    text-decoration: none;
     cursor: pointer;
 
     mat-icon {
@@ -105,28 +113,10 @@
         color: var(--text-dim);
     }
 
-    &:hover:not(:disabled) {
+    &:hover {
         background-color: var(--bg-input);
         color: var(--text-primary);
     }
 
-    &:disabled {
-        cursor: default;
-
-        mat-icon,
-        .menu-item-texto > span:first-child {
-            opacity: 0.55;
-        }
-    }
 }
 
-.menu-item-texto {
-    display: flex;
-    flex-direction: column;
-}
-
-.menu-item-nota {
-    font-size: 12px;
-    white-space: nowrap;
-    color: var(--text-dim);
-}

@@ -8,6 +8,8 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { Paginacao, paginaNaUrl } from '../../../shared/paginacao/paginacao';
 import { indiceFaseAtual, situacaoFase } from '../../projetos/utils/fase';
 import { analisarProjeto, Estado, estadoProjeto, ICONE_ESTADO, progressoProjeto } from '../../projetos/utils/saude';
+import { EstadoTela } from '../../../shared/estado/estado';
+import { mensagemDeErro } from '../../../shared/estado/erro-api';
 
 type Escala = 'MES' | 'TRIMESTRE';
 
@@ -59,14 +61,14 @@ const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'o
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-cronograma',
-  imports: [RouterLink, FormsModule, MatIconModule, Paginacao],
+  imports: [RouterLink, FormsModule, MatIconModule, Paginacao, EstadoTela],
   templateUrl: './cronograma.html',
   styleUrl: './cronograma.scss',
 })
 export class Cronograma implements OnInit, AfterViewChecked {
   projetos: ProjetoResponse[] = [];
   carregando = true;
-  erro = false;
+  erro = '';
 
   anosDisponiveis: number[] = [];
   areasDisponiveis: string[] = [];
@@ -76,6 +78,9 @@ export class Cronograma implements OnInit, AfterViewChecked {
     { valor: 'APROVADO', label: 'Aprovado' },
     { valor: 'REJEITADO', label: 'Rejeitado' },
   ];
+
+  // Sem recorte escolhido, o período cobre todos os projetos.
+  private periodoTotal = { inicio: new Date().getFullYear(), fim: new Date().getFullYear() + 1 };
 
   // `rascunho` é o que o usuário edita; `filtros` é o que está aplicado à matriz.
   rascunho: Filtros = this.filtrosPadrao();
@@ -120,11 +125,51 @@ export class Cronograma implements OnInit, AfterViewChecked {
         this.prepararOpcoes();
         this.carregando = false;
       },
-      error: () => {
+      error: (e) => {
         this.carregando = false;
-        this.erro = true;
+        this.erro = mensagemDeErro(e, 'o cronograma');
       },
     });
+  }
+
+  // ---- Arrastar a matriz ----
+  // Clicar e arrastar rola a linha do tempo na horizontal. Um gesto que passa de poucos pixels é um arraste:
+  // o clique que o fecha não abre o painel da fase nem segue o link do projeto.
+  arrastando = false;
+  private arrasto: { x: number; rolagem: number; moveu: boolean } | null = null;
+  private readonly limiteArraste = 4;
+
+  iniciarArraste(ev: PointerEvent) {
+    const el = this.rolagem?.nativeElement;
+    if (!el || ev.pointerType !== 'mouse' || ev.button !== 0) return;
+    this.arrasto = { x: ev.clientX, rolagem: el.scrollLeft, moveu: false };
+  }
+
+  @HostListener('document:pointermove', ['$event'])
+  moverArraste(ev: PointerEvent) {
+    const el = this.rolagem?.nativeElement;
+    if (!this.arrasto || !el) return;
+    const dx = ev.clientX - this.arrasto.x;
+    if (!this.arrasto.moveu && Math.abs(dx) <= this.limiteArraste) return;
+    this.arrasto.moveu = true;
+    this.arrastando = true;
+    el.scrollLeft = this.arrasto.rolagem - dx;
+  }
+
+  @HostListener('document:pointerup')
+  @HostListener('document:pointercancel')
+  terminarArraste() {
+    const arrasto = this.arrasto;
+    this.arrasto = null;
+    this.arrastando = false;
+    if (!arrasto?.moveu) return;
+    // O clique que vem logo depois do arraste é engolido; se não vier nenhum, a guarda sai no mesmo ciclo.
+    const engolir = (e: Event) => {
+      e.stopPropagation();
+      e.preventDefault();
+    };
+    window.addEventListener('click', engolir, { capture: true, once: true });
+    setTimeout(() => window.removeEventListener('click', engolir, { capture: true }), 0);
   }
 
   // Ao abrir a tela ou mudar o período, a rolagem horizontal põe "hoje" à vista.
@@ -139,8 +184,8 @@ export class Cronograma implements OnInit, AfterViewChecked {
   }
 
   private filtrosPadrao(): Filtros {
-    const ano = new Date().getFullYear();
-    return { area: '', status: '', anoInicio: ano, anoFim: ano + 1, escala: 'TRIMESTRE' };
+    const { inicio, fim } = this.periodoTotal;
+    return { area: '', status: '', anoInicio: inicio, anoFim: fim, escala: 'TRIMESTRE' };
   }
 
   private prepararOpcoes() {
@@ -155,6 +200,9 @@ export class Cronograma implements OnInit, AfterViewChecked {
     const max = Math.max(...anos);
     this.anosDisponiveis = Array.from({ length: max - min + 2 }, (_, i) => min + i);
     this.areasDisponiveis = [...new Set(this.projetos.map((p) => p.areaSolicitante || 'Sem área'))].sort();
+    this.periodoTotal = { inicio: min, fim: Math.max(max, min + 1) };
+    this.rascunho = this.filtrosPadrao();
+    this.filtros = { ...this.rascunho };
   }
 
   filtrar() {

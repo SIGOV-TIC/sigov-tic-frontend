@@ -9,6 +9,10 @@
 </div>
 
 <div class="toolbar">
+    <div class="situacao" role="group" aria-label="Situação dos projetos">
+        <button type="button" [class.marcada]="!aposentados" [attr.aria-pressed]="!aposentados" (click)="verAposentados(false)">Ativos</button>
+        <button type="button" [class.marcada]="aposentados" [attr.aria-pressed]="aposentados" (click)="verAposentados(true)">Aposentados</button>
+    </div>
     <div class="search-box">
         <mat-icon class="search-icon">search</mat-icon>
         <input type="text"
@@ -20,27 +24,57 @@
 </div>
 
 @if (carregando) {
-    <div class="estado-vazio">
-        <p>Carregando projetos...</p>
-    </div>
+    <app-estado tipo="carregando" mensagem="Carregando projetos..." />
 } @else if (erro) {
-    <div class="estado-vazio estado-erro">
-        <mat-icon class="estado-icon">error</mat-icon>
-        <p>{{ erro }}</p>
-        <button class="btn-tentar" (click)="carregar()">Tentar novamente</button>
-    </div>
+    <app-estado tipo="erro" [mensagem]="erro" (tentar)="carregar()" />
 } @else if (projetosFiltrados.length === 0) {
-    <div class="estado-vazio">
-        <mat-icon class="estado-icon">folder_open</mat-icon>
-        @if (busca.trim()) {
-            <p>Nenhum projeto encontrado para "{{ busca }}"</p>
-        } @else {
-            <p>Nenhum projeto cadastrado ainda</p>
+    @if (busca.trim()) {
+        <app-estado tipo="vazio" icone="folder_open" [mensagem]="'Nenhum projeto encontrado para &quot;' + busca + '&quot;'" />
+    } @else if (aposentados) {
+        <app-estado tipo="vazio" icone="inventory_2" mensagem="Nenhum projeto aposentado" />
+    } @else {
+        <app-estado tipo="vazio" icone="folder_open" mensagem="Nenhum projeto cadastrado ainda">
             @if (auth.pode('criarProjeto')) {
                 <a routerLink="/cadastro" class="btn-novo-inline">Cadastrar primeiro projeto</a>
             }
-        }
+        </app-estado>
+    }
+} @else if (aposentados) {
+    <div class="tabela-container">
+        <table>
+            <thead>
+                <tr>
+                    <th class="col-nome">Projeto</th>
+                    <th>Aposentado em</th>
+                    <th>Motivo</th>
+                    <th>Custo final</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (projeto of projetosDaPagina; track projeto.id) {
+                    <tr class="row-link" [routerLink]="['/projeto', projeto.id]">
+                        <td class="col-nome">
+                            <span class="linha1">{{ projeto.nome }}</span>
+                            <span class="linha2">{{ projeto.sigla }} · {{ projeto.areaSolicitante || 'sem área' }} · {{ projeto.po?.nome || 'sem PO' }}</span>
+                        </td>
+                        <td>
+                            <span class="linha1">{{ formatarData(projeto.aposentadoria?.data + 'T00:00') }}</span>
+                            @if (projeto.aposentadoria?.autor) { <span class="linha2">por {{ projeto.aposentadoria?.autor }}</span> }
+                        </td>
+                        <td [title]="projeto.aposentadoria?.observacao || ''">
+                            <span class="linha1">{{ motivo(projeto) }}</span>
+                            @if (projeto.aposentadoria?.observacao) { <span class="linha2 obs">{{ projeto.aposentadoria?.observacao }}</span> }
+                        </td>
+                        <td [title]="formatarMoeda(projeto.custoRealizado) + ' de ' + formatarMoeda(projeto.orcamentoEstimado)">
+                            <span class="linha1">{{ projeto.custoRealizado ? moeda(projeto.custoRealizado) : 'R$ 0' }} <span class="de">de {{ projeto.orcamentoEstimado ? moeda(projeto.orcamentoEstimado) : '—' }}</span></span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
+
+    <app-paginacao [total]="projetosFiltrados.length" [pagina]="paginaAtual" [tamanho]="tamanhoPagina" (mudar)="pagina.ir($event)" />
 } @else {
     <div class="tabela-container">
         <table>

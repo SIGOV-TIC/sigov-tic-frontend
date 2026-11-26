@@ -30,6 +30,50 @@ function deslocar(meses: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
 }
 
+// Meses já emitidos do primeiro projeto: o avanço vai ficando para trás do plano
+// e o custo sobe, que é o caso em que o gráfico precisa dizer alguma coisa.
+function historicoDeRetratos() {
+  const hoje = new Date();
+  const serie = [
+    { concluido: 8, esperado: 10, idp: 0.8, idc: 1.4, realizado: 120000 },
+    { concluido: 17, esperado: 22, idp: 0.77, idc: 1.3, realizado: 260000 },
+    { concluido: 24, esperado: 34, idp: 0.71, idc: 1.18, realizado: 420000 },
+    { concluido: 31, esperado: 45, idp: 0.69, idc: 1.05, realizado: 610000 },
+    { concluido: 40, esperado: 55, idp: 0.72, idc: 1.1, realizado: 780000 },
+  ];
+  return serie.map((q, i) => {
+    const inicio = new Date(hoje.getFullYear(), hoje.getMonth() - (serie.length - i), 1);
+    const dia = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const ultimo = new Date(inicio.getFullYear(), inicio.getMonth() + 1, 0).getDate();
+    return {
+      id: 'h' + i,
+      projetoId: 'p1',
+      sigla: 'ERP',
+      area: 'DTI',
+      gerente: 'Cláudio Silva',
+      periodoInicio: `${dia(inicio)}-01`,
+      periodoFim: `${dia(inicio)}-${ultimo}`,
+      emitidoEm: `${dia(inicio)}-${ultimo}T09:00:00Z`,
+      autor: 'Paula Escritório',
+      andamento: i === serie.length - 1 ? `${dia(inicio)}-10 · Ana: Homologação do módulo piloto concluída.` : null,
+      pontoAtencao: 'Fornecedor atrasou a entrega do ambiente.',
+      recomendacao: 'Repactuar o cronograma da fase de homologação.',
+      fatos: [
+        { metrica: 'PERCENTUAL_CONCLUIDO', valor: q.concluido, meta: q.esperado },
+        { metrica: 'PERCENTUAL_ESPERADO', valor: q.esperado, meta: null },
+        { metrica: 'IDP', valor: q.idp, meta: 1 },
+        { metrica: 'IDC', valor: q.idc, meta: 1 },
+        { metrica: 'ORCADO', valor: 1500000, meta: null },
+        { metrica: 'REALIZADO', valor: q.realizado, meta: 1500000 },
+        { metrica: 'FASES_CONCLUIDAS', valor: 1, meta: 3 },
+        { metrica: 'FASES_TOTAL', valor: 3, meta: null },
+        { metrica: 'ATIVIDADES_ABERTAS', valor: 5, meta: null },
+        { metrica: 'ATIVIDADES_ATRASADAS', valor: 2, meta: 0 },
+      ],
+    };
+  });
+}
+
 function dadosIniciais() {
   // Datas relativas a hoje, para o cenário valer em qualquer dia.
   const projetos = [
@@ -86,7 +130,9 @@ function dadosIniciais() {
   ];
   const metas = [
     { id: 'm1', objetivo: 'Eficiência operacional', indicador: 'Processos digitalizados', unidade: '%', valorInicial: 0, valorAlvo: 100, valorAtual: 10,
-      dataInicio: deslocar(-6), prazo: deslocar(6), responsavel: 'Escritório', createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z' },
+      dataInicio: deslocar(-6), prazo: deslocar(6), responsavel: 'Escritório', ano: Number(deslocar(-6).slice(0, 4)), ciclo: 'QUADRIENAL',
+      itensFinanceiros: [{ quantidade: 2, unidade: 'contratos', valorUnitario: 500_000, total: 1_000_000 }], valorFinanceiroTotal: 1_000_000,
+      createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z' },
   ];
   const usuarios = Object.entries(CONTAS).map(([login, c]) => ({ id: c.id, login, nome: c.nome, perfil: c.perfil, ativo: true }));
   return { projetos, metas, usuarios };
@@ -97,6 +143,20 @@ export class ApiFalsa {
   readonly escritas: Pedido[] = [];
   // Quando definido, toda chamada fora do login responde com este status.
   forcarStatus: number | null = null;
+  // Perfil editado em /api/users/me e o login de quem entrou.
+  perfilProprio: { nome?: string; cargo?: string | null; foto?: string | null } = {};
+  loginAtual = 'pmo';
+  // Contas com senha temporária (criadas ou redefinidas pelo admin) e senhas trocadas.
+  readonly senhaTemporaria = new Set<string>();
+  private readonly senhas: Record<string, string> = {};
+  private retratos: Record<string, unknown>[] = historicoDeRetratos();
+  // Realizado mês a mês: a soma de cada projeto é o custoRealizado dele.
+  readonly gastos: { id: string; projetoId: string; mes: string; valor: number; motivo: string; origem: string; autor: string }[] = [
+    { id: 'g1', projetoId: 'p1', mes: deslocar(-2).slice(0, 7), valor: 800_000, motivo: 'Licenças do primeiro lote.', origem: 'Contrato 15/2026', autor: 'Paula Escritório' },
+    { id: 'g2', projetoId: 'p1', mes: deslocar(-1).slice(0, 7), valor: 700_000, motivo: 'Implantação do módulo financeiro.', origem: 'Contrato 15/2026', autor: 'Paula Escritório' },
+    { id: 'g3', projetoId: 'p1', mes: deslocar(0).slice(0, 7), valor: 500_000, motivo: 'Treinamento das áreas.', origem: 'Nota de empenho 2026NE0042', autor: 'Paula Escritório' },
+    { id: 'g4', projetoId: 'p2', mes: deslocar(-1).slice(0, 7), valor: 900_000, motivo: 'Troca dos switches do núcleo.', origem: 'Ata de registro de preços 07/2026', autor: 'Paula Escritório' },
+  ];
 
   constructor(private page: Page) {}
 
@@ -107,6 +167,7 @@ export class ApiFalsa {
   // Abre o app já logado, como se a pessoa tivesse entrado antes.
   async entrarComo(login: keyof typeof CONTAS) {
     const c = CONTAS[login];
+    this.loginAtual = login;
     await this.page.addInitScript(
       ([sessao]) => localStorage.setItem('sigov_sessao', sessao),
       [JSON.stringify({ username: login, roles: ['ROLE_' + c.perfil], id: c.id, nome: c.nome, perfil: c.perfil })],
@@ -131,11 +192,34 @@ export class ApiFalsa {
 
     if (caminho === '/api/auth/login') {
       const c = CONTAS[corpo?.username];
-      if (!c || corpo.password !== SENHA) return erro(401, 'Credenciais invalidas.');
-      return json({ username: corpo.username, roles: ['ROLE_' + c.perfil], usuario: { id: c.id, nome: c.nome, perfil: c.perfil } });
+      if (!c || corpo.password !== (this.senhas[corpo.username] ?? SENHA)) return erro(401, 'Credenciais invalidas.');
+      this.loginAtual = corpo.username;
+      const trocaSenhaObrigatoria = this.senhaTemporaria.has(corpo.username);
+      return json({
+        username: corpo.username,
+        roles: ['ROLE_' + c.perfil],
+        usuario: { id: c.id, nome: c.nome, perfil: c.perfil, trocaSenhaObrigatoria },
+      });
     }
     if (caminho === '/api/auth/logout') return vazio(200);
     if (this.forcarStatus) return erro(this.forcarStatus, 'Forcado.');
+
+    // Mesma barreira da API: com senha temporária só o perfil e a troca de senha respondem.
+    const liberadoComSenhaTemporaria = (metodo === 'GET' && caminho === '/api/users/me') || caminho === '/api/users/me/senha';
+    if (this.senhaTemporaria.has(this.loginAtual) && !liberadoComSenhaTemporaria) {
+      return route.fulfill({
+        status: 403,
+        json: { status: 403, message: 'Troque a senha temporaria para continuar.', codigo: 'TROCA_SENHA_OBRIGATORIA' },
+      });
+    }
+    if (caminho === '/api/users/me/senha' && metodo === 'POST') {
+      if (corpo.senhaAtual !== (this.senhas[this.loginAtual] ?? SENHA)) {
+        return erro(400, 'Senha atual incorreta. Restam 4 tentativas antes do bloqueio.');
+      }
+      this.senhas[this.loginAtual] = corpo.novaSenha;
+      this.senhaTemporaria.delete(this.loginAtual);
+      return vazio();
+    }
 
     const { projetos, metas, usuarios } = this.dados;
     let m: RegExpMatchArray | null;
@@ -183,7 +267,45 @@ export class ApiFalsa {
       fase.atividades = fase.atividades.filter((a) => a !== atv);
       return vazio();
     }
+    if (caminho === '/api/opcoes') {
+      return json({
+        areasSolicitantes: [...new Set(projetos.map((p) => p.areaSolicitante))].sort(),
+        areasExecutoras: [...new Set(projetos.map((p) => p.areaExecutora).filter(Boolean))].sort(),
+        pessoas: [...new Set(projetos.map((p) => p.gerenteResponsavel).filter(Boolean))].sort(),
+        objetivos: [...new Set([...metas.map((m) => m.objetivo), ...projetos.map((p) => p.objetivoEstrategico).filter(Boolean)])].sort(),
+        iniciativas: [],
+        indicadores: [],
+        origensDeGasto: [...new Set(this.gastos.map((g) => g.origem))].sort(),
+      });
+    }
+    if (caminho === '/api/gastos') return json(this.gastos);
+    if (caminho === '/api/gastos/origens') return json([...new Set(this.gastos.map((g) => g.origem))].sort());
+    if ((m = caminho.match(/^\/api\/projetos\/([^/]+)\/gastos(?:\/([^/]+))?$/))) {
+      const p = projetos.find((x) => x.id === m![1])!;
+      const somar = () => (p.custoRealizado = this.gastos.filter((g) => g.projetoId === p.id).reduce((s, g) => s + g.valor, 0));
+      if (metodo === 'GET') return json(this.gastos.filter((g) => g.projetoId === p.id));
+      if (metodo === 'DELETE') {
+        this.gastos.splice(this.gastos.findIndex((g) => g.id === m![2]), 1);
+        somar();
+        return vazio();
+      }
+      if (metodo === 'PUT') {
+        const g = Object.assign(this.gastos.find((x) => x.id === m![2])!, corpo);
+        somar();
+        return json(g);
+      }
+      const novo = { id: 'g' + Date.now(), projetoId: p.id, autor: CONTAS[this.loginAtual as keyof typeof CONTAS]?.nome ?? '', ...corpo };
+      this.gastos.push(novo);
+      somar();
+      return json(novo, 201);
+    }
     if (caminho === '/api/metas' && metodo === 'GET') return json(metas);
+    if (caminho === '/api/users/me') {
+      const login = this.loginAtual;
+      const c = CONTAS[login];
+      if (metodo === 'PUT') Object.assign(this.perfilProprio, { nome: corpo.nome, cargo: corpo.cargo, foto: corpo.foto });
+      return json({ id: c.id, login, perfil: c.perfil, ativo: true, ...{ nome: c.nome, cargo: null, foto: null }, ...this.perfilProprio });
+    }
     if (caminho === '/api/users/gestores') return json(usuarios.filter((u) => u.perfil === 'GESTOR_PROJETO'));
     if (caminho === '/api/users' && metodo === 'GET') return json(usuarios);
     if (caminho === '/api/users' && metodo === 'POST') {
@@ -192,6 +314,70 @@ export class ApiFalsa {
       return json(nova, 201);
     }
     if (caminho === '/api/retratos' || caminho === '/api/retratos/hoje') return json(metodo === 'GET' ? [] : {});
+    if (caminho === '/api/retratos-mensais/areas') {
+      return json([...new Set(this.retratos.map((r) => r.area as string))]);
+    }
+    if (caminho === '/api/retratos-mensais/fatos' || caminho === '/api/retratos-mensais/fatos.csv') {
+      const p = url.searchParams;
+      const metricas = p.getAll('metrica');
+      const linhas = this.retratos
+        .filter((r) => !p.get('projeto') || r.projetoId === p.get('projeto'))
+        .filter((r) => !p.get('area') || r.area === p.get('area'))
+        .filter((r) => !p.get('de') || (r.periodoInicio as string) >= p.get('de')!)
+        .flatMap((r) =>
+          (r.fatos as { metrica: string; valor: number | null; meta: number | null }[])
+            .filter((f) => !metricas.length || metricas.includes(f.metrica))
+            .map((f) => ({
+              projetoId: r.projetoId,
+              sigla: r.sigla,
+              area: r.area,
+              gerente: r.gerente,
+              periodoInicio: r.periodoInicio,
+              periodoFim: r.periodoFim,
+              emitidoEm: r.emitidoEm,
+              metrica: f.metrica,
+              valor: f.valor,
+              meta: f.meta,
+            })),
+        );
+      if (caminho.endsWith('.csv')) {
+        const cabecalho = 'projeto_id,sigla,area,gerente,periodo_inicio,periodo_fim,emitido_em,metrica,valor,meta';
+        const corpo = linhas.map((l) => Object.values(l).join(',')).join('\n');
+        return route.fulfill({ status: 200, contentType: 'text/csv', body: cabecalho + '\n' + corpo });
+      }
+      return json(linhas);
+    }
+    if (caminho === '/api/retratos-mensais') {
+      if (metodo === 'GET') return json(this.retratos.filter((r) => r.projetoId === url.searchParams.get('projeto')));
+      const inicio = (url.searchParams.get('dia') ?? '').slice(0, 8) + '01';
+      const [ano, mes] = inicio.split('-').map(Number);
+      const emitido = {
+        id: 'r' + this.retratos.length,
+        projetoId: url.searchParams.get('projeto'),
+        sigla: 'CSD',
+        area: 'TIC',
+        gerente: 'Fernanda Lima',
+        periodoInicio: inicio,
+        periodoFim: inicio.slice(0, 8) + new Date(ano, mes, 0).getDate(),
+        emitidoEm: new Date().toISOString(),
+        autor: CONTAS[this.loginAtual].nome,
+        andamento: inicio + ' · Ana: Homologação do módulo piloto concluída.',
+        pontoAtencao: 'Fornecedor atrasou a entrega do ambiente.',
+        recomendacao: 'Repactuar o cronograma da fase de homologação.',
+        fatos: [
+          { metrica: 'PERCENTUAL_CONCLUIDO', valor: 40, meta: 55 },
+          { metrica: 'PERCENTUAL_ESPERADO', valor: 55, meta: null },
+          { metrica: 'IDP', valor: 0.72, meta: 1 },
+          { metrica: 'IDC', valor: 1.1, meta: 1 },
+          { metrica: 'FASES_CONCLUIDAS', valor: 1, meta: 3 },
+          { metrica: 'FASES_TOTAL', valor: 3, meta: null },
+          { metrica: 'ATIVIDADES_ABERTAS', valor: 5, meta: null },
+          { metrica: 'ATIVIDADES_ATRASADAS', valor: 2, meta: 0 },
+        ],
+      };
+      this.retratos.unshift(emitido);
+      return json(emitido, 201);
+    }
     if (caminho === '/api/feedback') return json({ id: 'fb1' }, 201);
     return erro(404, 'Rota nao simulada: ' + metodo + ' ' + caminho);
   }

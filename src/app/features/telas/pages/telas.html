@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SIGOV-TIC | Dashboard Executivo</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="wrap">
+    <main class="main">
+      <header class="topbar" id="topbar"></header>
+      <nav class="crumb" id="crumb"></nav>
+
+      <section class="card hero">
+        <div>
+          <h2>Dashboard Executivo</h2>
+          <p>Visão geral do portfólio de projetos de TIC</p>
+        </div>
+        <a class="btn" href="portfolio.html">
+          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          Ver Portfólio
+        </a>
+      </section>
+
+      <section class="kpis" id="kpis"></section>
+
+      <div class="grid-2">
+        <section class="card section">
+          <h3 class="section-title">CRONOGRAMA CONSOLIDADO</h3>
+          <table class="timeline">
+            <thead>
+              <tr><th>PROJETO</th><th class="q">Q1</th><th class="q">Q2</th><th class="q">Q3</th><th class="q">Q4</th></tr>
+            </thead>
+            <tbody id="cronograma"></tbody>
+          </table>
+        </section>
+
+        <section class="card section">
+          <h3 class="section-title">DISTRIBUIÇÃO POR ÁREA</h3>
+          <div class="dist">
+            <div class="donut" id="donut"></div>
+            <div class="areas" id="areas"></div>
+          </div>
+        </section>
+      </div>
+
+      <section class="card section">
+        <h3 class="section-title">TOP 5 PROJETOS POR INVESTIMENTO</h3>
+        <table class="top5">
+          <thead>
+            <tr><th>RANKING</th><th>PROJETO</th><th>ÁREA</th><th>ORÇAMENTO</th><th>% EXECUTADO</th><th>STATUS</th></tr>
+          </thead>
+          <tbody id="top5"></tbody>
+        </table>
+      </section>
+    </main>
+    <footer class="footer" id="footer"></footer>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/telas.js"></script>
+</body>
+</html>

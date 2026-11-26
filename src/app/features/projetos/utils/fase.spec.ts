@@ -1,4 +1,4 @@
-import { CORES_FASE, corFase, indiceFaseAtual, janelaFase, materializarSituacoes, situacaoFase } from './fase';
+import { CORES_FASE, corFase, dataReferencia, indiceFaseAtual, janelaFase, materializarSituacoes, situacaoFase } from './fase';
 import { dia, fase, projeto } from '../../../testing/dados';
 
 describe('fases', () => {
@@ -35,6 +35,16 @@ describe('fases', () => {
     const p = projeto();
     p.fases!.forEach((f) => (f.situacao = undefined));
     expect([0, 1, 2].map((i) => situacaoFase(p, i))).toEqual(['CONCLUIDA', 'EM_ANDAMENTO', 'PENDENTE']);
+  });
+
+  it('aposentado congela o calendário no dia da aposentadoria', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(dia('2026-11-19'));
+    const p = projeto({ aposentadoria: { data: '2026-05-10', motivo: 'CANCELADO', autor: 'Renata' } });
+    p.fases!.forEach((f) => (f.situacao = undefined));
+    expect([0, 1, 2].map((i) => situacaoFase(p, i))).toEqual(['CONCLUIDA', 'EM_ANDAMENTO', 'PENDENTE']);
+    expect(dataReferencia(p)).toEqual(new Date(2026, 4, 10));
+    expect(dataReferencia(projeto())).toEqual(new Date());
   });
 
   it('fase atual é a em andamento, ou a primeira não concluída', () => {
