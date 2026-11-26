@@ -24,7 +24,7 @@ describe('guards', () => {
 
   it('administração só para o admin', () => {
     expect(rodar(adminGuard, ['ROLE_ADMIN'])).toBe(true);
-    expect(rodar(adminGuard, ['ROLE_ESCRITORIO'])).toBe('/dashboard');
+    expect(rodar(adminGuard, ['ROLE_ESCRITORIO'])).toBe(true);
   });
 
   it('cadastro de projeto só para o Escritório', () => {

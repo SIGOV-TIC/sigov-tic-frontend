@@ -19,7 +19,7 @@ interface RespostaLogin {
 }
 
 // editarProjeto: todos os campos. acompanharProjeto: pontos de atenção, andamento das fases, atualizações e atividades.
-export type Acao = 'criarProjeto' | 'editarProjeto' | 'acompanharProjeto' | 'editarMetas' | 'gerenciarUsuarios';
+export type Acao = 'criarProjeto' | 'editarProjeto' | 'acompanharProjeto' | 'editarMetas' | 'gerenciarUsuarios' | 'decidirSolicitacoes';
 
 // O que a regra precisa saber do projeto: quem é PO e Scrum Master.
 export interface VinculoProjeto {
@@ -35,6 +35,7 @@ export class AuthService {
   readonly sessao = signal<Sessao | null>(this.lerSessao());
   readonly ehAdmin = computed(() => this.sessao()?.roles.includes('ROLE_ADMIN') ?? false);
   readonly ehEscritorio = computed(() => this.sessao()?.roles.includes('ROLE_ESCRITORIO') ?? false);
+  readonly ehPmo = computed(() => this.sessao()?.roles.includes('ROLE_PMO') ?? false);
   readonly rotuloPerfil = computed(() => {
     const s = this.sessao();
     const perfil = s?.perfil ?? s?.roles[0]?.replace(/^ROLE_/, '');
@@ -43,10 +44,11 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  // Mesma regra da API: admin cuida das contas; o Escritório de Projetos cria e edita projetos e metas;
-  // PO e Scrum Master acompanham só o próprio projeto.
+  // Mesma regra da API: admin e Escritório cuidam das contas; o Escritório cria e edita projetos e metas;
+  // PMO e Escritório decidem solicitações; PO e Scrum Master acompanham só o próprio projeto.
   pode(acao: Acao, projeto?: VinculoProjeto | null): boolean {
-    if (acao === 'gerenciarUsuarios') return this.ehAdmin();
+    if (acao === 'gerenciarUsuarios') return this.ehAdmin() || this.ehEscritorio();
+    if (acao === 'decidirSolicitacoes') return this.ehPmo() || this.ehEscritorio();
     if (this.ehEscritorio()) return true;
     if (acao !== 'acompanharProjeto' || !projeto) return false;
     const id = this.sessao()?.id;

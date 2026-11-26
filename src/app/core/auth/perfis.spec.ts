@@ -2,7 +2,7 @@ import { PERFIS, rotuloPerfil } from './perfis';
 
 describe('perfis', () => {
   it('oferece os quatro perfis em uso', () => {
-    expect(PERFIS.map((p) => p.valor)).toEqual(['ADMIN', 'ESCRITORIO', 'GESTOR_PROJETO', 'USER']);
+    expect(PERFIS.map((p) => p.valor)).toEqual(['ADMIN', 'ESCRITORIO', 'PMO', 'GESTOR_PROJETO', 'SOLICITANTE', 'USER']);
   });
 
   it('rótulo conhecido ou o próprio valor', () => {

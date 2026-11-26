@@ -32,6 +32,10 @@
                 <mat-icon class="nav-icon">summarize</mat-icon>
                 Status Report
             </a>
+            <a class="nav-item" routerLink="/solicitacoes" routerLinkActive="active">
+                <mat-icon class="nav-icon">assignment</mat-icon>
+                Solicitações
+            </a>
             @if (auth.pode('criarProjeto')) {
                 <a class="nav-item" routerLink="/cadastro" routerLinkActive="active">
                     <mat-icon class="nav-icon">add_circle</mat-icon>
@@ -90,6 +94,8 @@
                     <span class="breadcrumb-current">Objetivos Estratégicos</span>
                 } @else if (estaNoDashboard) {
                     <span class="breadcrumb-current">Dashboard</span>
+                } @else if (estaNasSolicitacoes) {
+                    <span class="breadcrumb-current">Solicitações</span>
                 } @else if (estaNosUsuarios) {
                     <span class="breadcrumb-current">Usuários</span>
                 } @else if (estaNoPortfolio) {

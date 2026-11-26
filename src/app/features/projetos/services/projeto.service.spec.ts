@@ -3,17 +3,20 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ProjetoService } from './projeto.service';
 import { PROJETOS_EXEMPLO } from './projetos-exemplo';
+import { entrarComo } from '../../../testing/dados';
 
 describe('ProjetoService', () => {
   let service: ProjetoService;
   let api: HttpTestingController;
 
   beforeEach(() => {
+    entrarComo('ESCRITORIO');
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     service = TestBed.inject(ProjetoService);
     api = TestBed.inject(HttpTestingController);
   });
 
+  afterEach(() => localStorage.clear());
   afterEach(() => api.verify());
 
   it('lista paginado, com no máximo 100 por página', () => {

@@ -7,9 +7,9 @@ export const authGuard: CanActivateFn = (_route, state) => {
   return inject(Router).createUrlTree(['/login'], { queryParams: { voltar: state.url } });
 };
 
-// Páginas de administração: quem não é admin volta ao Dashboard.
+// Gestão de contas: admin e Escritório; os demais voltam ao Dashboard.
 export const adminGuard: CanActivateFn = () => {
-  if (inject(AuthService).ehAdmin()) return true;
+  if (inject(AuthService).pode('gerenciarUsuarios')) return true;
   return inject(Router).createUrlTree(['/dashboard']);
 };
 

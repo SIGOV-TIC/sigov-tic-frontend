@@ -19,7 +19,7 @@ describe('Layout', () => {
   });
 
   it('menu mostra Novo Projeto ao Escritório e Usuários ao admin', async () => {
-    for (const [perfil, novo, usuarios] of [['ESCRITORIO', true, false], ['ADMIN', false, true], ['USER', false, false]] as const) {
+    for (const [perfil, novo, usuarios] of [['ESCRITORIO', true, true], ['ADMIN', false, true], ['USER', false, false]] as const) {
       TestBed.resetTestingModule();
       entrarComo(perfil);
       configurar();
