@@ -49,7 +49,8 @@
                     <tr (click)="abrirDetalhe(s)" (keydown.enter)="abrirDetalhe(s)" tabindex="0">
                         <td class="principal">
                             <span class="titulo">{{ s.titulo }}</span>
-                            <span class="resumo">{{ s.descricao }}</span>
+                            @if (s.tipo) { <span class="tipo">{{ rotuloTipo(s.tipo) }}@if (s.areaDemandante) { · {{ s.areaDemandante }} }</span> }
+                            @if (!s.tipo) { <span class="resumo">{{ s.descricao }}</span> }
                         </td>
                         @if (aba === 'decidir') { <td class="nowrap">{{ s.solicitante }}</td> }
                         <td class="nowrap">{{ s.createdAt | date: 'dd/MM/yyyy' }}</td>
@@ -80,12 +81,40 @@
 
         @if (nova; as n) {
             <h3>Nova solicitação</h3>
+            @let op = opcoes$ | async;
             <form class="form" (ngSubmit)="enviar()">
+                <fieldset class="tipos">
+                    <legend>Tipo</legend>
+                    @for (t of tipos; track t.valor) {
+                        <label [class.ativo]="n.tipo === t.valor">
+                            <input type="radio" name="tipo" [value]="t.valor" [(ngModel)]="n.tipo">{{ t.rotulo }}
+                        </label>
+                    }
+                </fieldset>
                 <label>Título
                     <input name="titulo" [(ngModel)]="n.titulo" maxlength="200" required>
                 </label>
+                <label for="areaDemandante">Área demandante
+                    <app-escolha campoId="areaDemandante" name="areaDemandante" [(ngModel)]="n.areaDemandante" [opcoes]="op?.areasSolicitantes ?? []" />
+                </label>
+                @if (n.tipo === 'NOVO_PROJETO') {
+                    <label for="objetivoEstrategico">Objetivo estratégico
+                        <app-escolha campoId="objetivoEstrategico" name="objetivoEstrategico" [(ngModel)]="n.objetivoEstrategico" [opcoes]="op?.objetivos ?? []" [maxlength]="300" />
+                    </label>
+                    <label for="poSugerido">PO sugerido
+                        <app-escolha campoId="poSugerido" name="poSugerido" [(ngModel)]="n.poSugerido" [opcoes]="op?.pessoas ?? []" />
+                    </label>
+                    <div class="dupla">
+                        <label>Prazo estimado (meses)
+                            <input name="prazoMeses" type="number" min="1" max="120" step="1" [(ngModel)]="n.prazoMeses">
+                        </label>
+                        <label>Custo estimado (R$)
+                            <input name="custoEstimado" type="number" min="0" step="any" [(ngModel)]="n.custoEstimado">
+                        </label>
+                    </div>
+                }
                 <label>Descrição
-                    <textarea name="descricao" [(ngModel)]="n.descricao" rows="8" maxlength="4000" required></textarea>
+                    <textarea name="descricao" [(ngModel)]="n.descricao" rows="5" maxlength="4000" required></textarea>
                 </label>
                 @if (erroPainel) { <p class="form-erro" role="alert">{{ erroPainel }}</p> }
                 <div class="form-acoes">
@@ -99,6 +128,12 @@
             <span class="status" [attr.data-status]="s.status">{{ rotuloStatus(s.status) }}</span>
             <h3>{{ s.titulo }}</h3>
             <dl class="meta">
+                @if (s.tipo) { <div><dt>Tipo</dt><dd>{{ rotuloTipo(s.tipo) }}</dd></div> }
+                @if (s.areaDemandante) { <div><dt>Área demandante</dt><dd>{{ s.areaDemandante }}</dd></div> }
+                @if (s.objetivoEstrategico) { <div class="inteira"><dt>Objetivo estratégico</dt><dd>{{ s.objetivoEstrategico }}</dd></div> }
+                @if (s.poSugerido) { <div><dt>PO sugerido</dt><dd>{{ s.poSugerido }}</dd></div> }
+                @if (s.prazoMeses) { <div><dt>Prazo estimado</dt><dd>{{ s.prazoMeses }} {{ s.prazoMeses === 1 ? 'mês' : 'meses' }}</dd></div> }
+                @if (s.custoEstimado != null) { <div><dt>Custo estimado</dt><dd>{{ reais(s.custoEstimado) }}</dd></div> }
                 <div><dt>Solicitante</dt><dd>{{ s.solicitante }}</dd></div>
                 <div><dt>Aberta em</dt><dd>{{ s.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
                 @if (s.decididoPor) {

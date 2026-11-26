@@ -1,9 +1,12 @@
 import { ChangeDetectionStrategy, Component, HostListener, OnInit } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/auth/auth.service';
-import { Solicitacao, SolicitacaoService, StatusSolicitacao } from '../services/solicitacao.service';
+import { Observable } from 'rxjs';
+import { Escolha } from '../../../shared/escolha/escolha';
+import { Opcoes, OpcoesService } from '../../../shared/escolha/opcoes.service';
+import { NovaSolicitacao, Solicitacao, SolicitacaoService, StatusSolicitacao, TIPOS, TipoSolicitacao } from '../services/solicitacao.service';
 
 type Aba = 'decidir' | 'minhas';
 type Filtro = 'TODAS' | StatusSolicitacao;
@@ -18,7 +21,7 @@ const ROTULO_STATUS: Record<StatusSolicitacao, string> = {
   // Dados chegam da API depois da renderização; sem Eager a tela não atualiza.
   changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-solicitacoes',
-  imports: [FormsModule, MatIconModule, DatePipe],
+  imports: [FormsModule, MatIconModule, DatePipe, AsyncPipe, Escolha],
   templateUrl: './solicitacoes.html',
   styleUrl: './solicitacoes.scss',
 })
@@ -38,8 +41,12 @@ export class Solicitacoes implements OnInit {
     { valor: 'RECUSADA', rotulo: 'Recusadas' },
   ];
 
+  readonly tipos = TIPOS;
+  opcoes$?: Observable<Opcoes>;
+
   constructor(
     private service: SolicitacaoService,
+    private opcoesService: OpcoesService,
     auth: AuthService,
   ) {
     this.decide = auth.pode('decidirSolicitacoes');
@@ -74,13 +81,21 @@ export class Solicitacoes implements OnInit {
     return f === 'TODAS' ? this.minhas.length : this.minhas.filter((s) => s.status === f).length;
   }
 
+  reais(v: number): string {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+  }
+
+  rotuloTipo(t?: TipoSolicitacao | null): string {
+    return TIPOS.find((x) => x.valor === t)?.rotulo ?? '';
+  }
+
   rotuloStatus(s: StatusSolicitacao): string {
     return ROTULO_STATUS[s];
   }
 
   // ---- Painel: nova solicitação ou detalhe ----
 
-  nova: { titulo: string; descricao: string } | null = null;
+  nova: NovaSolicitacao | null = null;
   aberta: Solicitacao | null = null;
   enviando = false;
   erroPainel = '';
@@ -88,7 +103,8 @@ export class Solicitacoes implements OnInit {
 
   abrirNova() {
     this.fechar();
-    this.nova = { titulo: '', descricao: '' };
+    this.opcoes$ ??= this.opcoesService.carregar();
+    this.nova = { tipo: 'NOVO_PROJETO', titulo: '', descricao: '', areaDemandante: '', objetivoEstrategico: '', poSugerido: '', prazoMeses: null, custoEstimado: null };
   }
 
   abrirDetalhe(s: Solicitacao) {
@@ -119,7 +135,25 @@ export class Solicitacoes implements OnInit {
     }
     this.enviando = true;
     this.erroPainel = '';
-    this.service.abrir(titulo, descricao).subscribe({
+    if (n.prazoMeses != null && (n.prazoMeses < 1 || n.prazoMeses > 120)) {
+      this.erroPainel = 'O prazo deve ficar entre 1 e 120 meses.';
+      return;
+    }
+    if (n.custoEstimado != null && n.custoEstimado < 0) {
+      this.erroPainel = 'O custo não pode ser negativo.';
+      return;
+    }
+    const projeto = n.tipo === 'NOVO_PROJETO';
+    this.service.abrir({
+      tipo: n.tipo,
+      titulo,
+      descricao,
+      areaDemandante: n.areaDemandante?.trim() || null,
+      objetivoEstrategico: projeto ? n.objetivoEstrategico?.trim() || null : null,
+      poSugerido: projeto ? n.poSugerido?.trim() || null : null,
+      prazoMeses: projeto ? n.prazoMeses : null,
+      custoEstimado: projeto ? n.custoEstimado : null,
+    }).subscribe({
       next: (s) => {
         this.minhas = [s, ...this.minhas];
         if (this.decide) this.pendentes = [...this.pendentes, s];
