@@ -34,7 +34,6 @@ interface RespostaLogin {
 // O que o usuário edita no próprio perfil.
 export interface DadosPerfil {
   nome: string;
-  cargo: string | null;
   foto: string | null;
 }
 

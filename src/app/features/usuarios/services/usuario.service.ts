@@ -9,6 +9,7 @@ export interface Usuario {
   nome: string;
   perfil: Perfil | string;
   ativo: boolean;
+  cargo?: string | null;
 }
 
 export interface UsuarioRequest {
@@ -16,6 +17,7 @@ export interface UsuarioRequest {
   nome: string;
   perfil: Perfil | string;
   ativo: boolean;
+  cargo?: string | null;
   // Obrigatória ao criar; ao alterar, só vai quando for trocar.
   senha?: string;
 }

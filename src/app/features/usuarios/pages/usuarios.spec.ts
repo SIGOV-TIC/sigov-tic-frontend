@@ -62,7 +62,7 @@ describe('Usuários', () => {
     tela.salvar();
     const req = api.expectOne('/api/users');
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ nome: 'Dani', login: 'dani', perfil: 'GESTOR_PROJETO', ativo: true, senha: 'segredo1' });
+    expect(req.request.body).toEqual({ nome: 'Dani', login: 'dani', perfil: 'GESTOR_PROJETO', ativo: true, cargo: null, senha: 'segredo1' });
     req.flush({ id: 'u5', login: 'dani', nome: 'Dani', perfil: 'GESTOR_PROJETO', ativo: true });
     expect(tela.usuarios).toHaveLength(5);
     expect(tela.edicao).toBeNull();

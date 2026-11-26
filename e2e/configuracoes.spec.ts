@@ -15,14 +15,15 @@ test.describe('Configurações da conta', () => {
     await expect(page).toHaveURL(/\/configuracoes$/);
 
     await page.getByLabel('Nome').fill('Paula Souza');
-    await page.getByLabel('Cargo').fill('Gerente do Escritório');
+    await expect(page.getByLabel('Cargo')).toHaveCount(0);
     await page.locator('input[type=file]').setInputFiles({ name: 'foto.png', mimeType: 'image/png', buffer: PNG });
     await expect(page.locator('.avatar img')).toBeVisible();
     await page.getByRole('button', { name: 'Salvar' }).click();
 
     await expect(page.getByText('Alterações salvas.')).toBeVisible();
     const [escrita] = api.escritasEm('/api/users/me');
-    expect(escrita.corpo).toMatchObject({ nome: 'Paula Souza', cargo: 'Gerente do Escritório' });
+    expect(escrita.corpo).toMatchObject({ nome: 'Paula Souza' });
+    expect(escrita.corpo).not.toHaveProperty('cargo');
     expect((escrita.corpo as { foto: string }).foto).toMatch(/^data:image\/jpeg;base64,/);
     await expect(page.getByRole('button', { name: /Paula Souza/ })).toBeVisible();
     await expect(page.locator('.menu-avatar img')).toBeVisible();

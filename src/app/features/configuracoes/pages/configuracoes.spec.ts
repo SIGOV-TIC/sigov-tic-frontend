@@ -35,15 +35,14 @@ describe('Configurações', () => {
     expect([tela.nome, tela.cargo, tela.foto()]).toEqual(['Ana Souza', 'Product Owner', FOTO]);
   });
 
-  it('salva nome, cargo e foto e reflete na sessão', () => {
+  it('salva nome e foto; cargo não vai para a API', () => {
     carregarPerfil();
     tela.nome = ' Ana Lima ';
-    tela.cargo = '';
     tela.foto.set(FOTO);
     tela.salvar();
     const req = api.expectOne('/api/users/me');
     expect(req.request.method).toBe('PUT');
-    expect(req.request.body).toEqual({ nome: 'Ana Lima', cargo: null, foto: FOTO });
+    expect(req.request.body).toEqual({ nome: 'Ana Lima', foto: FOTO });
     req.flush({ id: 'u1', nome: 'Ana Lima', perfil: 'GESTOR_PROJETO', cargo: null, foto: FOTO });
 
     expect(tela.salvo()).toBe(true);
